@@ -1,0 +1,59 @@
+/* Reset Base e Variáveis de Tema - LABWARE */
+:root {
+  /* Paleta Principal */
+  --bg-dark: #0A0E17;          /* Azul quase preto */
+  --bg-dark-secondary: #031130;/* Azul escuro profundo */
+  --primary-color: #185DF1;    /* Azul vibrante / Ações principais */
+  --border-color: #E2E8F0;     /* Cinzento claro / Bordas */
+  --bg-main: #F3F7FE;          /* Fundo principal Light Mode */
+  --text-secondary: #555555;   /* Cinzento médio / Textos secundários */
+  --primary-hover: #1C57D5;    /* Azul hover */
+  --bg-card: #FFFFFF;          /* Fundo de cartões */
+
+  /* Textos Principais */
+  --text-primary: #0A0E17;
+
+  /* Tipografia */
+  --font-body: '42dot Sans', sans-serif;
+  --font-heading: 'Big Shoulders Text', cursive, sans-serif;
+
+  --radius: 8px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: 0.5px;
+}
+
+/* Scrollbar Personalizada */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
