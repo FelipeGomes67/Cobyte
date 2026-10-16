@@ -1,0 +1,8 @@
+PASTA: src/components/layout
+DESCRIÇÃO: Estrutura principal de navegação e enquadramento das telas do LABWARE.
+
+COMPONENTES E RESPONSABILIDADES:
+- MainLayout.jsx : Wrapper principal que junta Header, Sidebar e o conteúdo da página.
+- Header.jsx     : Barra superior otimizada para Light Mode (notificações e perfil).
+- Sidebar.jsx    : Menu de navegação lateral para desktop.
+- MobileNav.jsx  : Menu inferior fixo para navegação em dispositivos móveis (PWA).

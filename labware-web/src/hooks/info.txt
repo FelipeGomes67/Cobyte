@@ -1,0 +1,7 @@
+PASTA: src/hooks
+DESCRIÇÃO: Custom Hooks do React para encapsular lógica de estado e integração com APIs do navegador.
+
+ARQUIVOS E RESPONSABILIDADES:
+- useAudioRecorder.js : Lógica de captura, gravação, pausa e geração de Blob do áudio do microfone.
+- useTickets.js       : Hook para busca, filtragem e atualização do estado dos chamados.
+- useAuth.js          : Hook para gestão da sessão do utilizador e armazenamento do token JWT.

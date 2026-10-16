@@ -1,0 +1,10 @@
+PASTA: src/components/common
+DESCRIÇÃO: Componentes genéricos e altamente reutilizáveis da interface gráfica (Design System do LABWARE).
+
+COMPONENTES E RESPONSABILIDADES:
+- Button.jsx         : Botões primários, secundários, perigo e com estados de carregamento.
+- Input.jsx          : Campos de texto, áreas de texto (textarea) e seletores customizados.
+- Card.jsx           : Container em Light Mode com sombra suave e bordas arredondadas.
+- Modal.jsx          : Caixa de diálogo flutuante para confirmações ou ações rápidas.
+- Badge.jsx          : Etiquetas de texto estilizadas (ex: tags de categorias ou origem).
+- LoadingSpinner.jsx : Indicadores de carregamento para requisições da API.

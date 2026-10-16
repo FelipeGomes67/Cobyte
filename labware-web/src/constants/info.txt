@@ -1,0 +1,6 @@
+PASTA: src/constants
+DESCRIÇÃO: Constantes globais, mapeamentos estáticos e dicionários do sistema.
+
+ARQUIVOS E RESPONSABILIDADES:
+- ticketConstants.js : Mapeamento de Status (ABERTO, EM_ATENDIMENTO, RESOLVIDO), Prioridades e Categorias com cores e ícones.
+- apiEndpoints.js    : Mapeamento centralizado de rotas da API Spring Boot (/api/chamados, /api/auth, etc.).

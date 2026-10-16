@@ -1,0 +1,8 @@
+PASTA: src/components/ticket
+DESCRIÇÃO: Componentes focados exclusivamente nas regras e exibições dos chamados de suporte.
+
+COMPONENTES E RESPONSABILIDADES:
+- TicketCard.jsx   : Cartão de resumo do chamado utilizado no histórico e listagens.
+- TicketFilter.jsx : Barra de pesquisa e filtros por status, prioridade e categoria.
+- SlaBadge.jsx     : Indicador visual do tempo restante do SLA (verde, amarelo, vermelho/estourado).
+- StarRating.jsx   : Bloco de avaliação de 1 a 5 estrelas para encerramento do atendimento.

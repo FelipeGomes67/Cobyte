@@ -1,0 +1,7 @@
+PASTA: src/utils
+DESCRIÇÃO: Funções utilitárias puras e formatadores de dados.
+
+ARQUIVOS E RESPONSABILIDADES:
+- dateUtils.js   : Formatadores de data/hora (ex: "há 5 minutos", "dd/mm/yyyy hh:mm").
+- formatters.js  : Utilitários para formatação de tamanho de ficheiros (KB/MB) e nomes de utilizadores.
+- classNames.js  : Função de junção e merge de classes CSS Tailwind (`clsx` + `tailwind-merge`).

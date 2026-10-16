@@ -1,0 +1,8 @@
+PASTA: src/components/chat
+DESCRIÇÃO: Módulo de comunicação e histórico de mensagens do chamado.
+
+COMPONENTES E RESPONSABILIDADES:
+- ChatTimeline.jsx  : Linha do tempo que renderiza todas as mensagens e eventos do chamado.
+- ChatMessage.jsx   : Balão de mensagem individual (distingue suporte, cliente e sistema).
+- ChatInput.jsx     : Campo para envio de texto, anexos de imagem/documento e gatilho de áudio.
+- AudioRecorder.jsx : Componente de gravação de voz (captura via microfone do PWA/browser).
