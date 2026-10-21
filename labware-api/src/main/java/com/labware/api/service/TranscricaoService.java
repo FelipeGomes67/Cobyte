@@ -1,4 +1,4 @@
 package com.labware.api.service;
 
-public class TranscricacaoService {
+public class TranscricaoService {
 }

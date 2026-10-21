@@ -1,4 +1,4 @@
 package com.labware.api.dto.request;
 
-public class AlterarStatusReqest {
+public class AlterarStatusRequest {
 }
