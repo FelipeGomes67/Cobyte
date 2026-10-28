@@ -1,32 +1,29 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useRoutes } from 'react-router-dom';
+import AppLayout from './components/layout/AppLayout';
+import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
+import ReportsPage from './pages/ReportsPage';
+import SettingsPage from './pages/SettingsPage';
+import { NewTicketPage, TicketsPage } from './pages/TicketsPage';
 
-// Componente temporário para validar a renderização das rotas
-function PlaceholderScreen({ title }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center max-w-md w-full">
-        <h1 className="text-2xl font-bold text-slate-800 mb-2">LABWARE</h1>
-        <p className="text-slate-600 font-medium">{title}</p>
-        <span className="inline-block mt-4 px-3 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full">
-          Em Desenvolvimento
-        </span>
-      </div>
-    </div>
-  );
+function AuthenticatedRoutes() {
+  const page = useRoutes([
+    { path: '/dashboard', element: <TicketsPage mode="dashboard"/> },
+    { path: '/chamados', element: <TicketsPage mode="all"/> },
+    { path: '/chamados/novo', element: <NewTicketPage/> },
+    { path: '/meus-chamados', element: <TicketsPage mode="mine"/> },
+    { path: '/historico', element: <TicketsPage mode="history"/> },
+    { path: '/relatorios', element: <ReportsPage/> },
+    { path: '/configuracoes', element: <SettingsPage/> },
+    { path: '/perfil', element: <ProfilePage/> },
+    { path: '*', element: <Navigate to="/dashboard" replace/> },
+  ]);
+  return <AppLayout>{page}</AppLayout>;
 }
 
 export default function RoutesApp() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<PlaceholderScreen title="Página de Login" />} />
-        <Route path="/chamados" element={<PlaceholderScreen title="Histórico de Chamados" />} />
-        <Route path="/chamados/novo" element={<PlaceholderScreen title="Abertura de Chamado" />} />
-        <Route path="/chamados/:id" element={<PlaceholderScreen title="Detalhe do Chamado & Chat" />} />
-        
-        {/* Rota padrão: redireciona para a lista de chamados */}
-        <Route path="*" element={<Navigate to="/chamados" replace />} />
-      </Routes>
-    </BrowserRouter>
-  );
+  return <BrowserRouter><Routes>
+    <Route path="/login" element={<LoginPage/>}/>
+    <Route path="*" element={<AuthenticatedRoutes/>}/>
+  </Routes></BrowserRouter>;
 }
