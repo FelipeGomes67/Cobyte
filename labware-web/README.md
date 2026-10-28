@@ -1,16 +1,35 @@
-# React + Vite
+# LabWare · Central de Suporte
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação de demonstração em React, JSX e Vite. Não há backend conectado neste repositório; autenticação, cadastros, chamados e preferências usam armazenamento local do navegador e não devem ser tratados como proteção de produção.
 
-Currently, two official plugins are available:
+## Executar
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```sh
+npm install
+npm run dev
+```
 
-## React Compiler
+Validação local:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```sh
+npm run lint
+npm run build
+```
 
-## Expanding the ESLint configuration
+## Contas fictícias
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Suporte: `demo@labware.com.br` / `Labware123!`
+- Cliente: `cliente@labware.com.br` / `Cliente123!`
+
+O suporte pode consultar todos os chamados e relatórios. O perfil cliente vê apenas chamados próprios. Cadastros criam perfis cliente.
+
+As credenciais de demonstração são verificadas com PBKDF2 no navegador; o armazenamento local contém hashes, não senhas em texto puro. Isso não é autenticação segura: o código, os usuários de demonstração e as permissões rodam no cliente e podem ser inspecionados ou alterados. Em produção, autenticação e autorização devem ser validadas pelo backend.
+
+## Dados e limitações
+
+- `src/data/demoTickets.js` e `src/data/demoUsers.js` contêm dados fictícios claramente identificados.
+- Chamados criados são salvos em `localStorage` e não sincronizam entre navegadores ou usuários.
+- Preferências de notificações persistem localmente. Permissão do navegador depende do dispositivo, navegador e origem segura.
+- A troca de senha não altera credenciais: a tela informa que depende de um endpoint de autenticação que ainda não existe.
+- Métricas de primeira resposta exigem `firstResponseMinutes`. SLA compara `resolvedAt` com `slaDueAt`. Registros sem esses campos não entram nesses indicadores. Resolução mensal exige `resolvedAt`.
+- Os gráficos podem usar os chamados fictícios de `src/data/demoTickets.js` enquanto não existe uma API conectada; essa origem fica documentada aqui e no arquivo de dados, sem aviso sobreposto à tela.

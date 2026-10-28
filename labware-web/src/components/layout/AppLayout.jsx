@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, ChevronDown, LogOut, Menu, MessageSquare, Settings, UserRound, X } from 'lucide-react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Bell, Menu, X } from 'lucide-react';
 import Sidebar from './Sidebar';
-import { getCurrentUser, signOut } from '../../data/mockDatabase';
+import ProfileMenu from './ProfileMenu';
+import ConfirmDialog from '../common/ConfirmDialog';
+import { useAuth } from '../../hooks/useAuth';
 
 const pageNames = {
   '/dashboard': 'Dashboard',
@@ -15,27 +17,18 @@ const pageNames = {
   '/chamados/novo': 'Novo chamado',
 };
 
-const sampleNotifications = [
-  { id: 1, title: 'Nova mensagem em Chamado #102', time: 'Há 2 min' },
-  { id: 2, title: 'Nova mensagem em Chamado #102', time: 'Há 2 min' },
-  { id: 3, title: 'Nova mensagem em Chamado #102', time: 'Há 2 min' },
-];
-
-function Avatar() {
-  return <span className="avatar"><UserRound size={18}/></span>;
-}
-
-export default function AppLayout({ children }) {
-  const user = getCurrentUser();
+export default function AppLayout() {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const notificationRef = useRef(null);
   const title = pageNames[location.pathname] || 'Central de Suporte';
   function leaveAccount() {
-    signOut();
+    logout();
+    setLogoutOpen(false);
     navigate('/login', { replace: true });
   }
 
@@ -57,13 +50,11 @@ export default function AppLayout({ children }) {
 
   function openNotifications() {
     setNotificationsOpen(false);
-    navigate('/historico');
+    navigate('/configuracoes?aba=notificacoes');
   }
 
-  if (!user) return <Navigate to="/login" replace/>;
-
   return <div className="app-shell">
-    <Sidebar open={menuOpen} onNavigate={() => setMenuOpen(false)} user={user} onSignOut={leaveAccount}/>
+    <Sidebar open={menuOpen} onNavigate={() => setMenuOpen(false)} user={user} onRequestLogout={() => setLogoutOpen(true)}/>
     {menuOpen && <button className="mobile-scrim" onClick={() => setMenuOpen(false)} aria-label="Fechar menu"/>}
     <main className="main-area">
       <header className="topbar">
@@ -72,29 +63,19 @@ export default function AppLayout({ children }) {
         <div className="top-actions">
           <div className="notification-center" ref={notificationRef}>
             <button className="icon-button notification-button" onClick={() => setNotificationsOpen(!notificationsOpen)} aria-label="Notificações" aria-expanded={notificationsOpen} aria-haspopup="true">
-              <Bell size={21}/><i aria-label="3 não lidas">3</i>
+              <Bell size={21}/>
             </button>
             {notificationsOpen && <section className="notification-popover" aria-label="Notificações recentes">
               <h2>Notificações</h2>
-              <div className="notification-list">{sampleNotifications.map(notification => <button className="notification-item" key={notification.id} onClick={openNotifications}>
-                <span className="notification-message-icon"><MessageSquare size={13}/></span>
-                <span className="notification-item-copy"><strong>{notification.title}</strong><small>{notification.time}</small></span>
-              </button>)}</div>
-              <button className="notification-see-all" onClick={openNotifications}>Ver todas as notificações</button>
+              <p className="notification-empty">O histórico de notificações será exibido quando estiver conectado ao serviço de chamados.</p>
+              <button className="notification-see-all" onClick={openNotifications}>Configurar notificações</button>
             </section>}
           </div>
-          <button className="user-trigger" onClick={() => setProfileOpen(!profileOpen)} aria-expanded={profileOpen}>
-            <Avatar/><span className="user-name">{user.name}</span><ChevronDown size={15}/>
-          </button>
-          {profileOpen && <div className="profile-menu header-profile-menu">
-            <div className="profile-menu-heading"><Avatar/><div><strong>{user.name}</strong><small>{user.role}</small></div></div>
-            <NavLink to="/perfil" onClick={() => setProfileOpen(false)}><UserRound size={16}/> Ver perfil</NavLink>
-            <NavLink to="/configuracoes" onClick={() => setProfileOpen(false)}><Settings size={16}/> Configurações</NavLink>
-            <button onClick={leaveAccount}><LogOut size={16}/> Sair da conta</button>
-          </div>}
+          <ProfileMenu user={user} variant="header" onRequestLogout={() => setLogoutOpen(true)}/>
         </div>
       </header>
-      <div className="content-area">{children}</div>
+      <div className="content-area"><Outlet/></div>
     </main>
+    <ConfirmDialog open={logoutOpen} title="Sair da conta?" message="Sua sessão será encerrada neste dispositivo." confirmLabel="Sair da conta" onCancel={() => setLogoutOpen(false)} onConfirm={leaveAccount}/>
   </div>;
 }
