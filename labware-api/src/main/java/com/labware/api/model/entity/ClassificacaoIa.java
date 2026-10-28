@@ -35,6 +35,20 @@ public class ClassificacaoIa {
     @Column(length = 50)
     private String modelo;
 
+    @Column(length = 255)
+    private String tituloGeradoIa;
+
+    @Column(columnDefinition = "TEXT")
+    private String sintomaObservadoIa;
+    @Column(columnDefinition = "TEXT")
+    private String impactoOperacionalIa;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tecnico_sugerido_id")
+    private Usuario tecnicoSugerido;
+
+    private Integer slaMetaMinutos;
+
     // Decisão final do analista (permite medir a taxa de acerto da IA)
     @Enumerated(EnumType.STRING)
     @Column(length = 30)
@@ -44,7 +58,7 @@ public class ClassificacaoIa {
     @Column(length = 20)
     private Prioridade prioridadeFinal;
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false)
     private LocalDateTime classificadaEm;
 
     @PrePersist
