@@ -3,6 +3,24 @@ import { Check, Clock3, Star } from 'lucide-react';
 import { useTickets } from '../hooks/useTickets';
 import { getAxisScale, getMonthlyTrend, getReportSummary } from '../utils/reportMetrics';
 
+function smoothPath(points) {
+  if (!points.length) return '';
+  return points.slice(1).reduce((path, point, index) => {
+    const previous = points[index];
+    const before = points[Math.max(0, index - 1)];
+    const after = points[Math.min(points.length - 1, index + 2)];
+    const firstControl = {
+      x: previous.x + (point.x - before.x) / 6,
+      y: previous.y + (point.y - before.y) / 6,
+    };
+    const secondControl = {
+      x: point.x - (after.x - previous.x) / 6,
+      y: point.y - (after.y - previous.y) / 6,
+    };
+    return `${path} C ${firstControl.x},${firstControl.y} ${secondControl.x},${secondControl.y} ${point.x},${point.y}`;
+  }, `M ${points[0].x},${points[0].y}`);
+}
+
 function PageHeading() {
   return <div className="page-heading reports-heading"><div><h1>Relatórios</h1><p>Indicadores de desempenho do atendimento.</p></div></div>;
 }
@@ -26,7 +44,7 @@ function HorizontalBars({ items, variant = 'category' }) {
 function CategoryChart({ categories }) {
   return <section className="panel chart-panel category-panel">
     <h2>Chamados por Categoria</h2>
-    {categories.every(item => item.count === 0) ? <div className="chart-empty">Sem dados no período</div> : <HorizontalBars items={categories}/>}
+    {categories.every(item => item.count === 0) ? <div className="chart-empty">Sem dados no período</div> : <div className="category-chart-content"><HorizontalBars items={categories}/></div>}
   </section>;
 }
 
@@ -40,9 +58,10 @@ function PriorityChart({ priorities }) {
 function TrendChart({ trend }) {
   const [activeIndex, setActiveIndex] = useState(null);
   const peak = Math.max(1, ...trend.flatMap(item => [item.opened, item.resolved]));
-  const pointAt = (value, index) => ({ x: 10 + index / Math.max(1, trend.length - 1) * 700, y: 145 - value / peak * 130 });
-  const openedPoints = trend.map((item, index) => { const point = pointAt(item.opened, index); return `${point.x},${point.y}`; }).join(' ');
-  const resolvedPoints = trend.map((item, index) => { const point = pointAt(item.resolved, index); return `${point.x},${point.y}`; }).join(' ');
+  const { axisMax, ticks } = getAxisScale(peak);
+  const pointAt = (value, index) => ({ x: 10 + index / Math.max(1, trend.length - 1) * 700, y: 145 - value / axisMax * 130 });
+  const openedPath = smoothPath(trend.map((item, index) => pointAt(item.opened, index)));
+  const resolvedPath = smoothPath(trend.map((item, index) => pointAt(item.resolved, index)));
   const selected = activeIndex === null ? null : trend[activeIndex];
   const activePoint = activeIndex === null ? null : pointAt(Math.max(selected.opened, selected.resolved), activeIndex);
   const tooltipLeft = activeIndex === null ? 0 : Math.max(0, Math.min(76, (activeIndex / Math.max(1, trend.length - 1)) * 100 - 7));
@@ -55,10 +74,18 @@ function TrendChart({ trend }) {
     <div className="panel-title"><h2>Evolução dos Chamados Mensal</h2></div>
     {trend.every(item => item.opened === 0 && item.resolved === 0) ? <div className="chart-empty">Sem dados nos últimos 12 meses.</div> : <>
       <div className="trend-plot">
-        <div className="y-axis"><span>{peak}</span><span>{Math.round(peak * .75)}</span><span>{Math.round(peak * .5)}</span><span>{Math.round(peak * .25)}</span><span>0</span></div>
-        <svg viewBox="0 0 720 160" preserveAspectRatio="none" role="group" aria-label="Evolução mensal dos chamados" onMouseMove={selectMonthFromPointer} onMouseLeave={() => setActiveIndex(null)}>
-          <polyline points={openedPoints} fill="none" className="trend-line trend-line-opened" vectorEffect="non-scaling-stroke"/>
-          <polyline points={resolvedPoints} fill="none" className="trend-line trend-line-resolved" vectorEffect="non-scaling-stroke"/>
+        <div className="y-axis">{[...ticks].reverse().map(tick => <span key={tick} style={{ top: `${(1 - tick / axisMax) * 100}%` }}>{tick.toLocaleString('pt-BR')}</span>)}</div>
+        <svg viewBox="0 0 720 160" preserveAspectRatio="none" role="group" aria-label="Evolução mensal dos chamados" onPointerMove={selectMonthFromPointer} onPointerLeave={() => setActiveIndex(null)}>
+          <defs>
+            <linearGradient id="opened-trend-gradient" x1="0" x2="1">
+              <stop offset="0%" stopColor="#78a7ff"/><stop offset="100%" stopColor="#2463eb"/>
+            </linearGradient>
+            <linearGradient id="resolved-trend-gradient" x1="0" x2="1">
+              <stop offset="0%" stopColor="#53d98a"/><stop offset="100%" stopColor="#159447"/>
+            </linearGradient>
+          </defs>
+          <path d={openedPath} pathLength="1" className="trend-line trend-line-opened" vectorEffect="non-scaling-stroke"/>
+          <path d={resolvedPath} pathLength="1" className="trend-line trend-line-resolved" vectorEffect="non-scaling-stroke"/>
           {activePoint && <line className="trend-guide" x1={activePoint.x} x2={activePoint.x} y1="0" y2="160"/>}
           {trend.map((item, index) => {
             const opened = pointAt(item.opened, index);

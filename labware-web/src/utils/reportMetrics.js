@@ -65,6 +65,12 @@ export function getReportSummary(tickets) {
     const completedAt = ticket.resolvedAt || new Date().toISOString();
     return new Date(completedAt) <= new Date(ticket.slaDueAt);
   });
+  const categoryNames = new Map(REPORT_CATEGORIES.map(name => [normalize(name), name]));
+  const categoryCounts = new Map(REPORT_CATEGORIES.map(name => [name, 0]));
+  tickets.forEach(ticket => {
+    const category = categoryNames.get(normalize(ticket.category)) || 'Outros';
+    categoryCounts.set(category, categoryCounts.get(category) + 1);
+  });
   // Cada chamado cai em exatamente um grupo de prioridade (a soma dos grupos = total de chamados).
   const priorityCounts = new Map(REPORT_PRIORITIES.map(priority => [priority.name, 0]));
   tickets.forEach(ticket => {
@@ -78,7 +84,7 @@ export function getReportSummary(tickets) {
     firstResponseCount: firstResponses.length,
     slaPercent: slaEvaluated.length ? Math.round((slaMet.length / slaEvaluated.length) * 100) : null,
     slaCount: slaEvaluated.length,
-    categories: REPORT_CATEGORIES.map(name => ({ name, count: tickets.filter(ticket => ticket.category === name).length })),
+    categories: REPORT_CATEGORIES.map(name => ({ name, count: categoryCounts.get(name) })),
     priorities: REPORT_PRIORITIES.map(priority => ({ ...priority, count: priorityCounts.get(priority.name) })),
   };
 }
