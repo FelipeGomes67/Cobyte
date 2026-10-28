@@ -5,6 +5,7 @@ const DEFAULT_PREFERENCES = {
   critical: true,
   sla: true,
   reply: true,
+  status: true,
   browserEnabled: false,
 };
 
