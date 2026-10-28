@@ -8,7 +8,8 @@ const notificationOptions = [
   ['assigned', 'Novo chamado atribuído a mim'],
   ['critical', 'Chamado Crítico criado'],
   ['sla', "SLA’s próximos de vencimentos"],
-  ['reply', 'Cliente respondeu um chamado'],
+  ['reply', 'Novas mensagens'],
+  ['status', 'Alterações de status'],
 ];
 
 export default function SettingsPage() {
@@ -94,20 +95,20 @@ export default function SettingsPage() {
       </div>
 
       <section className={`panel settings-panel settings-reference-card ${tab === 'security' ? 'security-card' : 'notification-card'}`}>
-      {tab === 'security' ? <>
-        <div className="settings-panel-heading"><h2>Segurança da conta</h2></div>
-        <p className="settings-limitation">A troca de senha fica indisponível enquanto este protótipo não estiver conectado ao backend de autenticação.</p>
-        <form onSubmit={changePassword}>
-          <label className="form-label">Senha Atual<div className="password-wrap"><input name="currentPassword" type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••" required/><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>{showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div></label>
-          <label className="form-label">Nova Senha<div className="password-wrap"><input name="newPassword" type={showPassword ? 'text' : 'password'} minLength="8" autoComplete="new-password" placeholder="••••••" required/><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>{showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}</button></div></label>
-          <div className="settings-footer">{message && <span className={`settings-message ${messageType}`} role="status">{message}</span>}<button className="primary-button" type="submit"><Save size={16}/> Atualizar senha</button></div>
-        </form>
-      </> : <>
-        <div className="settings-panel-heading"><h2>Preferências de notificação</h2></div>
-        <div className="device-notification-card"><span className={`device-notification-icon ${preferences.browserEnabled ? 'enabled' : ''}`}>{preferences.browserEnabled ? <Bell size={18}/> : <BellOff size={18}/>}</span><div className="device-notification-copy"><strong>Notificações neste dispositivo</strong><span>{permissionLabel}</span></div>{preferences.browserEnabled ? <button className="secondary-button" onClick={disableDeviceNotifications}>Desativar</button> : <button className="primary-button" onClick={enableDeviceNotifications} disabled={working}>{working ? 'Aguardando…' : 'Ativar'}</button>}</div>
-        <div className="notification-options">{notificationOptions.map(([key, label]) => <label className="check-row" key={key}><span>{label}</span><input type="checkbox" checked={preferences[key]} onChange={event => changeNotification(key, event.target.checked)}/></label>)}</div>
-        <div className="settings-footer">{message && <span className={`settings-message ${messageType}`} role="status">{message}</span>}<button className="secondary-button" onClick={testNotification}><Bell size={15}/> Testar</button><button className="primary-button" onClick={savePreferences}><Save size={16}/> Salvar</button></div>
-      </>}
+        {tab === 'security' ? <>
+          <div className="settings-panel-heading"><h2>Segurança da conta</h2></div>
+          <p className="settings-limitation">A troca de senha fica indisponível enquanto este protótipo não estiver conectado ao backend de autenticação.</p>
+          <form onSubmit={changePassword}>
+            <label className="form-label">Senha Atual<div className="password-wrap"><input name="currentPassword" type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••" required /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label>
+            <label className="form-label">Nova Senha<div className="password-wrap"><input name="newPassword" type={showPassword ? 'text' : 'password'} minLength="8" autoComplete="new-password" placeholder="••••••" required /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label>
+            <div className="settings-footer">{message && <span className={`settings-message ${messageType}`} role="status">{message}</span>}<button className="primary-button" type="submit"><Save size={16} /> Atualizar senha</button></div>
+          </form>
+        </> : <>
+          <div className="settings-panel-heading"><h2>Preferências de notificação</h2></div>
+          <div className="device-notification-card"><span className={`device-notification-icon ${preferences.browserEnabled ? 'enabled' : ''}`}>{preferences.browserEnabled ? <Bell size={18} /> : <BellOff size={18} />}</span><div className="device-notification-copy"><strong>Notificações neste dispositivo</strong><span>{permissionLabel}</span></div>{preferences.browserEnabled ? <button className="secondary-button" onClick={disableDeviceNotifications}>Desativar</button> : <button className="primary-button" onClick={enableDeviceNotifications} disabled={working}>{working ? 'Aguardando…' : 'Ativar'}</button>}</div>
+          <div className="notification-options">{notificationOptions.map(([key, label]) => <label className="check-row" key={key}><span>{label}</span><input type="checkbox" checked={preferences[key]} onChange={event => changeNotification(key, event.target.checked)} /></label>)}</div>
+          <div className="settings-footer">{message && <span className={`settings-message ${messageType}`} role="status">{message}</span>}<button className="secondary-button" onClick={testNotification}><Bell size={15} /> Testar</button><button className="primary-button" onClick={savePreferences}><Save size={16} /> Salvar</button></div>
+        </>}
       </section>
     </div>
   </>;
