@@ -30,6 +30,7 @@ public class Anexo {
     private String caminhoArquivo;
     @Column(nullable = false)
     private long tamanhoBytes;
+    private Double duracaoAudioSegundos;
     @Column(nullable = false, updatable = false)
     private LocalDateTime enviadoEm;
 
