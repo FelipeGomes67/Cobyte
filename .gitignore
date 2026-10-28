@@ -1,1 +1,7 @@
 mailpit-windows-amd64/
+
+# Ignora todo o conteúdo da pasta de uploads
+labware-api/uploads/*
+
+# Preserva apenas o arquivo .gitkeep para que o Git rastreie a pasta
+!labware-api/uploads/.gitkeep
