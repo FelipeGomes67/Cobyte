@@ -1,101 +1,221 @@
-id;perfil_usuario;categoria_problema;texto_entrada
-1;Recepcionista;ACESSO E AUTENTICAÇÃO;SOCORRO! Não entra a minha senha do laboratório e preciso pegar o resultado de um paciente agora! Tá dando tela vermelha e bloqueou tudo!
-2;Bioquímico;INFRAESTRUTURA E BANCO;Pelo amor de deus o sistema caiu inteiro!! to com 500 amostras pra rodar e ta dando timeout no banco de dados!
-3;Médico;INTERFACE E BUGS;O botão de assinar laudo simplesmente sumiu da tela. Preciso liberar o paciente da UTI urgente, o que vcs fizeram no sistema???
-4;Secretária;OPERACIONAL;Gente to tentando fechar o faturamento da unimed e ta dando erro de lote duplicado, me ajuda q o prazo acaba as 17h!!!
-5;Paciente;ACESSO E AUTENTICAÇÃO;Moço não consigo ver minha biopsia. Diz q o token expirou mas eu acabei de pedir, pelo amor d Deus to desesperada.
-6;Técnico TI;INTEGRAÇÃO E HARDWARE;A impressora Zebra de etiquetas desconfigurou do nada, não imprime o codigo de barras. Recepcao travada!
-7;Recepcionista;OPERACIONAL;Amostra do paciente Joao da silva sumiu do historico!! A filha dele ta aqui gritando na recepcao, onde foi parar???
-8;Bioquímico;INTEGRAÇÃO E HARDWARE;A maquina de hematologia parou de enviar os resultados pro LABWARE. Nao vou digitar 200 hemogramas na mao ne?!
-9;Médico;ACESSO E AUTENTICAÇÃO;Meu email de recuperacao de senha não chega de jeito nenhum, plantão lotado e eu sem acesso aos laudos!!
-10;Secretária;INTERFACE E BUGS;A tela de relatorio financeiro ta cortada, nao consigo ver o total do mes e ja tentei em 3 computadores.
-11;Paciente;INTERFACE E BUGS;Gerei o PDF do exame da minha mae e veio todo em branco!! como vou levar isso no medico hj a tarde??
-12;Técnico TI;INFRAESTRUTURA E BANCO;Servidor HTTP 500 direto, ninguem na filial inteira consegue logar, derrubaram o servidor foi??
-13;Recepcionista;INFRAESTRUTURA E BANCO;Gente ta uma lentidao que nao carrega nada, pagina 404 toda hora, a fila ta saindo pra fora da clinica!!
-14;Bioquímico;OPERACIONAL;Erro na liberacao de laudos em lote. Travo tudo aqui, da falha de processamento e ninguem recebe os exames.
-15;Médico;INTERFACE E BUGS;To tentando buscar o nome da paciente e fica carregando infinito. vcs precisam arrumar isso pra ontem!!
-16;Secretária;ACESSO E AUTENTICAÇÃO;Botao de login simplesmente nao responde. clico clico e nada acontece, socorro!
-17;Paciente;ACESSO E AUTENTICAÇÃO;Esqueci a senha e o sms não chega!! to na porta do consultorio preciso mostrar o exame pro medico!
-18;Técnico TI;INTEGRAÇÃO E HARDWARE;Leitor de codigo de barras parou de reconhecer os tubos de sangue, preciso de suporte na porta serial urgente.
-19;Recepcionista;INTEGRAÇÃO E HARDWARE;A impressora de pulseira parou no meio do cadastro. nao tem como eu atender a emergencia assim!
-20;Bioquímico;INTERFACE E BUGS;Tela de conferencia da bancada ta travando, os valores dos reagentes somem qnd eu clico em salvar.
-21;Médico;OPERACIONAL;Cancelei um pedido duplicado e agora apagou os dois!! restaura isso logo q a cirurgia é em 10 minutos.
-22;Secretária;INFRAESTRUTURA E BANCO;O sistema caiu e ta dando erro de banco PostgreSQL, preciso emitir as notas fiscais pelo amor de deus!!
-23;Paciente;INTERFACE E BUGS;O site de vcs no meu celular corta a parte q diz se deu reagente ou nao, arruma isso que to passando mal de ansiedade!
-24;Técnico TI;ACESSO E AUTENTICAÇÃO;Erro 403 Forbidden pra todos os medicos na hora de acessar remotamente, verifica o firewall de vcs.
-25;Recepcionista;INTERFACE E BUGS;Fui emitir o comprovante e saiu um PDF zerado. O paciente ta achando q é golpe!
-26;Bioquímico;ACESSO E AUTENTICAÇÃO;meu token ta expirando em 5 segundos, nao da tempo nem de digitar a senha, arruma isso plmdds!
-27;Médico;INFRAESTRUTURA E BANCO;Sistema fora do ar, ta dando erro 500 Server Error. O hospital inteiro ta parado aguardando vcs.
-28;Secretária;INTEGRAÇÃO E HARDWARE;A maquina de cartao nao ta comunicando com o sistema do caixa, travou o recebimento de tudo aqui.
-29;Paciente;OPERACIONAL;Meu nome ta escrito errado no laudo, como vcs erram o nome do paciente??? precisa alterar urgente!!
-30;Técnico TI;INTERFACE E BUGS;O menu lateral esquerdo sumiu pra todos os usuarios com perfil administrativo. erro de javascript no front de vcs.
-31;Recepcionista;INFRAESTRUTURA E BANCO;Pelo amor de deus alguem reinicia o servidor q ta muito lento, demoro 5 min pra cada cadastro!!
-32;Bioquímico;OPERACIONAL;Tentei estornar uma rotina e trancou todo o lote de sorologia, ngm trabalha mais aqui hoje!
-33;Médico;ACESSO E AUTENTICAÇÃO;Diz q meu usuario ta bloqueado por excesso de tentativas mas eu so tentei uma vez, libera ai urgente.
-34;Secretária;INTERFACE E BUGS;O filtro de datas do faturamento nao funciona, coloco o mes de agosto e ele puxa janeiro, SOCORRO.
-35;Paciente;INFRAESTRUTURA E BANCO;O portal do paciente ta caindo toda hora, preciso baixar meu preventivo pelo amor de deus.
-36;Técnico TI;OPERACIONAL;Log de auditoria parou de gravar os acessos de onte, precisamos disso pra compliance, verifica o script.
-37;Recepcionista;INTEGRAÇÃO E HARDWARE;Gente o leitor nao le nada! Bipo o tubo e ele apita erro, a fila so cresce!
-38;Bioquímico;INTERFACE E BUGS;O icone de assinatura digital nao aparece, laudo pronto e não consigo assinar pra liberar!
-39;Médico;OPERACIONAL;O sistema trocou os resultados dos leitos, paciente da maca 3 ta com laudo do 4, ABSURDO!! Corrige isso agora!
-40;Secretária;ACESSO E AUTENTICAÇÃO;A recepcionista nova foi logar e deu 403 Forbidden, precisamos dela operando o caixa já.
-41;Paciente;INTERFACE E BUGS;Toda vez q tento abrir meu exame aparece uns codigos na tela em vez do resultado, q palhacada é essa?
-42;Técnico TI;INFRAESTRUTURA E BANCO;Perda de pacotes na comunicacao com o banco de vcs, timeout ta estourando com 30s.
-43;Recepcionista;INTERFACE E BUGS;A caixa de texto pra colocar a observacao de jejum sumiu! como vou mandar a amostra sem isso?
-44;Bioquímico;INFRAESTRUTURA E BANCO;Deu pau geral, tela branca e erro 500. Tenho 200 amostras de covid esperando!!
-45;Médico;INTEGRAÇÃO E HARDWARE;A assinatura via token USB não ta funcionando, o sistema de vcs não reconhece o pendrive.
-46;Secretária;OPERACIONAL;Gerei o arquivo XML pro convenio e diz que a tag ta vazia, o prazo final do plano de saude é HOJE!
-47;Paciente;ACESSO E AUTENTICAÇÃO;nao lembro minha senha e ngm me atende no telefone pra resetar, to ficando desesperado!
-48;Técnico TI;INTERFACE E BUGS;PDF gerando com fonte quebra, os caracteres especiais estao saindo como quadradinhos.
-49;Recepcionista;ACESSO E AUTENTICAÇÃO;Pelo amor de deus o login ta dando expirado mesmo eu botando a senha certa. libera logo!
-50;Bioquímico;INTEGRAÇÃO E HARDWARE;Interface com o equipamento Roche parou, nao sobe os dados nem a pau, ja reiniciei tudo!
-51;Médico;INFRAESTRUTURA E BANCO;O sistema no pronto socorro ta rastejando, nao carrega o historico, paciente ta mal aqui e nao posso esperar!
-52;Secretária;INTERFACE E BUGS;O valor do exame de urina ta dando zero no fechamento financeiro, tem um bug no calculo de vcs.
-53;Paciente;OPERACIONAL;Fiz 3 exames mas so aparecem 2 no historico do site. Onde foi parar meu exame de tireoide???
-54;Técnico TI;ACESSO E AUTENTICAÇÃO;Api de integracao retornando 401 Unauthorized pra todos os endpoints, o que mudou na chave?
-55;Recepcionista;OPERACIONAL;Erro fatal ao tentar agendar retorno, exclui o cadastro da mulher do sistema, e agora???
-56;Bioquímico;INTERFACE E BUGS;Fica um popup na tela de 'processando' q nao fecha nunca mais, tenho q dar F5 toda hora.
-57;Médico;ACESSO E AUTENTICAÇÃO;Derrubaram minha sessao no meio de um laudo super complexo, nao salvou nada! que odio!
-58;Secretária;INFRAESTRUTURA E BANCO;Página 404 ao tentar abrir a aba de faturamento, vcs tiraram a ferramenta do ar do nada?
-59;Paciente;INTEGRAÇÃO E HARDWARE;Fui no totem da clinica pra imprimir e a maquina engoliu a folha e travou o sistema de vcs.
-60;Técnico TI;OPERACIONAL;Job de backup automatico do postgres falhou essa madrugada, precisamos do log de erros urgente.
-61;Recepcionista;INFRAESTRUTURA E BANCO;Ta demorando 1 minuto pra abrir cada tela. Socorro a recepçao ta um caos de tao cheio!
-62;Bioquímico;ACESSO E AUTENTICAÇÃO;O acesso dos estagiarios caiu todo, ninguem consegue bipar amostra na bancada 2.
-63;Médico;INTERFACE E BUGS;Laudo com quebra de pagina errada, a minha assinatura ta saindo numa pagina em branco no final.
-64;Secretária;INTEGRAÇÃO E HARDWARE;A catraca do refeitorio parou de ler o cracha via sistema labware, ngm consegue almocar!
-65;Paciente;ACESSO E AUTENTICAÇÃO;Toda vez q tento entrar da 'usuário nao encontrado'. to digitando meu CPF certo.
-66;Técnico TI;INTERFACE E BUGS;O css da pagina de relatorios quebrou, tudo fora de formato, arruma ai por favor.
-67;Recepcionista;INTERFACE E BUGS;O icone de imprimir sumiu! os pacientes tudo pedindo via impressa e nao tenho como dar!
-68;Bioquímico;OPERACIONAL;fui validar a calibracao e o sistema cancelou todos os resultados de glicose de hoje!! DESFAZ ISSO!
-69;Médico;INFRAESTRUTURA E BANCO;Nao salva o diagnostico! da erro de conexao com banco db_lab, to com urgencia pediatrica aqui!
-70;Secretária;ACESSO E AUTENTICAÇÃO;A menina do financeiro bloqueou a conta e o botao de reset de senha diz que a permissao ta negada.
-71;Paciente;OPERACIONAL;Onde vejo o historico de 2021? sumiu tudo do meu portal de vcs, e o medico precisa pra hoje!!
-72;Técnico TI;INTEGRAÇÃO E HARDWARE;Tamo com problema no middleware da impressora termica. as etiquetas saem cortadas.
-73;Recepcionista;OPERACIONAL;Tentei cancelar um exame que a paciente desistiu e ta dando 'erro de integridade referencial'. E agora??
-74;Bioquímico;INFRAESTRUTURA E BANCO;Gente sistema lentao e agora deu tela branca 502 bad gateway. Vcs estao em manutencao??
-75;Médico;INTERFACE E BUGS;O texto do laudo fica duplicando cada vez que eu aperto enter. impossivel de trabalhar assim!
-76;Secretária;INTEGRAÇÃO E HARDWARE;O scanner de guias TISS nao puxa a imagem pro sistema de vcs, e preciso faturar hoje.
-77;Paciente;ACESSO E AUTENTICAÇÃO;Clico em ENTRAR e ele volta pra mesma tela sem dizer nada, ja troquei de pc e continua.
-78;Técnico TI;OPERACIONAL;Preciso q vcs rodem um script pra desfazer as exclusoes da tabela de pacientes q o usuario fez sem querer.
-79;Recepcionista;ACESSO E AUTENTICAÇÃO;A senha antiga nao funciona e a nova fala que nao atende os requisitos. O que eu coloco?? a fila ta gigante!
-80;Bioquímico;INTERFACE E BUGS;Quando eu mudo o status pra 'em analise' a amostra desaparece da grid de visao! Bug critico!!
-81;Médico;INTEGRAÇÃO E HARDWARE;Microfone de ditado parou de funcionar na tela de vcs, nao vou digitar laudo de ressonancia na mao!
-82;Secretária;INFRAESTRUTURA E BANCO;A lentidao ta tao grande que o relatorio de repasse medico deu timeout e caiu a tela inteira.
-83;Paciente;INTERFACE E BUGS;Quando clico no botao verde pra baixar o pdf ele so carrega ate a metade e trava a aba do chrome.
-84;Técnico TI;ACESSO E AUTENTICAÇÃO;Certificado SSL do portal de laudos venceu. navegadores estao bloqueando o acesso dos pacientes!
-85;Recepcionista;INFRAESTRUTURA E BANCO;Alguem socorre a gnt, a base ta caindo de 5 em 5 minutos, o plantonista ja ta xingando a gente.
-86;Bioquímico;OPERACIONAL;Não tem como colocar os valores de referencia novos, da msg de erro de campo bloqueado.
-87;Médico;ACESSO E AUTENTICAÇÃO;To no meu celular tentando logar no labware e da tela branca depois q digito a senha.
-88;Secretária;INTERFACE E BUGS;O nome do convenio ta saindo por cima do valor total no pdf da nota, ficou inelegivel.
-89;Paciente;OPERACIONAL;Me disseram q o exame de sangue ficava pronto hj 14h, e ainda consta como pendente de coleta!! mas ja colhi!
-90;Técnico TI;INTEGRAÇÃO E HARDWARE;A interfaceamento HL7 com o equipamento Sysmex parou de processar ACK, as filas de msg tao enchendo.
-91;Recepcionista;INTEGRAÇÃO E HARDWARE;Acabou a luz e quando voltou o leitor de cartao q puxa do labware nao reconhece mais nada.
-92;Bioquímico;INFRAESTRUTURA E BANCO;O servidor principal ta off e o de contigencia tbm nao entra! to ligando e ngm de vcs atende!!
-93;Médico;INTERFACE E BUGS;A fonte do laudo alterou sozinha pra uma letra minuscula q nao da pra ler nem com lupa.
-94;Secretária;ACESSO E AUTENTICAÇÃO;Recuperacao de senha do portal corporativo bloqueada com erro 403. resolve ai pfv.
-95;Paciente;INFRAESTRUTURA E BANCO;O site pra ver o resultado deve ter caido, ta dando muito lento e no final da falha.
-96;Técnico TI;OPERACIONAL;Usuario fulano excluiu em lote os agendamentos, vcs conseguem voltar o backup das 10h da manha?
-97;Recepcionista;INTERFACE E BUGS;Gente na tela principal de triagem os nomes dos pacientes tão embaraçados, um por cima do outro!!
-98;Bioquímico;ACESSO E AUTENTICAÇÃO;Bloqueou meu perfil dizendo q é feriado bancario, sendo q hoje é segunda normal!! deixa eu logar!!
-99;Médico;OPERACIONAL;A validacao cruzada nao deixa eu assinar um laudo de um paciente de obito, arruma o status de validacao!!
-100;Secretária;INTEGRAÇÃO E HARDWARE;Impressora padrao nao quer setar pro formato de fatura de jeito nenhum, desconfigurou pelo labware.
+id;texto_entrada;prioridade
+1;"SOCORRO! Não entra a minha senha do laboratório e preciso pegar o resultado de um paciente agora! Tá dando tela vermelha e bloqueou tudo!";Alta
+2;"Pelo amor de deus o sistema caiu inteiro!! to com 500 amostras pra rodar e ta dando timeout no banco de dados!";Crítica
+3;"O botão de assinar laudo simplesmente sumiu da tela. Preciso liberar o paciente da UTI urgente, o que vcs fizeram no sistema???";Alta
+4;"Gente to tentando fechar o faturamento da unimed e ta dando erro de lote duplicado, me ajuda q o prazo acaba as 17h!!!";Alta
+5;"Moço não consigo ver minha biopsia. Diz q o token expirou mas eu acabei de pedir, pelo amor d Deus to desesperada.";Média
+6;"A impressora Zebra de etiquetas desconfigurou do nada, não imprime o codigo de barras. Recepcao travada!";Alta
+7;"Amostra do paciente Joao da silva sumiu do historico!! A filha dele ta aqui gritando na recepcao, onde foi parar???";Média
+8;"A maquina de hematologia parou de enviar os resultados pro LABWARE. Nao vou digitar 200 hemogramas na mao ne?!";Alta
+9;"Meu email de recuperacao de senha não chega de jeito nenhum, plantão lotado e eu sem acesso aos laudos!!";Média
+10;"A tela de relatorio financeiro ta cortada, nao consigo ver o total do mes e ja tentei em 3 computadores.";Baixa
+11;"Gerei o PDF do exame da minha mae e veio todo em branco!! como vou levar isso no medico hj a tarde??";Média
+12;"Servidor HTTP 500 direto, ninguem na filial inteira consegue logar, derrubaram o servidor foi??";Crítica
+13;"Gente ta uma lentidao que nao carrega nada, pagina 404 toda hora, a fila ta saindo pra fora da clinica!!";Alta
+14;"Erro na liberacao de laudos em lote. Travo tudo aqui, da falha de processamento e ninguem recebe os exames.";Alta
+15;"To tentando buscar o nome da paciente e fica carregando infinito. vcs precisam arrumar isso pra ontem!!";Média
+16;"Botao de login simplesmente nao responde. clico clico e nada acontece, socorro!";Média
+17;"Esqueci a senha e o sms não chega!! to na porta do consultorio preciso mostrar o exame pro medico!";Média
+18;"Leitor de codigo de barras parou de reconhecer os tubos de sangue, preciso de suporte na porta serial urgente.";Alta
+19;"A impressora de pulseira parou no meio do cadastro. nao tem como eu atender a emergencia assim!";Alta
+20;"Tela de conferencia da bancada ta travando, os valores dos reagentes somem qnd eu clico em salvar.";Média
+21;"Cancelei um pedido duplicado e agora apagou os dois!! restaura isso logo q a cirurgia é em 10 minutos.";Crítica
+22;"O sistema caiu e ta dando erro de banco PostgreSQL, preciso emitir as notas fiscais pelo amor de deus!!";Crítica
+23;"O site de vcs no meu celular corta a parte q diz se deu reagente ou nao, arruma isso que to passando mal de ansiedade!";Baixa
+24;"Erro 403 Forbidden pra todos os medicos na hora de acessar remotamente, verifica o firewall de vcs.";Alta
+25;"Fui emitir o comprovante e saiu um PDF zerado. O paciente ta achando q é golpe!";Média
+26;"meu token ta expirando em 5 segundos, nao da tempo nem de digitar a senha, arruma isso plmdds!";Média
+27;"Sistema fora do ar, ta dando erro 500 Server Error. O hospital inteiro ta parado aguardando vcs.";Crítica
+28;"A maquina de cartao nao ta comunicando com o sistema do caixa, travou o recebimento de tudo aqui.";Alta
+29;"Meu nome ta escrito errado no laudo, como vcs erram o nome do paciente??? precisa alterar urgente!!";Média
+30;"O menu lateral esquerdo sumiu pra todos os usuarios com perfil administrativo. erro de javascript no front de vcs.";Média
+31;"Pelo amor de deus alguem reinicia o servidor q ta muito lento, demoro 5 min pra cada cadastro!!";Alta
+32;"Tentei estornar uma rotina e trancou todo o lote de sorologia, ngm trabalha mais aqui hoje!";Alta
+33;"Diz q meu usuario ta bloqueado por excesso de tentativas mas eu so tentei uma vez, libera ai urgente.";Média
+34;"O filtro de datas do faturamento nao funciona, coloco o mes de agosto e ele puxa janeiro, SOCORRO.";Média
+35;"O portal do paciente ta caindo toda hora, preciso baixar meu preventivo pelo amor de deus.";Média
+36;"Log de auditoria parou de gravar os acessos de ontem, precisamos disso pra compliance, verifica o script.";Melhoria
+37;"Gente o leitor nao le nada! Bipo o tubo e ele apita erro, a fila so cresce!";Alta
+38;"O icone de assinatura digital nao aparece, laudo pronto e não consigo assinar pra liberar!";Média
+39;"O sistema trocou os resultados dos leitos, paciente da maca 3 ta com laudo do 4, ABSURDO!! Corrige isso agora!";Crítica
+40;"A recepcionista nova foi logar e deu 403 Forbidden, precisamos dela operando o caixa já.";Alta
+41;"Toda vez q tento abrir meu exame aparece uns codigos na tela em vez do resultado, q palhacada é essa?";Média
+42;"Perda de pacotes na comunicacao com o banco de vcs, timeout ta estourando com 30s.";Alta
+43;"A caixa de texto pra colocar a observacao de jejum sumiu! como vou mandar a amostra sem isso?";Média
+44;"Deu pau geral, tela branca e erro 500. Tenho 200 amostras de covid esperando!!";Crítica
+45;"A assinatura via token USB não ta funcionando, o sistema de vcs não reconhece o pendrive.";Alta
+46;"Gerei o arquivo XML pro convenio e diz que a tag ta vazia, o prazo final do plano de saude é HOJE!";Alta
+47;"nao lembro minha senha e ngm me atende no telefone pra resetar, to ficando desesperado!";Média
+48;"PDF gerando com fonte quebra, os caracteres especiais estao saindo como quadradinhos.";Baixa
+49;"Pelo amor de deus o login ta dando expirado mesmo eu botando a senha certa. libera logo!";Média
+50;"Interface com o equipamento Roche parou, nao sobe os dados nem a pau, ja reiniciei tudo!";Alta
+51;"O sistema no pronto socorro ta rastejando, nao carrega o historico, paciente ta mal aqui e nao posso esperar!";Crítica
+52;"O valor do exame de urina ta dando zero no fechamento financeiro, tem um bug no calculo de vcs.";Média
+53;"Fiz 3 exames mas so aparecem 2 no historico do site. Onde foi parar meu exame de tireoide???";Média
+54;"Api de integracao retornando 401 Unauthorized pra todos os endpoints, o que mudou na chave?";Alta
+55;"Erro fatal ao tentar agendar retorno, exclui o cadastro da mulher do sistema, e agora???";Média
+56;"Fica um popup na tela de 'processando' q nao fecha nunca mais, tenho q dar F5 toda hora.";Média
+57;"Derrubaram minha sessao no meio de um laudo super complexo, nao salvou nada! que odio!";Média
+58;"Página 404 ao tentar abrir a aba de faturamento, vcs tiraram a ferramenta do ar do nada?";Média
+59;"Fui no totem da clinica pra imprimir e a maquina engoliu a folha e travou o sistema de vcs.";Média
+60;"Job de backup automatico do postgres falhou essa madrugada, precisamos do log de erros urgente.";Melhoria
+61;"Ta demorando 1 minuto pra abrir cada tela. Socorro a recepçao ta um caos de tao cheio!";Alta
+62;"O acesso dos estagiarios caiu todo, ninguem consegue bipar amostra na bancada 2.";Alta
+63;"Laudo com quebra de pagina errada, a minha assinatura ta saindo numa pagina em branco no final.";Baixa
+64;"A catraca do refeitorio parou de ler o cracha via sistema labware, ngm consegue almocar!";Baixa
+65;"Toda vez q tento entrar da 'usuário nao encontrado'. to digitando meu CPF certo.";Média
+66;"O css da pagina de relatorios quebrou, tudo fora de formato, arruma ai por favor.";Baixa
+67;"O icone de imprimir sumiu! os pacientes tudo pedindo via impressa e nao tenho como dar!";Média
+68;"fui validar a calibracao e o sistema cancelou todos os resultados de glicose de hoje!! DESFAZ ISSO!";Média
+69;"Nao salva o diagnostico! da erro de conexao com banco db_lab, to com urgencia pediatrica aqui!";Crítica
+70;"A menina do financeiro bloqueou a conta e o botao de reset de senha diz que a permissao ta negada.";Média
+71;"Onde vejo o historico de 2021? sumiu tudo do meu portal de vcs, e o medico precisa pra hoje!!";Baixa
+72;"Tamo com problema no middleware da impressora termica. as etiquetas saem cortadas.";Alta
+73;"Tentei cancelar um exame que a paciente desistiu e ta dando 'erro de integridade referencial'. E agora??";Média
+74;"Gente sistema lentao e agora deu tela branca 502 bad gateway. Vcs estao em manutencao??";Crítica
+75;"O texto do laudo fica duplicando cada vez que eu aperto enter. impossivel de trabalhar assim!";Média
+76;"O scanner de guias TISS nao puxa a imagem pro sistema de vcs, e preciso faturar hoje.";Alta
+77;"Clico em ENTRAR e ele volta pra mesma tela sem dizer nada, ja troquei de pc e continua.";Média
+78;"Preciso q vcs rodem um script pra desfazer as exclusoes da tabela de pacientes q o usuario fez sem querer.";Média
+79;"A senha antiga nao funciona e a nova fala que nao atende os requisitos. O que eu coloco?? a fila ta gigante!";Média
+80;"Quando eu mudo o status pra 'em analise' a amostra desaparece da grid de visao! Bug critico!!";Alta
+81;"Microfone de ditado parou de funcionar na tela de vcs, nao vou digitar laudo de ressonancia na mao!";Média
+82;"A lentidao ta tao grande que o relatorio de repasse medico deu timeout e caiu a tela inteira.";Alta
+83;"Quando clico no botao verde pra baixar o pdf ele so carrega ate a metade e trava a aba do chrome.";Média
+84;"Certificado SSL do portal de laudos venceu. navegadores estao bloqueando o acesso dos pacientes!";Alta
+85;"Alguem socorre a gnt, a base ta caindo de 5 em 5 minutos, o plantonista ja ta xingando a gente.";Crítica
+86;"Não tem como colocar os valores de referencia novos, da msg de erro de campo bloqueado.";Média
+87;"To no meu celular tentando logar no labware e da tela branca depois q digito a senha.";Média
+88;"O nome do convenio ta saindo por cima do valor total no pdf da nota, ficou inelegivel.";Baixa
+89;"Me disseram q o exame de sangue ficava pronto hj 14h, e ainda consta como pendente de coleta!! mas ja colhi!";Média
+90;"A interfaceamento HL7 com o equipamento Sysmex parou de processar ACK, as filas de msg tao enchendo.";Alta
+91;"Acabou a luz e quando voltou o leitor de cartao q puxa do labware nao reconhece mais nada.";Média
+92;"O servidor principal ta off e o de contigencia tbm nao entra! to ligando e ngm de vcs atende!!";Crítica
+93;"A fonte do laudo alterou sozinha pra uma letra minuscula q nao da pra ler nem com lupa.";Baixa
+94;"Recuperacao de senha do portal corporativo bloqueada com erro 403. resolve ai pfv.";Média
+95;"O site pra ver o resultado deve ter caido, ta dando muito lento e no final da falha.";Média
+96;"Usuario fulano excluiu em lote os agendamentos, vcs conseguem voltar o backup das 10h da manha?";Média
+97;"Gente na tela principal de triagem os nomes dos pacientes tão embaraçados, um por cima do outro!!";Baixa
+98;"Bloqueou meu perfil dizendo q é feriado bancario, sendo q hoje é segunda normal!! deixa eu logar!!";Média
+99;"A validacao cruzada nao deixa eu assinar um laudo de um paciente de obito, arruma o status de validacao!!";Média
+100;"Impressora padrao nao quer setar pro formato de fatura de jeito nenhum, desconfigurou pelo labware.";Média
+101;"Minha senha expirou bem na hora que estou cadastrando uma gestante em trabalho de parto, destrava meu acesso agora!";Alta
+102;"A base de dados do LIMS desconectou do nada, perdi a leitura de 150 tubos de sorologia, socorro!!";Crítica
+103;"A janela de laudo congelou e não deixa eu salvar o diagnóstico da tomografia, o paciente tá aguardando transferência!";Crítica
+104;"Erro ao tentar exportar o lote TISS da Bradesco Saúde, diz que a versão do esquema tá inválida!";Alta
+105;"Não recebi o código de validação no WhatsApp para ver meu exame de sangue, já tentei 5 vezes!";Média
+106;"A interface RS232 do equipamento de gasometria parou de responder, porta COM1 dando erro de I/O.";Alta
+107;"Cadastrei o convênio errado sem querer e o sistema bloqueou a alteração depois da coleta, como eu arrumo isso?";Média
+108;"O autoanalisador Sysmex deu erro de timeout de comunicação HL7 com a rede do laboratório.";Alta
+109;"Estou no centro cirúrgico e o sistema diz que meu login exige autenticação em dois fatores que não configurei!";Crítica
+110;"A coluna de valor cobrado no relatório de caixa sumiu depois da atualização, preciso fechar o dia!";Média
+111;"A página de laudos abre tudo desformatado no Safari do iPhone, não consigo ler o resultado da glicose.";Baixa
+112;"Uso de CPU do servidor do PostgreSQL tá em 100% por causa de uma query travada no módulo de faturamento.";Crítica
+113;"Nenhum guichê da recepção consegue abrir a tela de agendamento, dá erro de rede intermitente!";Alta
+114;"Duplicou a entrada de uma bancada inteira de uroanálise, como cancelo a segunda sem apagar os laudos?";Média
+115;"O histórico de exames anteriores do paciente não expande quando clico no botão de detalhes!";Média
+116;"A senha do certificado digital da clínica caducou e ninguém consegue emitir nota fiscal eletrônica.";Alta
+117;"Digitei meu CPF e data de nascimento no site e diz que não existe nenhum cadastro, sendo que colhi ontem!";Média
+118;"Leitor de código de barras Datamatrix da triagem tá pulando caracteres ao enviar pela USB.";Média
+119;"A impressora de etiquetas Argox tá soltando papel em branco sem parar, travou o atendimento!";Alta
+120;"Na tela de microbiologia, quando seleciono o antibiograma o sistema fecha sozinho sem salvar.";Média
+121;"Tentei retificar um laudo assinado e o sistema deu erro de permissão insuficiente, ajusta isso urgente!";Média
+122;"Erro de conexão com a API da prefeitura para geração de NFSe, servidor fora do ar?";Alta
+123;"O PDF do laudo do meu filho veio com a segunda página cortada no meio da conclusão médica.";Média
+124;"Falha de autenticação LDAP no Active Directory bloqueou todos os logins de médicos externos.";Alta
+125;"O campo de busca por nome não aceita letras com acento, não estou achando os pacientes!";Baixa
+126;"Sessão expirando a cada 2 minutos de inatividade, impossível trabalhar na bancada de lâminas assim.";Média
+127;"Mensagem de erro de socket fechado ao tentar puxar a imagem de ressonância magnética do PACS.";Crítica
+128;"Pinpad da Stone perdeu a comunicação com a aplicação de caixa, não aceita nenhum cartão.";Alta
+129;"Recebi um SMS dizendo que meu resultado estava pronto, mas o portal mostra que está em análise.";Média
+130;"Erros de JS no console da dashboard do BI impedem a exibição dos gráficos em tempo real.";Média
+131;"Sistema demorando demais para gerar a guia de atendimento, os pacientes estão reclamando da fila na calçada!";Alta
+132;"Alguém deu baixa errada em um kit de Reagente de PCR e bloqueou a rotina de biologia molecular.";Média
+133;"Esqueci a senha da minha conta médica e a opção 'Esqueci minha senha' dá erro 500.";Média
+134;"O valor do desconto do convênio não está sendo recalculado ao alterar o exame da proposta.";Média
+135;"Tento entrar no site pelo Wi-Fi de casa e dá erro de conexão recusada no servidor de laudos.";Média
+136;"Falha na sincronização do banco secundário de read-replica gerando inconsistência nos relatórios.";Alta
+137;"O leitor biométrico da recepção não reconhece nenhum paciente cadastrado hoje.";Média
+138;"Os valores críticos em vermelho não estão destacando na tela de liberação de emergência!";Média
+139;"Anexei um arquivo de laudo externo no prontuário e o arquivo sumiu depois que fechei a aba.";Média
+140;"Usuário financeiro sem permissão para estornar guias canceladas, libera o perfil para o caixa.";Média
+141;"No aplicativo do celular a tela fica preta logo depois de digitar o código de acesso.";Média
+142;"Estouro de memória RAM no servidor Web do laboratório, caindo a cada 15 minutos.";Crítica
+143;"O botão de imprimir senha do painel da sala de espera desapareceu da interface.";Média
+144;"Perda repentina de acesso ao storage NAS onde ficam armazenados os arquivos de imagem dos exames.";Crítica
+145;"O leitor de cartão e-CPF via leitora SmartCard parou de autenticar no portal do médico.";Alta
+146;"Gerei o arquivo de faturamento do mês e 50 atendimentos ficaram sem o código TUSS obrigatório.";Alta
+147;"Troquei de número de telefone e não consigo atualizar o cadastro para receber o link do laudo.";Média
+148;"Interface web do LIMS apresentando memory leak no Chrome ao manter a aba aberta durante o plantão.";Média
+149;"Caixa de diálogo pedindo código MFA não aparece, o login simplesmente trava no carregando.";Média
+150;"Equipamento Vitros de bioquímica não está puxando as ordens de trabalho da lista de atendimento.";Alta
+151;"Lentidão extrema na consulta de prontuário eletrônico na UTI móvel via conexão 4G.";Média
+152;"O totalizador de Glosa no módulo de recursos está mostrando valor negativo, acerte o cálculo.";Média
+153;"Consta no sistema que faltou colher uma amostra de urina, mas o coletor foi entregue na recepção ontem!";Média
+154;"Endpoint /auth/login retornando HTTP 503 Service Unavailable durante picos de acesso.";Alta
+155;"Sem querer marquei dois exames de pacientes diferentes no mesmo horário e no mesmo médico.";Média
+156;"O gráfico de controle de qualidade Levey-Jennings está gerando os pontos fora do eixo X.";Média
+157;"Mensagem de que minha conta está suspensa por inatividade, sendo que usei ontem no plantão.";Média
+158;"Página de fechamento do caixa dá erro de timeout toda vez que seleciono mais de 100 itens.";Alta
+159;"O aplicativo de coleta domiciliar da enfermeira travou e não grava a foto da etiqueta do tubo.";Média
+160;"Cronjob de envio de laudos por e-mail parou de disparar no servidor de filas.";Alta
+161;"Toda vez que tento salvar a ficha do paciente dá erro 'Deadlock detected' na base de dados.";Crítica
+162;"Permissão negada ao tentar liberar resultado de toxicologia na aba de laudos especiais.";Média
+163;"O modelo de laudo padrão sumiu do menu suspenso, preciso do modelo de ECG urgentemente!";Média
+164;"Impressora de recibo não aceita o comando de corte de papel automático vindo do sistema.";Média
+165;"Tento redefinir a senha mas diz que o e-mail não confere com o cadastro.";Média
+166;"Quebra do layout de tabelas ao visualizar telas em monitores ultrawide ou resolução 4K.";Baixa
+167;"O botão de cancelar atendimento está desabilitado mesmo para perfil de supervisora.";Média
+168;"O sistema aceitou dois resultados conflitantes para a mesma amostra na bancada de imuno.";Média
+169;"Falha de comunicação com o servidor de banco de dados na hora de salvar prescrição urgente.";Crítica
+170;"O perfil de caixa foi revogado automaticamente após virada do mês, reativem as permissões.";Média
+171;"Foi cadastrado o médico solicitante errado no meu laudo e a receita foi recusada na farmácia.";Média
+172;"Erro de handshake TLS na integração via API com o laboratório de apoio de referência.";Alta
+173;"A tela de pré-agendamento online não está puxando as vagas liberadas na agenda dos médicos.";Média
+174;"Nenhum equipamento da automação consegue conectar ao servidor de middleware do laboratório.";Crítica
+175;"A opção de comparar laudos históricos sumiu após a atualização do sistema no hospital.";Média
+176;"Leitor de código de barras USB parou de ler caracteres em etiquetas térmicas pequenas.";Média
+177;"A mensagem com o token de acesso para ver os resultados não chega no meu celular de jeito nenhum.";Média
+178;"Solicitação para rodar script de reindexação do banco de dados para melhorar desempenho das buscas.";Melhoria
+179;"Login bloqueado com mensagem de IP não autorizado para acesso ao módulo de recepção.";Média
+180;"A barra de rolagem horizontal no painel de liberação sumiu, não vejo o nome do paciente.";Baixa
+181;"O ditador de voz para laudos radiológicos perde a conexão com o sistema a cada 3 minutos.";Média
+182;"Relatório de glosa médica dando erro 504 Gateway Timeout devido ao volume de dados.";Alta
+183;"O botão 'Baixar PDF' não faz o download do arquivo, apenas recarrega a página em branco.";Média
+184;"Erro de configuração no servidor OAuth2 fazendo com que chamadas de API deem erro 403.";Alta
+185;"Lentidão geral no sistema da clínica tornando inviável o atendimento dos pacientes da manhã.";Alta
+186;"O sistema não deixa editar a observação da amostra sem antes apagar todo o resultado liberado.";Média
+187;"Tentativa de login informando que o perfil não possui licença ativa no módulo de UTI.";Média
+188;"Texto do cabeçalho da nota fiscal está sobrepondo o logotipo da clínica no documento gerado.";Baixa
+189;"A data de nascimento impressa no protocolo de retirada de exames está incorreta.";Média
+190;"A interface do equipamento de coagulação está descartando dados recebidos com erro de paridade.";Alta
+191;"O leitor de documentos de identidade parou de digitalizar a imagem para a ficha do paciente.";Média
+192;"Queda brusca de desempenho do servidor LIMS durante o processamento das amostras do meio-dia.";Crítica
+193;"O campo de laudo em texto puro está apagando a formatação em negrito e itálico ao salvar.";Média
+194;"O sistema está deslogando a secretária do caixa toda vez que ela muda de aba para emitir recibo.";Média
+195;"O portal de laudos do paciente está apresentando mensagem de manutenção temporária há mais de 4 horas.";Alta
+196;"Necessidade de limpeza dos logs antigos da tabela de auditoria que estão enchendo o disco.";Melhoria
+197;"A listagem da fila de prioridade na recepção deixou de atualizar automaticamente em tempo real.";Média
+198;"Minha chave de assinatura digital expirou no sistema e não consigo assinar nenhum laudo.";Média
+199;"A opção de solicitar exame complementar diretamente do laudo anterior foi removida do fluxo.";Média
+200;"Impressora de cheques/recibos não responde aos comandos do sistema financeiro da clínica.";Média
+201;"Solicitação de inclusão de atalho de teclado para assinar laudos em lote com apenas um clique.";Melhoria
+202;"Sugestão de implementação de filtro por faixa etária e sexo na tela de resultados de patologia.";Melhoria
+203;"Otimização do tempo de carregamento da dashboard inicial do laboratório através de cache de consultas.";Melhoria
+204;"Inclusão do recurso de envio automático do laudo em PDF via WhatsApp assim que for assinado.";Melhoria
+205;"Solicito a criação de um botão para exportar a listagem de faturamento direto para planilha Excel.";Melhoria
+206;"Implementação de confirmação visual (check verde) ao lado dos exames que já possuem laudo liberado.";Melhoria
+207;"Criação de um histórico de alterações e auditoria visível diretamente na ficha do paciente.";Melhoria
+208;"Sugiro adicionar o modo escuro (Dark Mode) no módulo de laudos para médicos que trabalham à noite.";Melhoria
+209;"Desenvolvimento de alerta sonoro customizável na recepção quando um paciente de prioridade/urgência chegar.";Melhoria
+210;"Inclusão de funcionalidade de auto-preenchimento de CID no cadastro de requisição de exames.";Melhoria
+211;"Otimização da rotina de impressão para permitir a impressão automática de etiquetas sem caixa de confirmação.";Melhoria
+212;"Sugestão de campo de busca global no topo do sistema para localizar pacientes por CPF, RG ou Protocolo.";Melhoria
+213;"Solicitação de integração do módulo financeiro com sistema de emissão de PIX estático via QR Code no balcão.";Melhoria
+214;"Implementação de gráficos comparativos de histórico de exames de sangue ao longo dos anos para o portal do paciente.";Melhoria
+215;"Inclusão de modelo configurável de texto padrão para laudos de ultrassonografia e tomografia.";Melhoria
+216;"Adicionar opção de ordenação personalizada na grid de bancada do bioquímico por horário de coleta.";Melhoria
+217;"Sugestão de notificação por push no app do médico quando um laudo crítico de UTI for disponibilizado.";Melhoria
+218;"Criação de funcionalidade para anexar documentos escaneados (pedidos médicos) diretamente no cadastro do paciente.";Melhoria
+219;"Otimização do banco de dados para arquivamento automático de exames de mais de 5 anos atrás em storage frio.";Melhoria
+220;"Solicitação de inclusão do logotipo do laboratório com alta resolução no relatório em PDF exportado.";Melhoria
