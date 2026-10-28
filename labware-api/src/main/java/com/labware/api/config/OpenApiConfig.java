@@ -34,7 +34,7 @@ public class OpenApiConfig {
         components.addResponses("ServicoIndisponivel", erro("IA/STT indisponível ou resposta inválida."));
         components.addResponses("ErroInterno", erro("Erro interno ao processar a solicitação."));
         return new OpenAPI().openapi("3.0.3")
-                .info(new Info().title("LABWARE LIMS & Helpdesk API").version("1.0.0")
+                .info(new Info().title("LABWARE LIMS    ").version("1.0.0")
                         .description("Documentação dos endpoints REST para integração do Portal do Cliente, "
                                 + "Painel do Suporte, Triagem por IA e Transcrição Local de Áudio (STT)."))
                 .components(components)
