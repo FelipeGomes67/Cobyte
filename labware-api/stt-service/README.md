@@ -19,3 +19,4 @@ py -3.12 -m venv .venv
 ```
 
 O serviço iniciará em **http://127.0.0.1:8000**.
+Swagger               **http://127.0.0.1:8000/docs#/**
