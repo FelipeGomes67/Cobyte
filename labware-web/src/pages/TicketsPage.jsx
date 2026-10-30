@@ -5,6 +5,27 @@ import { createTicket } from '../services/ticketService';
 import { sendNotification } from '../utils/notifications';
 import { useAutenticacao } from '../hooks/useAuth';
 import { useTickets } from '../hooks/useTickets';
+import SelectStatus from '../components/layout/SelectStatus';
+
+const codigosStatus = {
+  Aberto: 'ABERTO',
+  'Em análise': 'EM_ANALISE',
+  'Em andamento': 'EM_ATENDIMENTO',
+  'Em atendimento': 'EM_ATENDIMENTO',
+  'Aguardando cliente': 'AGUARDANDO_CLIENTE',
+  Resolvido: 'RESOLVIDO',
+  Fechado: 'FECHADO',
+};
+
+function SelecaoStatusChamado({ statusAtual, valor, aoAlterar }) {
+  const [novoStatus, definirNovoStatus] = useState('');
+
+  return <SelectStatus
+    statusAtual={codigosStatus[statusAtual] || statusAtual}
+    valor={valor ?? novoStatus}
+    aoAlterar={aoAlterar ?? definirNovoStatus}
+  />;
+}
 
 function TicketDetailsModal({ ticket, onClose }) {
   useEffect(() => {
@@ -43,7 +64,7 @@ function TicketDetailsModal({ ticket, onClose }) {
             <main className="history-modal-main">
               <div className="history-header-row">
                 <span className="history-ticket-code">{ticket.id}</span>
-                <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span>
+                <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status === 'Em andamento' ? 'Em atendimento' : ticket.status}</span>
               </div>
 
               <h3 className="history-title">{ticket.title}</h3>
@@ -121,11 +142,10 @@ function TicketDetailsModal({ ticket, onClose }) {
 
               <div className="history-info-card">
                 <h4>Atendimento</h4>
-                <p>Chamado em atendimento. Atualize o status, atribua o responsável e mantenha o cliente informado.</p>
+                <p>Status atual: {ticket.status === 'Em andamento' ? 'Em atendimento' : ticket.status}. Atualize o status, atribua o responsável e mantenha o cliente informado.</p>
                 <div className="history-form-stack">
                   <div className="status-fixed-row">
-                    <span className="status-fixed-label">Status</span>
-                    <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span>
+                    <SelecaoStatusChamado key={`${ticket.id}-${ticket.status}`} statusAtual={ticket.status}/>
                   </div>
                 </div>
               </div>
@@ -163,7 +183,7 @@ function TicketDetailsModal({ ticket, onClose }) {
           <div className="detail-item">
             <span className="detail-label"><Check size={12} />Status</span>
             <strong>
-              <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span>
+              <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status === 'Em andamento' ? 'Em atendimento' : ticket.status}</span>
             </strong>
           </div>
           <div className="detail-item">
@@ -190,6 +210,19 @@ function TicketDetailsModal({ ticket, onClose }) {
 }
 
 function TicketDetailsPage({ ticket, onBack }) {
+  const [novoStatus, definirNovoStatus] = useState('');
+  const nomesStatus = {
+    ABERTO: 'Aberto',
+    EM_ANALISE: 'Em análise',
+    EM_ATENDIMENTO: 'Em atendimento',
+    AGUARDANDO_CLIENTE: 'Aguardando cliente',
+    RESOLVIDO: 'Resolvido',
+    FECHADO: 'Fechado',
+  };
+  const codigoAtual = codigosStatus[ticket?.status] || ticket?.status;
+  const statusExibido = nomesStatus[novoStatus || codigoAtual] || ticket?.status;
+  const classeStatus = statusExibido === 'Resolvido' || statusExibido === 'Fechado'
+    ? 'done' : statusExibido === 'Aberto' ? 'open' : 'progress';
   if (!ticket) {
     return <div className="panel empty-state">Nenhum chamado para exibir.</div>;
   }
@@ -202,29 +235,13 @@ function TicketDetailsPage({ ticket, onBack }) {
 
   return (
     <div className="history-page-shell">
+      <button type="button" className="ticket-back-link" onClick={onBack}><ArrowLeft size={14} aria-hidden="true"/>Voltar para chamados</button>
       <div className="history-shell panel">
-        <header className="history-header">
-          <div className="history-header-row-top">
-            <div className="history-brand-wrap">
-              <div className="history-logo">
-                <Ticket size={18} />
-              </div>
-              <div>
-                <div className="eyebrow">Central de Suporte</div>
-                <h2>Detalhes</h2>
-              </div>
-            </div>
-            <button type="button" className="secondary-button history-back-button" onClick={onBack}>
-              <ArrowLeft size={14} /> Voltar
-            </button>
-          </div>
-        </header>
-
         <div className="history-layout">
           <main className="history-main-content">
             <div className="history-header-row">
               <span className="history-ticket-code">{ticket.id}</span>
-              <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span>
+              <span className={`status-tag ${classeStatus}`}><i aria-hidden="true" />{statusExibido}</span>
             </div>
 
             <h3 className="history-title">{ticket.title}</h3>
@@ -285,7 +302,7 @@ function TicketDetailsPage({ ticket, onBack }) {
             <div className="history-summary-card">
               <div className="summary-header">
                 <span className="summary-label">LABWARE</span>
-                <span className="summary-progress">Acompanhamento</span>
+                <span className={`status-tag ${classeStatus}`}><i aria-hidden="true"/>{statusExibido}</span>
               </div>
 
               <div className="summary-grid">
@@ -302,11 +319,10 @@ function TicketDetailsPage({ ticket, onBack }) {
 
             <div className="history-info-card">
               <h4>Atendimento</h4>
-              <p>Chamado em atendimento. Atualize o status, atribua o responsável e mantenha o cliente informado.</p>
+              <p>Status atual: {statusExibido}. Atualize o status, atribua o responsável e mantenha o cliente informado.</p>
               <div className="history-form-stack">
                 <div className="status-fixed-row">
-                  <span className="status-fixed-label">Status</span>
-                  <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span>
+                  <SelecaoStatusChamado key={`${ticket.id}-${ticket.status}`} statusAtual={ticket.status} valor={novoStatus} aoAlterar={definirNovoStatus}/>
                 </div>
               </div>
             </div>
@@ -368,7 +384,7 @@ function TicketTable({ tickets, query, onSearch, onSelect }) {
                 <td className="ticket-title">{ticket.title}</td>
                 <td>{ticket.category}</td>
                 <td><span className={`priority-tag ${ticket.priority.toLowerCase()}`}>{ticket.priority}</span></td>
-                <td><span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span></td>
+                <td><span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status === 'Em andamento' ? 'Em atendimento' : ticket.status}</span></td>
                 <td className="ticket-date">{new Date(ticket.createdAt).toLocaleDateString('pt-BR')}</td>
               </tr>
             ))}
@@ -428,7 +444,7 @@ function HistoryTable({ tickets, query, onSearch, onSelect }) {
                 <td className="ticket-title">{ticket.title}</td>
                 <td>{ticket.category}</td>
                 <td><span className={`priority-tag ${ticket.priority.toLowerCase()}`}>{ticket.priority}</span></td>
-                <td><span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span></td>
+                <td><span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status === 'Em andamento' ? 'Em atendimento' : ticket.status}</span></td>
                 <td className="ticket-date">{ticket.resolvedAt ? new Date(ticket.resolvedAt).toLocaleDateString('pt-BR') : new Date(ticket.createdAt).toLocaleDateString('pt-BR')}</td>
               </tr>
             ))}
@@ -537,7 +553,7 @@ export function TicketsPage({ mode }) {
       {loading && <div className="panel loading-state" role="status">Carregando chamados…</div>}
       {dataError && <div className="data-warning" role="status">{dataError}</div>}
       {!loading && mode !== 'history' && !isDetailRoute && <TicketTable tickets={tickets} query={query} onSearch={setQuery} onSelect={handleTicketSelect} />}
-      {!loading && isDetailRoute && <TicketDetailsPage ticket={resolvedTicket} onBack={goBackToList} />}
+      {!loading && isDetailRoute && <TicketDetailsPage key={`${resolvedTicket?.id}-${resolvedTicket?.status}`} ticket={resolvedTicket} onBack={goBackToList} />}
       {!loading && mode === 'history' && !isHistoryDetailRoute && <HistoryTable tickets={tickets} query={query} onSearch={setQuery} onSelect={handleHistorySelect} />}
       {!loading && mode === 'history' && isHistoryDetailRoute && <HistoryTicketView ticket={resolvedTicket} onBack={goBackToList} />}
 
@@ -604,29 +620,13 @@ function HistoryTicketView({ ticket, onBack }) {
 
   return (
     <div className="history-page-shell">
+      <button type="button" className="ticket-back-link" onClick={onBack}><ArrowLeft size={14} aria-hidden="true"/>Voltar para chamados</button>
       <div className="history-shell panel">
-        <header className="history-header">
-          <div className="history-header-row-top">
-            <div className="history-brand-wrap">
-              <div className="history-logo">
-                <Ticket size={18} />
-              </div>
-              <div>
-                <div className="eyebrow">Central de Suporte</div>
-                <h2>Detalhes</h2>
-              </div>
-            </div>
-            <button type="button" className="secondary-button history-back-button" onClick={onBack}>
-              <ArrowLeft size={14} /> Voltar
-            </button>
-          </div>
-        </header>
-
         <div className="history-layout">
           <main className="history-main-content">
             <div className="history-header-row">
               <span className="history-ticket-code">{ticket.id}</span>
-              <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span>
+              <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status === 'Em andamento' ? 'Em atendimento' : ticket.status}</span>
             </div>
 
             <h3 className="history-title">{ticket.title}</h3>

@@ -349,6 +349,9 @@ td { height: 47px; padding: 0 12px; border-top: 1px solid #edf0f4; color: #59657
 .history-info-card h4 { margin: 0 0 6px; font-size: 10px; color: #27334a; }
 .history-info-card p { margin: 0; color: #60708a; font-size: 8px; line-height: 1.6; }
 .history-info-card .history-form-stack { display: grid; gap: 10px; margin-top: 10px; }
+.ticket-back-link { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; padding: 0; border: 0; background: transparent; color: #3978ec; font-size: 11px; cursor: pointer; }
+.ticket-back-link:hover { text-decoration: underline; }
+.ticket-back-link:focus-visible { outline: 2px solid #397cf0; outline-offset: 4px; border-radius: 2px; }
 .compact-form-label { gap: 4px; font-size: 8px; }
 .compact-form-label span { color: #64748b; }
 .compact-form-label select {
@@ -363,6 +366,16 @@ td { height: 47px; padding: 0 12px; border-top: 1px solid #edf0f4; color: #59657
 .history-info-card .secondary-button.wide-button { margin-top: 2px; }
 .status-fixed-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid #e5eaf0; border-radius: 8px; background: #f8fafc; }
 .status-fixed-label { color: #64748b; font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+
+.select-status { display: grid; gap: 7px; width: 100%; min-width: 0; }
+.select-status-label { color: #64748b; font-size: 9px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.select-status-control { position: relative; display: flex; min-width: 0; }
+.select-status-input { appearance: none; width: 100%; min-width: 0; min-height: 38px; padding: 9px 34px 9px 12px; border: 1px solid #dce4ef; border-radius: 7px; background: #fff; color: #27384f; font-size: 11px; line-height: 1.4; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease; }
+.select-status-input:hover:not(:disabled) { border-color: #94b7ef; }
+.select-status-input:focus-visible { outline: 2px solid #397cf0; outline-offset: 2px; border-color: #397cf0; box-shadow: 0 0 0 3px #397cf014; }
+.select-status-input:disabled { color: #8995a6; background: #f0f3f7; cursor: not-allowed; }
+.select-status-arrow { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); color: #607895; pointer-events: none; }
+.select-status-input:disabled + .select-status-arrow { color: #a3adbb; }
 
 @keyframes pop-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
