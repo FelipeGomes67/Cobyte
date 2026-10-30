@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, Clock3, Headset, Search, Ticket } from 'lucide-react';
 import { createTicket } from '../services/ticketService';
 import { sendNotification } from '../utils/notifications';
-import { useAuth } from '../hooks/useAuth';
+import { useAutenticacao } from '../hooks/useAuth';
 import { useTickets } from '../hooks/useTickets';
 
 function Heading({ title, description, action }) {
@@ -23,7 +23,7 @@ function TicketTable({ tickets, query, onSearch }) {
 export function TicketsPage({ mode }) {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { usuario: user } = useAutenticacao();
   const { tickets: allTickets, loading, error: dataError } = useTickets();
   const userTickets = user.role === 'support' ? allTickets : allTickets.filter(ticket => ticket.ownerId === user.id);
   let tickets = userTickets;
@@ -59,7 +59,7 @@ export function TicketsPage({ mode }) {
 
 export function NewTicketPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { usuario: user } = useAutenticacao();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Acesso');
   const [priority, setPriority] = useState('Média');
