@@ -1,4 +1,20 @@
+springdoc:
+  api-docs:
+    path: /api-docs
+    version: OPENAPI_3_0
+  swagger-ui:
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+  override-with-generic-response: false
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+  packages-to-scan: com.labware.api.controller
+
 labware:
+  email:
+    remetente: ${MAIL_FROM:noreply@labware.local}
   stt:
     url: ${STT_SERVICE_URL:http://localhost:8000}
     timeout-segundos: ${STT_TIMEOUT_SEGUNDOS:120}
@@ -6,12 +22,25 @@ labware:
     diretorio: ${UPLOADS_DIRETORIO:./uploads/chamados}
     tamanho-maximo-bytes: 10485760
   jwt:
-    secret: ${JWT_SECRET}
+    secret: ${JWT_SECRET:labware-segredo-jwt-com-ao-menos-32-bytes-padrao}
     expiracao-minutos: 120
   cors:
     origens: http://localhost:5173
 
 spring:
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS_ENABLE:false}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+  flyway:
+    enabled: false
   servlet:
     multipart:
       max-file-size: 10MB
@@ -19,9 +48,9 @@ spring:
   application:
     name: labware-api
   datasource:
-    url: jdbc:postgresql://localhost:5432/labware
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/labware}
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:nova_senha_simples}
   jpa:
     hibernate:
       ddl-auto: update
@@ -39,4 +68,4 @@ spring:
       chat:
         options:
           model: llama3.2
-          temperature: 0.3
+          temperature: 0.2

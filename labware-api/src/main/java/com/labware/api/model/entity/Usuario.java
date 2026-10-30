@@ -33,6 +33,10 @@ public class Usuario {
     @Column(length = 80)
     private String cargo;
 
+
+    @Column(name = "foto_perfil", length = 500)
+    private String fotoPerfil;
+
     @Column(length = 20)
     private String telefone;
 
