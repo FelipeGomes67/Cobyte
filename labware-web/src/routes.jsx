@@ -31,9 +31,12 @@ export default function RoutesApp() {
     <Route path="/cadastro" element={<PublicOnly/>}/>
     <Route element={<RequireAuth/>}>
       <Route path="/dashboard" element={<TicketsPage mode="dashboard"/>}/>
+      <Route path="/dashboard/:ticketId" element={<TicketsPage mode="dashboard"/>}/>
       <Route path="/chamados" element={<TicketsPage mode="all"/>}/>
+      <Route path="/chamados/:ticketId" element={<TicketsPage mode="all"/>}/>
       <Route path="/chamados/novo" element={<NewTicketPage/>}/>
       <Route path="/meus-chamados" element={<TicketsPage mode="mine"/>}/>
+      <Route path="/meus-chamados/:ticketId" element={<TicketsPage mode="mine"/>}/>
       <Route path="/historico" element={<TicketsPage mode="history"/>}/>
       <Route path="/historico/:ticketId" element={<TicketsPage mode="history"/>}/>
       <Route path="/relatorios" element={<RequireSupport><ReportsPage/></RequireSupport>}/>

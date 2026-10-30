@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CalendarDays, Check, Clock3, FileText, Headset, Search, Tag, Ticket, User, X } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Check, Clock3, FileText, Headset, Search, Tag, Ticket, User, X } from 'lucide-react';
 import { createTicket } from '../services/ticketService';
 import { sendNotification } from '../utils/notifications';
 import { useAuth } from '../hooks/useAuth';
@@ -28,11 +28,11 @@ function TicketDetailsModal({ ticket, onClose }) {
     return (
       <div className="dialog-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
         <section className="ticket-detail-dialog history-detail-modal" role="dialog" aria-modal="true" aria-labelledby="ticket-detail-title">
-          <button className="dialog-close" onClick={onClose} aria-label="Fechar detalhes do chamado"><X size={17}/></button>
+          <button className="dialog-close" onClick={onClose} aria-label="Fechar detalhes do chamado"><X size={17} /></button>
 
           <header className="history-modal-header">
             <div className="history-modal-brand">
-              <div className="history-modal-logo"><Ticket size={18}/></div>
+              <div className="history-modal-logo"><Ticket size={18} /></div>
               <div>
                 <div className="eyebrow">Central de Suporte</div>
                 <h2>Detalhes</h2>
@@ -44,7 +44,7 @@ function TicketDetailsModal({ ticket, onClose }) {
             <main className="history-modal-main">
               <div className="history-header-row">
                 <span className="history-ticket-code">{ticket.id}</span>
-                <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true"/>{ticket.status}</span>
+                <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span>
               </div>
 
               <h3 className="history-title">{ticket.title}</h3>
@@ -99,37 +99,36 @@ function TicketDetailsModal({ ticket, onClose }) {
                   <span className="evidence-size">1.4 MB</span>
                 </div>
               </div>
-
-              <div className="history-rating">
-                <h4>Avaliação do cliente</h4>
-                <div className="stars" aria-label="Avaliação 4 de 5">★★★★★</div>
-                <p>Boa</p>
-                <small>{resolvedAt}</small>
-              </div>
             </main>
 
             <aside className="history-modal-sidebar">
               <div className="history-summary-card">
                 <div className="summary-header">
                   <span className="summary-label">LABWARE</span>
-                  <span className="summary-progress">Cumprido</span>
+                  <span className="summary-progress">Acompanhamento</span>
                 </div>
 
                 <div className="summary-grid">
+                  <div className="summary-item"><span>SLA</span><strong>12h</strong></div>
+                  <div className="summary-item"><span>Tempo restante</span><strong>11:58:23</strong></div>
                   <div className="summary-item"><span>Prioridade</span><strong>{ticket.priority}</strong></div>
                   <div className="summary-item"><span>Responsável</span><strong>Lucas Ribeiro</strong></div>
                   <div className="summary-item"><span>Categoria</span><strong>{ticket.category}</strong></div>
                   <div className="summary-item"><span>Origem</span><strong>AUDIO VOZ</strong></div>
-                  <div className="summary-item"><span>Última resposta</span><strong>{resolvedAt}</strong></div>
-                  <div className="summary-item"><span>Data de criação</span><strong>{new Date(ticket.createdAt).toLocaleDateString('pt-BR')}</strong></div>
+                  <div className="summary-item"><span>Prazo</span><strong>{new Date(ticket.createdAt).toLocaleDateString('pt-BR')}</strong></div>
+                  <div className="summary-item"><span>Última resposta</span><strong>Suporte</strong></div>
                 </div>
-
-                <button className="secondary-button wide-button">Reabrir chamado</button>
               </div>
 
               <div className="history-info-card">
                 <h4>Atendimento</h4>
-                <p>Chamado encerrado. Reabra o atendimento para registrar nova atualização.</p>
+                <p>Chamado em atendimento. Atualize o status, atribua o responsável e mantenha o cliente informado.</p>
+                <div className="history-form-stack">
+                  <div className="status-fixed-row">
+                    <span className="status-fixed-label">Status</span>
+                    <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span>
+                  </div>
+                </div>
               </div>
             </aside>
           </div>
@@ -187,6 +186,134 @@ function TicketDetailsModal({ ticket, onClose }) {
           <button className="secondary-button" onClick={onClose}>Fechar</button>
         </div>
       </section>
+    </div>
+  );
+}
+
+function TicketDetailsPage({ ticket, onBack }) {
+  if (!ticket) {
+    return <div className="panel empty-state">Nenhum chamado para exibir.</div>;
+  }
+
+  if (ticket.status === 'Resolvido') {
+    return <HistoryTicketView ticket={ticket} onBack={onBack} />;
+  }
+
+  const description = ticket.description || `Solicitação da categoria ${ticket.category} referente a "${ticket.title}". O cliente reportou o problema e acompanha a resolução do atendimento via suporte.`;
+
+  return (
+    <div className="history-page-shell">
+      <div className="history-shell panel">
+        <header className="history-header">
+          <div className="history-header-row-top">
+            <div className="history-brand-wrap">
+              <div className="history-logo">
+                <Ticket size={18} />
+              </div>
+              <div>
+                <div className="eyebrow">Central de Suporte</div>
+                <h2>Detalhes</h2>
+              </div>
+            </div>
+            <button type="button" className="secondary-button history-back-button" onClick={onBack}>
+              <ArrowLeft size={14} /> Voltar
+            </button>
+          </div>
+        </header>
+
+        <div className="history-layout">
+          <main className="history-main-content">
+            <div className="history-header-row">
+              <span className="history-ticket-code">{ticket.id}</span>
+              <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span>
+            </div>
+
+            <h3 className="history-title">{ticket.title}</h3>
+            <p className="history-description">{description}</p>
+
+            <div className="history-people-row">
+              <div className="history-person-box">
+                <span className="history-person-label">Responsável</span>
+                <strong>{ticket.ownerId || 'Ronaldo'}</strong>
+              </div>
+              <div className="history-person-box">
+                <span className="history-person-label">Suporte</span>
+                <strong>Ruffles</strong>
+              </div>
+            </div>
+
+            <div className="history-conversation">
+              <div className="history-conversation-header">
+                <span className="conversation-pill">Conversa</span>
+                <span className="conversation-date">{new Date(ticket.createdAt).toLocaleDateString('pt-BR')}</span>
+              </div>
+
+              <div className="history-message-row">
+                <div className="avatar small-avatar">R</div>
+                <div className="history-message-card customer-message">
+                  <strong>{ticket.ownerId || 'Ronaldo'}</strong>
+                  <p>{description}</p>
+                </div>
+              </div>
+
+              <div className="history-message-row right-align">
+                <div className="history-message-card support-message">
+                  <strong>Ruffles</strong>
+                  <p>Vamos analisar o chamado e manter o cliente informado sobre o andamento da correção.</p>
+                </div>
+                <div className="avatar small-avatar support-avatar">S</div>
+              </div>
+
+              <div className="history-message-composer">
+                <input type="text" placeholder="Nova mensagem" />
+                <button className="primary-button">Enviar mensagem</button>
+              </div>
+            </div>
+
+            <div className="history-evidences">
+              <div className="evidence-header">
+                <h4>Evidências</h4>
+                <button type="button" className="secondary-button small-button">Baixar</button>
+              </div>
+              <div className="evidence-item">
+                <span className="evidence-text">Captura de tela 2026-10-27 10:14:25.png</span>
+                <span className="evidence-size">1.4 MB</span>
+              </div>
+            </div>
+          </main>
+
+          <aside className="history-sidebar">
+            <div className="history-summary-card">
+              <div className="summary-header">
+                <span className="summary-label">LABWARE</span>
+                <span className="summary-progress">Acompanhamento</span>
+              </div>
+
+              <div className="summary-grid">
+                <div className="summary-item"><span>SLA</span><strong>12h</strong></div>
+                <div className="summary-item"><span>Tempo restante</span><strong>11:58:23</strong></div>
+                <div className="summary-item"><span>Prioridade</span><strong>{ticket.priority}</strong></div>
+                <div className="summary-item"><span>Responsável</span><strong>{ticket.ownerId || 'Lucas Ribeiro'}</strong></div>
+                <div className="summary-item"><span>Categoria</span><strong>{ticket.category}</strong></div>
+                <div className="summary-item"><span>Origem</span><strong>AUDIO VOZ</strong></div>
+                <div className="summary-item"><span>Prazo</span><strong>{new Date(ticket.createdAt).toLocaleDateString('pt-BR')}</strong></div>
+                <div className="summary-item"><span>Última resposta</span><strong>Suporte</strong></div>
+              </div>
+            </div>
+
+            <div className="history-info-card">
+              <h4>Atendimento</h4>
+              <p>Chamado em atendimento. Atualize o status, atribua o responsável e mantenha o cliente informado.</p>
+              <div className="history-form-stack">
+                <div className="status-fixed-row">
+                  <span className="status-fixed-label">Status</span>
+                  <span className={`status-tag ${ticket.status === 'Resolvido' ? 'done' : ticket.status === 'Aberto' ? 'open' : 'progress'}`}><i aria-hidden="true" />{ticket.status}</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
     </div>
   );
 }
@@ -343,10 +470,51 @@ export function TicketsPage({ mode }) {
   const ticketIdFromUrl = location.pathname.split('/').filter(Boolean).pop();
   const selectedFromUrl = tickets.find(ticket => ticket.id === ticketIdFromUrl) ?? null;
   const isHistoryDetailRoute = mode === 'history' && Boolean(ticketIdFromUrl) && ticketIdFromUrl !== 'historico';
-  const resolvedTicket = mode === 'history' ? (selectedFromUrl ?? null) : selectedTicket;
+  const isDetailRoute = ['dashboard', 'all', 'mine'].includes(mode) && Boolean(ticketIdFromUrl) && !['dashboard', 'chamados', 'meus-chamados'].includes(ticketIdFromUrl);
+  const resolvedTicket = mode === 'history' ? (selectedFromUrl ?? null) : selectedFromUrl ?? selectedTicket;
 
   function handleHistorySelect(ticket) {
     navigate(`/historico/${ticket.id}`);
+  }
+
+  function handleTicketSelect(ticket) {
+    setSelectedTicket(null);
+
+    if (mode === 'mine') {
+      navigate(`/meus-chamados/${ticket.id}`);
+      return;
+    }
+
+    if (mode === 'all') {
+      navigate(`/chamados/${ticket.id}`);
+      return;
+    }
+
+    if (mode === 'dashboard') {
+      navigate(`/dashboard/${ticket.id}`);
+      return;
+    }
+  }
+
+  function goBackToList() {
+    setSelectedTicket(null);
+
+    if (mode === 'mine') {
+      navigate('/meus-chamados');
+      return;
+    }
+
+    if (mode === 'all') {
+      navigate('/chamados');
+      return;
+    }
+
+    if (mode === 'dashboard') {
+      navigate('/dashboard');
+      return;
+    }
+
+    navigate('/dashboard');
   }
 
   const openCount = userTickets.filter(ticket => ticket.status !== 'Resolvido').length;
@@ -355,11 +523,13 @@ export function TicketsPage({ mode }) {
 
   return (
     <>
-      <Heading title={title} description="Acompanhe solicitações e atualizações da equipe de suporte." action={createButton} />
+      {!isDetailRoute && !isHistoryDetailRoute && (
+        <Heading title={title} description="Acompanhe solicitações e atualizações da equipe de suporte." action={createButton} />
+      )}
 
-      {mode === 'dashboard' && (
+      {mode === 'dashboard' && !isDetailRoute && !isHistoryDetailRoute && (
         <div className="metric-grid dashboard-metrics">
-          <article className="metric-card"><span className="metric-icon"><Ticket size={18} /></span><strong>{openCount}</strong><span>Chamados em aberto</span></article>
+          <article className="metric-card"><span className="metric-icon"><Ticket size={18} /></span><strong>{openCount}</strong><span>Chamados in aberto</span></article>
           <article className="metric-card metric-blue"><span className="metric-icon"><Clock3 size={18} /></span><strong>{resolvedCount}</strong><span>Chamados resolvidos</span></article>
           <article className="metric-card metric-green"><span className="metric-icon"><Check size={18} /></span><strong>{userTickets.length}</strong><span>Total de chamados</span></article>
         </div>
@@ -367,13 +537,16 @@ export function TicketsPage({ mode }) {
 
       {loading && <div className="panel loading-state" role="status">Carregando chamados…</div>}
       {dataError && <div className="data-warning" role="status">{dataError}</div>}
-      {!loading && mode !== 'history' && <TicketTable tickets={tickets} query={query} onSearch={setQuery} onSelect={setSelectedTicket} />}
+      {!loading && mode !== 'history' && !isDetailRoute && <TicketTable tickets={tickets} query={query} onSearch={setQuery} onSelect={handleTicketSelect} />}
+      {!loading && isDetailRoute && <TicketDetailsPage ticket={resolvedTicket} onBack={goBackToList} />}
       {!loading && mode === 'history' && !isHistoryDetailRoute && <HistoryTable tickets={tickets} query={query} onSearch={setQuery} onSelect={handleHistorySelect} />}
-      {!loading && mode === 'history' && isHistoryDetailRoute && <HistoryTicketView ticket={resolvedTicket} />}
+      {!loading && mode === 'history' && isHistoryDetailRoute && <HistoryTicketView ticket={resolvedTicket} onBack={goBackToList} />}
 
-      {mode !== 'history' && <TicketDetailsModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />}
+      {mode !== 'history' && !isDetailRoute && <TicketDetailsModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />}
 
-      <div className="list-note"><Headset size={17} /> Precisa de ajuda? <a href="mailto:suporte@labware.com.br">Fale com o suporte LabWare</a></div>
+      {!isDetailRoute && !isHistoryDetailRoute && (
+        <div className="list-note"><Headset size={17} /> Precisa de ajuda? <a href="mailto:suporte@labware.com.br">Fale com o suporte LabWare</a></div>
+      )}
     </>
   );
 }
@@ -422,7 +595,7 @@ export function NewTicketPage() {
   );
 }
 
-function HistoryTicketView({ ticket }) {
+function HistoryTicketView({ ticket, onBack }) {
   if (!ticket) {
     return <div className="panel empty-state">Nenhum chamado resolvido para exibir.</div>;
   }
@@ -434,14 +607,19 @@ function HistoryTicketView({ ticket }) {
     <div className="history-page-shell">
       <div className="history-shell panel">
         <header className="history-header">
-          <div className="history-brand-wrap">
-            <div className="history-logo">
-              <Ticket size={18} />
+          <div className="history-header-row-top">
+            <div className="history-brand-wrap">
+              <div className="history-logo">
+                <Ticket size={18} />
+              </div>
+              <div>
+                <div className="eyebrow">Central de Suporte</div>
+                <h2>Detalhes</h2>
+              </div>
             </div>
-            <div>
-              <div className="eyebrow">Central de Suporte</div>
-              <h2>Detalhes</h2>
-            </div>
+            <button type="button" className="secondary-button history-back-button" onClick={onBack}>
+              <ArrowLeft size={14} /> Voltar
+            </button>
           </div>
         </header>
 
@@ -529,7 +707,7 @@ function HistoryTicketView({ ticket }) {
                 <div className="summary-item"><span>Data de criação</span><strong>{new Date(ticket.createdAt).toLocaleDateString('pt-BR')}</strong></div>
               </div>
 
-              <button className="secondary-button wide-button">Reabrir chamado</button>
+              <button className="secondary-button wide-button" onClick={onBack}>Reabrir chamado</button>
             </div>
 
             <div className="history-info-card">
