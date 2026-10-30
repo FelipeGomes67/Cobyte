@@ -33,10 +33,14 @@ export default function RotasAplicacao() {
     <Route path="/cadastro" element={<SomentePublico/>}/>
     <Route element={<ExigirAutenticacao/>}>
       <Route path="/dashboard" element={<TicketsPage mode="dashboard"/>}/>
+      <Route path="/dashboard/:ticketId" element={<TicketsPage mode="dashboard"/>}/>
       <Route path="/chamados" element={<TicketsPage mode="all"/>}/>
+      <Route path="/chamados/:ticketId" element={<TicketsPage mode="all"/>}/>
       <Route path="/chamados/novo" element={<NewTicketPage/>}/>
       <Route path="/meus-chamados" element={<TicketsPage mode="mine"/>}/>
+      <Route path="/meus-chamados/:ticketId" element={<TicketsPage mode="mine"/>}/>
       <Route path="/historico" element={<TicketsPage mode="history"/>}/>
+      <Route path="/historico/:ticketId" element={<TicketsPage mode="history"/>}/>
       <Route path="/relatorios" element={<ExigirSuporte><ReportsPage/></ExigirSuporte>}/>
       <Route path="/configuracoes" element={<SettingsPage/>}/>
       <Route path="/perfil" element={<ProfilePage/>}/>
