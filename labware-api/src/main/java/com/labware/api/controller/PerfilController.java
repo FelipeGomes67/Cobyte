@@ -27,20 +27,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController @RequiredArgsConstructor
 public class PerfilController {
     private final PerfilService service;
-    @Operation(summary = "Vincular empresa ao usuário", description = "SUPORTE ou ADMIN. Vincula usuário CLIENTE a uma empresa existente e ativa. O texto empresa do perfil não altera este vínculo.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
-            @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
-            @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
-            @ApiResponse(responseCode = "403", ref = "#/components/responses/AcessoNegado"),
-            @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
-            @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
-    })
-    @PutMapping("/api/usuarios/{id}/empresa")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
-    public PerfilResponse vincularEmpresa(@PathVariable Long id,@Valid @RequestBody VincularEmpresaRequest r) {
-        return service.vincularEmpresa(id,r);
-    }
     @GetMapping("/api/usuarios")
     @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
     @Operation(summary = "Listar clientes", description = "SUPORTE/ADMIN. Lista paginada com nome, e-mail e vínculo cadastral. Busca por nome ou e-mail.")
@@ -60,8 +46,8 @@ public class PerfilController {
     }
 
     @GetMapping("/api/empresas")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
-    @Operation(summary = "Listar empresas ativas", description = "SUPORTE/ADMIN. Empresas cadastradas disponíveis para vínculo de clientes.")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('CLIENTE','SUPORTE','ADMIN')")
+    @Operation(summary = "Listar empresas ativas", description = "CLIENTE, SUPORTE ou ADMIN. Retorna id, nome e CNPJ das empresas ativas, ordenadas por nome, para seleção no perfil.")
     public java.util.List<com.labware.api.dto.response.EmpresaResumoResponse> empresas() {
         return service.listarEmpresas();
     }
@@ -76,7 +62,7 @@ public class PerfilController {
     })
     @PostMapping("/api/auth/cadastrar") @ResponseStatus(HttpStatus.CREATED)
     public PerfilResponse cadastrar(@Valid @RequestBody CadastroRequest r) { return service.cadastrar(r); }
-    @Operation(summary = "Consultar perfil", description = "Retorna nome, e-mail, cargo, empresa informativa, empresaId cadastral e perfil do usuário logado.")
+    @Operation(summary = "Consultar perfil", description = "Retorna nome, e-mail, cargo, telefone, empresa vinculada, empresaId cadastral e perfil do usuário logado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
@@ -85,11 +71,12 @@ public class PerfilController {
     })
     @GetMapping("/api/usuarios/me")
     public PerfilResponse me(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) { return service.buscar(UsuarioLogado.id(jwt)); }
-    @Operation(summary = "Atualizar perfil", description = "Atualiza nome, e-mail, cargo e texto informativo da empresa. Não permite alterar perfil ou empresaId.")
+    @Operation(summary = "Atualizar perfil", description = "Atualiza os dados do próprio usuário em uma única requisição. Somente CLIENTE pode informar empresaId para escolher ou trocar uma empresa existente e ativa. EmpresaId ausente ou nulo preserva o vínculo atual. Não permite alterar o perfil de acesso.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
             @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
+            @ApiResponse(responseCode = "403", ref = "#/components/responses/AcessoNegado"),
             @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
             @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflito"),
             @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")

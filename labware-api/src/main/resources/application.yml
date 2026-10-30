@@ -48,7 +48,7 @@ spring:
   application:
     name: labware-api
   datasource:
-    url: jdbc:postgresql://localhost:5432/labware
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/labware}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:nova_senha_simples}
   jpa:

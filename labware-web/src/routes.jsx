@@ -5,37 +5,43 @@ import ProfilePage from './pages/ProfilePage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
 import { NewTicketPage, TicketsPage } from './pages/TicketsPage';
-import { useAuth } from './hooks/useAuth';
+import { useAutenticacao } from './hooks/useAuth';
 
-function RequireAuth() {
-  const { user } = useAuth();
-  const location = useLocation();
-  return user ? <AppLayout/> : <Navigate to="/login" replace state={{ from: location.pathname }}/>;
+function ExigirAutenticacao() {
+  const { usuario, inicializando } = useAutenticacao();
+  const localizacao = useLocation();
+  if (inicializando) return <main className="auth-screen" role="status">Carregando sessão…</main>;
+  return usuario ? <AppLayout/> : <Navigate to="/login" replace state={{ from: localizacao.pathname }}/>;
 }
 
-function RequireSupport({ children }) {
-  const { user } = useAuth();
-  return user?.role === 'support' ? children : <Navigate to="/dashboard" replace/>;
+function ExigirSuporte({ children }) {
+  const { usuario } = useAutenticacao();
+  return usuario?.role === 'support' ? children : <Navigate to="/dashboard" replace/>;
 }
 
-function PublicOnly() {
-  const { user } = useAuth();
-  const location = useLocation();
-  if (user) return <Navigate to="/dashboard" replace/>;
-  return <LoginPage mode={location.pathname === '/cadastro' ? 'register' : 'login'}/>;
+function SomentePublico() {
+  const { usuario, inicializando } = useAutenticacao();
+  const localizacao = useLocation();
+  if (inicializando) return <main className="auth-screen" role="status">Carregando sessão…</main>;
+  if (usuario) return <Navigate to="/dashboard" replace/>;
+  return <LoginPage key={localizacao.pathname} modo={localizacao.pathname === '/cadastro' ? 'cadastro' : 'login'}/>;
 }
 
-export default function RoutesApp() {
+export default function RotasAplicacao() {
   return <BrowserRouter><Routes>
-    <Route path="/login" element={<PublicOnly/>}/>
-    <Route path="/cadastro" element={<PublicOnly/>}/>
-    <Route element={<RequireAuth/>}>
+    <Route path="/login" element={<SomentePublico/>}/>
+    <Route path="/cadastro" element={<SomentePublico/>}/>
+    <Route element={<ExigirAutenticacao/>}>
       <Route path="/dashboard" element={<TicketsPage mode="dashboard"/>}/>
+      <Route path="/dashboard/:ticketId" element={<TicketsPage mode="dashboard"/>}/>
       <Route path="/chamados" element={<TicketsPage mode="all"/>}/>
+      <Route path="/chamados/:ticketId" element={<TicketsPage mode="all"/>}/>
       <Route path="/chamados/novo" element={<NewTicketPage/>}/>
       <Route path="/meus-chamados" element={<TicketsPage mode="mine"/>}/>
+      <Route path="/meus-chamados/:ticketId" element={<TicketsPage mode="mine"/>}/>
       <Route path="/historico" element={<TicketsPage mode="history"/>}/>
-      <Route path="/relatorios" element={<RequireSupport><ReportsPage/></RequireSupport>}/>
+      <Route path="/historico/:ticketId" element={<TicketsPage mode="history"/>}/>
+      <Route path="/relatorios" element={<ExigirSuporte><ReportsPage/></ExigirSuporte>}/>
       <Route path="/configuracoes" element={<SettingsPage/>}/>
       <Route path="/perfil" element={<ProfilePage/>}/>
       <Route path="*" element={<Navigate to="/dashboard" replace/>}/>

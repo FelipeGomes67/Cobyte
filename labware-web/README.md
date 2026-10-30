@@ -1,35 +1,40 @@
 # LabWare · Central de Suporte
 
-Aplicação de demonstração em React, JSX e Vite. Não há backend conectado neste repositório; autenticação, cadastros, chamados e preferências usam armazenamento local do navegador e não devem ser tratados como proteção de produção.
+Frontend React e Vite com login e cadastro integrados à API Spring Boot em `../labware-api`.
 
 ## Executar
+
+Inicie a API na porta 8080 e execute neste diretório:
 
 ```sh
 npm install
 npm run dev
 ```
 
-Validação local:
+A URL da API é configurada pela constante `URL_API` em `src/services/service.js`, inicialmente `http://localhost:8080/api`. Esse arquivo centraliza a instância Axios, o envio do token e o tratamento de erros. Libere a origem do frontend no CORS da API (por padrão, `http://localhost:5173`).
+
+## Autenticação
+
+- Login: `POST /api/auth/login`, com `email` e `senha`.
+- Cadastro: `POST /api/auth/cadastrar`, com `nome`, `email` e `senha`; depois faz login automaticamente para obter o JWT.
+- O token é salvo no localStorage na chave `labware-token`. Senhas não são armazenadas no navegador.
+- Ao recarregar, `GET /api/auth/me` valida o token e recupera o usuário antes de liberar as rotas.
+- O cliente HTTP em `src/services/service.js` envia `Authorization: Bearer <token>` nas requisições autenticadas e encerra a sessão ao receber 401.
+- Sair remove o token. Contas devem existir na API; credenciais fictícias não autenticam mais.
+- Perfis SUPORTE e ADMIN usam as telas de suporte; CLIENTE usa as telas de cliente. A autorização efetiva continua sendo responsabilidade da API.
+
+## Validação
+
+Cadastro validado manualmente pelo responsável pelo projeto com a API real em 30/10/2026.
 
 ```sh
 npm run lint
 npm run build
+node --test tests/authService.test.js
 ```
 
-## Contas fictícias
+## Escopo atual
 
-- Suporte: `demo@labware.com.br` / `Labware123!`
-- Cliente: `cliente@labware.com.br` / `Cliente123!`
+Temporariamente, a tela de login oferece o botão sem estilo próprio “Acessar sem login”. Ele abre as telas com um visitante em memória, incluindo relatórios, sem gerar token ou autenticar na API. Ao recarregar, o acesso de visitante termina; o login normal continua disponível ao sair.
 
-O suporte pode consultar todos os chamados e relatórios. O perfil cliente vê apenas chamados próprios. Cadastros criam perfis cliente.
-
-As credenciais de demonstração são verificadas com PBKDF2 no navegador; o armazenamento local contém hashes, não senhas em texto puro. Isso não é autenticação segura: o código, os usuários de demonstração e as permissões rodam no cliente e podem ser inspecionados ou alterados. Em produção, autenticação e autorização devem ser validadas pelo backend.
-
-## Dados e limitações
-
-- `src/data/demoTickets.js` e `src/data/demoUsers.js` contêm dados fictícios claramente identificados.
-- Chamados criados são salvos em `localStorage` e não sincronizam entre navegadores ou usuários.
-- Preferências de notificações persistem localmente. Permissão do navegador depende do dispositivo, navegador e origem segura.
-- A troca de senha não altera credenciais: a tela informa que depende de um endpoint de autenticação que ainda não existe.
-- Métricas de primeira resposta exigem `firstResponseMinutes`. SLA compara `resolvedAt` com `slaDueAt`. Registros sem esses campos não entram nesses indicadores. Resolução mensal exige `resolvedAt`.
-- Os gráficos podem usar os chamados fictícios de `src/data/demoTickets.js` enquanto não existe uma API conectada; essa origem fica documentada aqui e no arquivo de dados, sem aviso sobreposto à tela.
+A integração com a API cobre autenticação e cadastro. Chamados, relatórios e preferências ainda usam dados de demonstração e armazenamento local. O vínculo de um cliente com uma empresa deve ser feito no backend antes de abrir chamados reais. A troca de senha ainda não está integrada.

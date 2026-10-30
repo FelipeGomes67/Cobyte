@@ -4,7 +4,7 @@ import { Bell, Menu, X } from 'lucide-react';
 import Sidebar from './Sidebar';
 import ProfileMenu from './ProfileMenu';
 import ConfirmDialog from '../common/ConfirmDialog';
-import { useAuth } from '../../hooks/useAuth';
+import { useAutenticacao } from '../../hooks/useAuth';
 
 const pageNames = {
   '/dashboard': 'Dashboard',
@@ -18,14 +18,16 @@ const pageNames = {
 };
 
 export default function AppLayout() {
-  const { user, logout } = useAuth();
+  const { usuario: user, desconectar: logout } = useAutenticacao();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const notificationRef = useRef(null);
-  const title = pageNames[location.pathname] || 'Central de Suporte';
+  const ehDetalheChamado = /^\/(dashboard|chamados|meus-chamados|historico)\/[^/]+\/?$/.test(location.pathname)
+    && location.pathname.replace(/\/$/, '') !== '/chamados/novo';
+  const title = ehDetalheChamado ? 'Detalhes' : pageNames[location.pathname] || 'Central de Suporte';
   function leaveAccount() {
     logout();
     setLogoutOpen(false);
