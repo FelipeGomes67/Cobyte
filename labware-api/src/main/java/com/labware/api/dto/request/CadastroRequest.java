@@ -2,7 +2,7 @@ package com.labware.api.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
-@Schema(description = "Cadastro público. O perfil será CLIENTE; vínculo com empresa deve ser feito posteriormente por ADMIN.")
+@Schema(description = "Cadastro público. O perfil será CLIENTE; após o login, o próprio cliente pode escolher uma empresa ativa em PUT /api/usuarios/me, junto com os demais dados do perfil.")
 public record CadastroRequest(
         @Schema(description = "Nome do usuário.", example = "Maria Silva")
         @NotBlank @Size(max=255) String nome,
