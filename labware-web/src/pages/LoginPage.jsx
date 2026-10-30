@@ -41,7 +41,7 @@ export default function LoginPage({ mode = 'login' }) {
 
     return <main className="auth-screen">
     <form className={`auth-card ${isRegistration ? 'auth-card-register' : 'auth-card-login'}`} onSubmit={isRegistration ? submitRegister : submitLogin}>
-      <img className="auth-logo" src="/Propriedade%201=Padr%C3%A3o.png" alt="COBYTE"/>
+      <img className="auth-logo" src="/cobyte-logo-white.png" alt="COBYTE"/>
       <h1>{isRegistration ? 'Cadastro' : 'Login'}</h1>
       <div className="auth-fields">
         {isRegistration && <div className="auth-field"><input name="name" type="text" placeholder="Nome" aria-label="Nome" required minLength="2" autoComplete="name" aria-describedby={registerError ? 'register-error' : undefined}/></div>}

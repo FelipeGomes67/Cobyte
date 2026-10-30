@@ -89,25 +89,54 @@ export function getReportSummary(tickets) {
   };
 }
 
-export function getMonthlyTrend(tickets, now = new Date()) {
+export function getReportYears(now = new Date()) {
+  return [now.getFullYear(), now.getFullYear() - 1];
+}
+
+export function getMonthlyTrend(tickets, now = new Date(), selectedYear = null) {
+  const year = selectedYear ?? now.getFullYear();
+  const firstMonth = new Date(year, 0, 1);
+  const firstMonthKey = firstMonth.getFullYear() * 12 + firstMonth.getMonth();
+  const lastAvailableMonth = year === now.getFullYear() ? now.getMonth() : 11;
+  const lastMonthKey = firstMonthKey + lastAvailableMonth;
+  const counts = new Map();
+
+  tickets.forEach(ticket => {
+    const createdAt = ticket.createdAt ? new Date(ticket.createdAt) : null;
+    if (createdAt && Number.isFinite(createdAt.getTime())) {
+      const monthKey = createdAt.getFullYear() * 12 + createdAt.getMonth();
+      if (monthKey >= firstMonthKey && monthKey <= lastMonthKey) {
+        const monthCounts = counts.get(monthKey) || { opened: 0, resolved: 0, pending: 0 };
+        monthCounts.opened += 1;
+        if (ticket.status !== 'Resolvido') monthCounts.pending += 1;
+        counts.set(monthKey, monthCounts);
+      }
+    }
+
+    const resolvedAt = ticket.status === 'Resolvido' && ticket.resolvedAt
+      ? new Date(ticket.resolvedAt)
+      : null;
+    if (resolvedAt && Number.isFinite(resolvedAt.getTime())) {
+      const monthKey = resolvedAt.getFullYear() * 12 + resolvedAt.getMonth();
+      if (monthKey >= firstMonthKey && monthKey <= lastMonthKey) {
+        const monthCounts = counts.get(monthKey) || { opened: 0, resolved: 0, pending: 0 };
+        monthCounts.resolved += 1;
+        counts.set(monthKey, monthCounts);
+      }
+    }
+  });
+
   return Array.from({ length: 12 }, (_, index) => {
-    const date = new Date(now.getFullYear(), now.getMonth() - 11 + index, 1);
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const opened = tickets.filter(ticket => {
-      const createdAt = new Date(ticket.createdAt);
-      return createdAt.getFullYear() === year && createdAt.getMonth() === month;
-    }).length;
-    const resolved = tickets.filter(ticket => {
-      if (ticket.status !== 'Resolvido' || !ticket.resolvedAt) return false;
-      const resolvedAt = new Date(ticket.resolvedAt);
-      return resolvedAt.getFullYear() === year && resolvedAt.getMonth() === month;
-    }).length;
+    const date = new Date(year, index, 1);
+    const available = index <= lastAvailableMonth;
+    const monthCounts = available
+      ? counts.get(firstMonthKey + index) || { opened: 0, resolved: 0, pending: 0 }
+      : { opened: null, resolved: null, pending: null };
     return {
       month: date.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''),
       year,
-      opened,
-      resolved,
+      available,
+      ...monthCounts,
     };
   });
 }
