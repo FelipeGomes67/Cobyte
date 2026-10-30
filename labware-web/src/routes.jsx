@@ -35,6 +35,7 @@ export default function RoutesApp() {
       <Route path="/chamados/novo" element={<NewTicketPage/>}/>
       <Route path="/meus-chamados" element={<TicketsPage mode="mine"/>}/>
       <Route path="/historico" element={<TicketsPage mode="history"/>}/>
+      <Route path="/historico/:ticketId" element={<TicketsPage mode="history"/>}/>
       <Route path="/relatorios" element={<RequireSupport><ReportsPage/></RequireSupport>}/>
       <Route path="/configuracoes" element={<SettingsPage/>}/>
       <Route path="/perfil" element={<ProfilePage/>}/>
