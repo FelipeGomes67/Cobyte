@@ -53,10 +53,11 @@ export default function AppLayout() {
     navigate('/configuracoes?aba=notificacoes');
   }
 
-  return <div className="app-shell">
+  const isReportsPage = location.pathname === '/relatorios';
+  return <div className={`app-shell ${isReportsPage ? 'app-shell--reports' : ''}`}>
     <Sidebar open={menuOpen} onNavigate={() => setMenuOpen(false)} user={user} onRequestLogout={() => setLogoutOpen(true)}/>
     {menuOpen && <button className="mobile-scrim" onClick={() => setMenuOpen(false)} aria-label="Fechar menu"/>}
-    <main className="main-area">
+    <main className={`main-area ${isReportsPage ? 'main-area--reports' : ''}`}>
       <header className="topbar">
         <button className="icon-button mobile-menu" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}>{menuOpen ? <X/> : <Menu/>}</button>
         <div className="breadcrumb"><span>Central de Suporte</span><strong>{title}</strong></div>
@@ -74,7 +75,7 @@ export default function AppLayout() {
           <ProfileMenu user={user} variant="header" onRequestLogout={() => setLogoutOpen(true)}/>
         </div>
       </header>
-      <div className="content-area"><Outlet/></div>
+      <div className={`content-area ${isReportsPage ? 'content-area--reports' : ''}`}><Outlet/></div>
     </main>
     <ConfirmDialog open={logoutOpen} title="Sair da conta?" message="Sua sessão será encerrada neste dispositivo." confirmLabel="Sair da conta" onCancel={() => setLogoutOpen(false)} onConfirm={leaveAccount}/>
   </div>;
