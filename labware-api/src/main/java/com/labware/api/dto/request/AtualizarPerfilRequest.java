@@ -15,8 +15,8 @@ public record AtualizarPerfilRequest(
         @Size(max=255) String empresa,
         @Schema(description = "Telefone de contato; opcional.", example = "(11) 98765-4321")
         @Size(max=20) String telefone,
-        @Schema(description = "Foto ou avatar do perfil; opcional.")
-        @Size(max=500) String fotoPerfil
+        @Schema(description = "Não enviar. Use os endpoints de upload ou remoção de foto.", deprecated = true)
+        @Null(message = "Use os endpoints de upload ou remoção para alterar a foto") String fotoPerfil
 ) {
     public AtualizarPerfilRequest(String nome, String email, String cargo, String empresa) {
         this(nome, email, cargo, empresa, null, null);

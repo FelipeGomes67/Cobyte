@@ -54,4 +54,21 @@ class PerfilServiceTest {
         verifyNoInteractions(empresas);
     }
 
+    @Test void atualizarPerfilNaoPermiteSobrescreverFotoViaJson() {
+        usuario.setFotoPerfil("/api/usuarios/1/foto?v=original");
+        var request = new AtualizarPerfilRequest("Cliente", "cliente@teste.com", null, null,
+                null, "https://exemplo.com/avatar.png");
+        var erro = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L, request));
+        assertEquals(400, erro.getStatusCode().value());
+        assertEquals("/api/usuarios/1/foto?v=original", usuario.getFotoPerfil());
+        verify(usuarios, never()).saveAndFlush(any());
+    }
+
+    @Test void validarJsonRejeitaCampoDeFoto() {
+        try (var factory = Validation.buildDefaultValidatorFactory()) {
+            var request = new AtualizarPerfilRequest("Cliente", "cliente@teste.com", null, null, null, "");
+            assertTrue(factory.getValidator().validate(request).stream()
+                    .anyMatch(v -> v.getPropertyPath().toString().equals("fotoPerfil")));
+        }
+    }
 }

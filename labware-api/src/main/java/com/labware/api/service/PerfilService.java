@@ -101,6 +101,10 @@ public class PerfilService {
     }
 
     public PerfilResponse atualizar(Long id, AtualizarPerfilRequest r) {
+        if (r.fotoPerfil() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Use os endpoints de upload ou remoção para alterar a foto");
+        }
         var u = usuario(id);
         String email = normalizar(r.email());
         verificarEmail(email, id);
@@ -111,9 +115,6 @@ public class PerfilService {
 
         // Atualização condicional por perfil
         if (u.getPerfil() == PerfilUsuario.CLIENTE) {
-            if (r.fotoPerfil() != null) {
-                u.setFotoPerfil(r.fotoPerfil().trim());
-            }
             if (r.empresa() != null) {
                 u.setEmpresaInformada(r.empresa().trim());
             }
