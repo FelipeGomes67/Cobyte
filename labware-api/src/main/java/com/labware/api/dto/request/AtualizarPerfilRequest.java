@@ -11,7 +11,7 @@ public record AtualizarPerfilRequest(
         @NotBlank @Email @Size(max=255) String email,
         @Schema(description = "Cargo informado no perfil; opcional.", example = "Analista")
         @Size(max=80) String cargo,
-        @Schema(description = "Nome da empresa cadastrada ou de vínculo; opcional.", example = "Laboratório Exemplo")
+        @Schema(description = "Nome livre da empresa informado pelo cliente; não altera o vínculo cadastral.", example = "Laboratório Exemplo")
         @Size(max=255) String empresa,
         @Schema(description = "Telefone de contato; opcional.", example = "(11) 98765-4321")
         @Size(max=30) String telefone,

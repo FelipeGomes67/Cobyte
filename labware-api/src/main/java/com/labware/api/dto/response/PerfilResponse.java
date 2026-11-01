@@ -14,7 +14,7 @@ public record PerfilResponse(
         String email,
         @Schema(description = "Cargo informado no perfil; opcional.", example = "Analista")
         String cargo,
-        @Schema(description = "Nome da empresa cadastrada vinculada ao usuário.", example = "Laboratório Exemplo")
+        @Schema(description = "Nome informado pelo cliente ou, quando ausente, nome da empresa vinculada.", example = "Laboratório Exemplo")
         String empresa,
         @Schema(description = "Identificador do vínculo cadastral com a empresa.", example = "1")
         Long empresaId,
@@ -35,7 +35,8 @@ public record PerfilResponse(
                 u.getNome(),
                 u.getEmail(),
                 u.getCargo(),
-                u.getEmpresa() != null ? u.getEmpresa().getNome() : null,
+                u.getEmpresaInformada() != null ? u.getEmpresaInformada()
+                        : u.getEmpresa() != null ? u.getEmpresa().getNome() : null,
                 u.getEmpresa() != null ? u.getEmpresa().getId() : null,
                 u.getPerfil(),
                 u.getTelefone(),

@@ -15,12 +15,13 @@ public record UsuarioResumoResponse(
         String email,
         @Schema(description = "Perfil de acesso: CLIENTE, SUPORTE ou ADMIN.", example = "CLIENTE")
         PerfilUsuario perfil,
-        @Schema(description = "Nome da empresa cadastrada vinculada ao usuário.", example = "Laboratório Exemplo")
+        @Schema(description = "Nome informado pelo cliente ou, quando ausente, nome da empresa vinculada.", example = "Laboratório Exemplo")
         String empresa
 ) {
 
     public static UsuarioResumoResponse from(Usuario u) {
         return new UsuarioResumoResponse(u.getId(), u.getNome(), u.getEmail(), u.getPerfil(),
-                u.getEmpresa() != null ? u.getEmpresa().getNome() : null);
+                u.getEmpresaInformada() != null ? u.getEmpresaInformada()
+                        : u.getEmpresa() != null ? u.getEmpresa().getNome() : null);
     }
 }

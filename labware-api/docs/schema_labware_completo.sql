@@ -16,6 +16,7 @@ CREATE TABLE usuario (
                          perfil VARCHAR(20) NOT NULL,
                          empresa_id BIGINT REFERENCES empresa(id),
                          cargo VARCHAR(80),
+                         empresa_informada VARCHAR(255),
                          foto_perfil VARCHAR(500),
                          telefone VARCHAR(20),
                          preferencias_notificacao JSONB NOT NULL DEFAULT '{}'::JSONB,

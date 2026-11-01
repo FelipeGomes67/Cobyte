@@ -33,6 +33,9 @@ public class Usuario {
     @Column(length = 80)
     private String cargo;
 
+    @Column(name = "empresa_informada", length = 255)
+    private String empresaInformada;
+
 
     @Column(name = "foto_perfil", length = 500)
     private String fotoPerfil;

@@ -67,9 +67,7 @@ public class PerfilService {
     public com.labware.api.dto.response.PaginaResponse<PerfilResponse> listarClientes(String busca, int page, int size) {
         return com.labware.api.dto.response.PaginaResponse.from(usuarios.listarClientes(busca == null ? "" : busca.trim(),
                         org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("nome", "id")))
-                .map(u -> new PerfilResponse(u.getId(), u.getNome(), u.getEmail(), u.getCargo(),
-                        u.getEmpresa() == null ? null : u.getEmpresa().getNome(),
-                        u.getEmpresa() == null ? null : u.getEmpresa().getId(), u.getPerfil())));
+                .map(PerfilResponse::from));
     }
 
     public com.labware.api.dto.response.EmpresaResumoResponse cadastrarEmpresa(CadastrarEmpresaRequest r) {
@@ -117,11 +115,8 @@ public class PerfilService {
             if (r.fotoPerfil() != null) {
                 u.setFotoPerfil(r.fotoPerfil().trim());
             }
-            if (r.empresa() != null && !r.empresa().isBlank() && u.getEmpresa() == null) {
-                empresas.findByAtivaTrueOrderByNomeAsc().stream()
-                        .filter(e -> e.getNome().equalsIgnoreCase(r.empresa().trim()))
-                        .findFirst()
-                        .ifPresent(u::setEmpresa);
+            if (r.empresa() != null) {
+                u.setEmpresaInformada(r.empresa().trim());
             }
         }
 
