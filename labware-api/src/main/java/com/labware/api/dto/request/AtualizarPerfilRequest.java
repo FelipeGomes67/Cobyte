@@ -14,7 +14,7 @@ public record AtualizarPerfilRequest(
         @Schema(description = "Nome livre da empresa informado pelo cliente; não altera o vínculo cadastral.", example = "Laboratório Exemplo")
         @Size(max=255) String empresa,
         @Schema(description = "Telefone de contato; opcional.", example = "(11) 98765-4321")
-        @Size(max=30) String telefone,
+        @Size(max=20) String telefone,
         @Schema(description = "Foto ou avatar do perfil; opcional.")
         @Size(max=500) String fotoPerfil
 ) {
