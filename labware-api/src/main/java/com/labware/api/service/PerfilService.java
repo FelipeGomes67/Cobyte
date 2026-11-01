@@ -52,16 +52,6 @@ public class PerfilService {
         this(usuarios, encoder, empresas, "./uploads/fotos");
     }
 
-    public PerfilResponse vincularEmpresa(Long id, VincularEmpresaRequest r) {
-        var u = usuario(id);
-        if (u.getPerfil() != PerfilUsuario.CLIENTE)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O vínculo de empresa é permitido somente para usuários CLIENTE");
-        var empresa = empresas.findById(r.empresaId()).orElseThrow(() -> new ResourceNotFoundException("Empresa não encontrada"));
-        if (!empresa.isAtiva()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empresa inativa");
-        u.setEmpresa(empresa);
-        return PerfilResponse.from(u);
-    }
-
     @Transactional(readOnly = true)
     public com.labware.api.dto.response.PaginaResponse<PerfilResponse> listarClientes(String busca, int page, int size) {
         return com.labware.api.dto.response.PaginaResponse.from(usuarios.listarClientes(busca == null ? "" : busca.trim(),
@@ -108,6 +98,21 @@ public class PerfilService {
         var u = usuario(id);
         String email = normalizar(r.email());
         verificarEmail(email, id);
+        var empresaSelecionada = u.getEmpresa();
+        if (r.empresaId() != null) {
+            if (u.getPerfil() != PerfilUsuario.CLIENTE) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente CLIENTE pode escolher a própria empresa");
+            }
+            empresaSelecionada = empresas.findById(r.empresaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Empresa não encontrada"));
+            if (!empresaSelecionada.isAtiva()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empresa inativa");
+            }
+        }
+        u.setEmpresa(empresaSelecionada);
+        if (r.empresaId() != null && r.empresa() == null) {
+            u.setEmpresaInformada(null);
+        }
         u.setNome(r.nome().trim());
         u.setEmail(email);
         u.setCargo(r.cargo() != null ? r.cargo().trim() : null);

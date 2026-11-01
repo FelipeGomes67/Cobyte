@@ -54,6 +54,35 @@ class PerfilServiceTest {
         verifyNoInteractions(empresas);
     }
 
+    @Test void clienteSelecionaEmpresaAtivaSemManterNomeInformativoAntigo() {
+        usuario.setEmpresaInformada("Nome antigo");
+        var empresa = Empresa.builder().id(20L).nome("Empresa escolhida").ativa(true).build();
+        when(empresas.findById(20L)).thenReturn(Optional.of(empresa));
+        var resposta = service.atualizar(1L, new AtualizarPerfilRequest("Cliente", "cliente@teste.com",
+                null, null, null, null, 20L));
+        assertEquals(20L, resposta.empresaId());
+        assertEquals("Empresa escolhida", resposta.empresa());
+        assertNull(usuario.getEmpresaInformada());
+    }
+
+    @Test void selecaoDeEmpresaInativaPreservaVinculoAtual() {
+        var atual = Empresa.builder().id(10L).nome("Atual").build();
+        usuario.setEmpresa(atual);
+        when(empresas.findById(20L)).thenReturn(Optional.of(Empresa.builder().id(20L).ativa(false).build()));
+        var erro = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L,
+                new AtualizarPerfilRequest("Cliente", "cliente@teste.com", null, null, null, null, 20L)));
+        assertEquals(400, erro.getStatusCode().value());
+        assertSame(atual, usuario.getEmpresa());
+    }
+
+    @Test void suporteNaoPodeAlterarPropriaEmpresaPorId() {
+        usuario.setPerfil(PerfilUsuario.SUPORTE);
+        var erro = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L,
+                new AtualizarPerfilRequest("Cliente", "cliente@teste.com", null, null, null, null, 20L)));
+        assertEquals(403, erro.getStatusCode().value());
+        verifyNoInteractions(empresas);
+    }
+
     @Test void atualizarPerfilNaoPermiteSobrescreverFotoViaJson() {
         usuario.setFotoPerfil("/api/usuarios/1/foto?v=original");
         var request = new AtualizarPerfilRequest("Cliente", "cliente@teste.com", null, null,

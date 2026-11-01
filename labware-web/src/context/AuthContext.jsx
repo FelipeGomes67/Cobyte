@@ -1,38 +1,71 @@
-import { useCallback, useMemo, useState } from 'react';
-import { getSessionUser, registerUser, signIn, signOut } from '../services/authService';
-import { AuthContext } from './authContext';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { obterUsuarioDaSessao, cadastrarUsuario, entrar, sair } from '../services/authService';
+import { EVENTO_SESSAO_EXPIRADA } from '../services/service';
+import { ContextoAutenticacao } from './authContext';
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(getSessionUser);
-  const [loading, setLoading] = useState(false);
+export function ProvedorAutenticacao({ children: conteudo }) {
+  const [usuario, definirUsuario] = useState(null);
+  const [inicializando, definirInicializando] = useState(true);
+  const [erroSessao, definirErroSessao] = useState('');
+  const [carregando, definirCarregando] = useState(false);
 
-  const login = useCallback(async (email, password) => {
-    setLoading(true);
+  useEffect(() => {
+    let ativo = true;
+    const encerrarSessao = () => definirUsuario(null);
+    window.addEventListener(EVENTO_SESSAO_EXPIRADA, encerrarSessao);
+    obterUsuarioDaSessao().then(usuarioAutenticado => {
+      if (ativo) definirUsuario(usuarioAutenticado);
+    }).catch(erro => {
+      if (ativo && erro.status !== 401) definirErroSessao(erro.message);
+    }).finally(() => {
+      if (ativo) definirInicializando(false);
+    });
+    return () => {
+      ativo = false;
+      window.removeEventListener(EVENTO_SESSAO_EXPIRADA, encerrarSessao);
+    };
+  }, []);
+
+  const autenticar = useCallback(async (email, senha) => {
+    definirCarregando(true);
     try {
-      const nextUser = await signIn(email, password);
-      setUser(nextUser);
-      return nextUser;
+      const usuarioAutenticado = await entrar(email, senha);
+      definirUsuario(usuarioAutenticado);
+      definirErroSessao('');
+      return usuarioAutenticado;
     } finally {
-      setLoading(false);
+      definirCarregando(false);
     }
   }, []);
 
-  const register = useCallback(async details => {
-    setLoading(true);
+  const cadastrar = useCallback(async dados => {
+    definirCarregando(true);
     try {
-      const nextUser = await registerUser(details);
-      setUser(nextUser);
-      return nextUser;
+      const usuarioAutenticado = await cadastrarUsuario(dados);
+      definirUsuario(usuarioAutenticado);
+      definirErroSessao('');
+      return usuarioAutenticado;
     } finally {
-      setLoading(false);
+      definirCarregando(false);
     }
   }, []);
 
-  const logout = useCallback(() => {
-    signOut();
-    setUser(null);
+  const desconectar = useCallback(() => {
+    sair();
+    definirUsuario(null);
   }, []);
 
-  const value = useMemo(() => ({ user, loading, login, register, logout }), [user, loading, login, register, logout]);
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const acessarSemLogin = useCallback(() => {
+    definirUsuario({
+      id: 'visitante',
+      nome: 'Visitante',
+      name: 'Visitante',
+      email: '',
+      role: 'support',
+    });
+    definirErroSessao('');
+  }, []);
+
+  const valor = useMemo(() => ({ usuario, carregando, inicializando, erroSessao, autenticar, cadastrar, desconectar, acessarSemLogin }), [usuario, carregando, inicializando, erroSessao, autenticar, cadastrar, desconectar, acessarSemLogin]);
+  return <ContextoAutenticacao.Provider value={valor}>{conteudo}</ContextoAutenticacao.Provider>;
 }

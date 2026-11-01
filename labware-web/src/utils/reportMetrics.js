@@ -41,6 +41,12 @@ export function average(values) {
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
 }
 
+export function getPendingCount(opened, resolved) {
+  const safeOpened = Number.isFinite(opened) ? opened : 0;
+  const safeResolved = Number.isFinite(resolved) ? resolved : 0;
+  return Math.max(0, safeOpened - safeResolved);
+}
+
 // Escala do eixo: começa em zero, usa passos inteiros (1, 2, 5, 10, 20, 50...)
 // e termina em um múltiplo do passo >= maior valor. As barras usam o mesmo axisMax.
 export function getAxisScale(maxValue, targetIntervals = 4) {
@@ -89,25 +95,76 @@ export function getReportSummary(tickets) {
   };
 }
 
-export function getMonthlyTrend(tickets, now = new Date()) {
+export function getReportYears(now = new Date()) {
+  const { year } = getCalendarParts(now);
+  return [year, year - 1];
+}
+
+function getCalendarParts(value) {
+  if (typeof value === 'string') {
+    const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnly) return { year: Number(dateOnly[1]), month: Number(dateOnly[2]) - 1 };
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(date.getTime())) return { year: 0, month: 0 };
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: 'numeric',
+  }).formatToParts(date);
+  return {
+    year: Number(parts.find(part => part.type === 'year')?.value),
+    month: Number(parts.find(part => part.type === 'month')?.value) - 1,
+  };
+}
+
+export function getMonthlyTrend(tickets, now = new Date(), selectedYear = null) {
+  const currentDate = getCalendarParts(now);
+  const year = selectedYear ?? currentDate.year;
+  const firstMonthKey = year * 12;
+  const lastAvailableMonth = year === currentDate.year ? currentDate.month : 11;
+  const lastMonthKey = firstMonthKey + lastAvailableMonth;
+  const counts = new Map();
+
+  (Array.isArray(tickets) ? tickets : []).forEach(ticket => {
+    const createdAt = ticket.createdAt ? getCalendarParts(ticket.createdAt) : null;
+    if (createdAt?.year) {
+      const monthKey = createdAt.year * 12 + createdAt.month;
+      if (monthKey >= firstMonthKey && monthKey <= lastMonthKey) {
+        const monthCounts = counts.get(monthKey) || { opened: 0, resolved: 0 };
+        monthCounts.opened += 1;
+        counts.set(monthKey, monthCounts);
+      }
+    }
+
+    const resolvedAt = ticket.status === 'Resolvido' && ticket.resolvedAt
+      ? getCalendarParts(ticket.resolvedAt)
+      : null;
+    if (resolvedAt?.year) {
+      const monthKey = resolvedAt.year * 12 + resolvedAt.month;
+      if (monthKey >= firstMonthKey && monthKey <= lastMonthKey) {
+        const monthCounts = counts.get(monthKey) || { opened: 0, resolved: 0 };
+        monthCounts.resolved += 1;
+        counts.set(monthKey, monthCounts);
+      }
+    }
+  });
+
   return Array.from({ length: 12 }, (_, index) => {
-    const date = new Date(now.getFullYear(), now.getMonth() - 11 + index, 1);
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const opened = tickets.filter(ticket => {
-      const createdAt = new Date(ticket.createdAt);
-      return createdAt.getFullYear() === year && createdAt.getMonth() === month;
-    }).length;
-    const resolved = tickets.filter(ticket => {
-      if (ticket.status !== 'Resolvido' || !ticket.resolvedAt) return false;
-      const resolvedAt = new Date(ticket.resolvedAt);
-      return resolvedAt.getFullYear() === year && resolvedAt.getMonth() === month;
-    }).length;
+    const available = index <= lastAvailableMonth;
+    const monthCounts = available
+      ? counts.get(firstMonthKey + index) || { opened: 0, resolved: 0 }
+      : { opened: null, resolved: null };
+    const month = new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'UTC' })
+      .format(new Date(Date.UTC(year, index, 1)))
+      .replace(/\.$/, '');
     return {
-      month: date.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''),
+      month,
       year,
-      opened,
-      resolved,
+      available,
+      pending: available ? getPendingCount(monthCounts.opened, monthCounts.resolved) : null,
+      ...monthCounts,
     };
   });
 }

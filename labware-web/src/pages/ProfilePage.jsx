@@ -1,8 +1,8 @@
 import { UserRound } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { useAutenticacao } from '../hooks/useAuth';
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { usuario: user } = useAutenticacao();
   const initials = user.name.split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase();
   const role = user.role === 'support' ? 'Suporte' : 'Cliente';
   return <>
