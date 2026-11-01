@@ -15,6 +15,9 @@ springdoc:
 labware:
   email:
     remetente: ${MAIL_FROM:noreply@labware.local}
+    fila-habilitada: ${MAIL_QUEUE_ENABLED:true}
+    intervalo-ms: ${MAIL_QUEUE_INTERVAL_MS:10000}
+    max-tentativas: ${MAIL_MAX_ATTEMPTS:8}
   stt:
     url: ${STT_SERVICE_URL:http://localhost:8000}
     timeout-segundos: ${STT_TIMEOUT_SEGUNDOS:120}
