@@ -20,7 +20,6 @@ import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Locale;
@@ -141,97 +140,146 @@ public class PerfilService {
             throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "A foto de perfil deve ter no máximo 10 MB");
         }
 
-        String contentType = arquivo.getContentType();
-        if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Apenas arquivos de imagem (JPEG, PNG, WEBP, etc.) são permitidos");
-        }
-
-        String extensao = extrairExtensao(arquivo.getOriginalFilename(), contentType);
-
+        // Decode the content instead of trusting the MIME type supplied by the client.
+        Path novaFoto = null;
+        String fotoAnterior = u.getFotoPerfil();
         try {
+            byte[] dados;
+            try (InputStream in = arquivo.getInputStream()) {
+                dados = in.readNBytes(10 * 1024 * 1024 + 1);
+            }
+            if (dados.length > 10 * 1024 * 1024) {
+                throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Foto excede 10 MB");
+            }
+            java.awt.image.BufferedImage imagem;
+            try (var entrada = javax.imageio.ImageIO.createImageInputStream(new java.io.ByteArrayInputStream(dados))) {
+                var leitores = javax.imageio.ImageIO.getImageReaders(entrada);
+                if (!leitores.hasNext()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Imagem invalida. Use JPEG, PNG ou GIF");
+                }
+                var leitor = leitores.next();
+                try {
+                    if (!java.util.Set.of("jpeg", "png", "gif").contains(leitor.getFormatName().toLowerCase(Locale.ROOT))) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Use JPEG, PNG ou GIF");
+                    }
+                    leitor.setInput(entrada);
+                    if ((long) leitor.getWidth(0) * leitor.getHeight(0) > 20_000_000) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Imagem excede 20 megapixels");
+                    }
+                    imagem = leitor.read(0);
+                } finally {
+                    leitor.dispose();
+                }
+            }
             Files.createDirectories(diretorioFotos);
-            limparFotosAntigas(id);
-
-            String nomeDestino = "usuario-" + id + extensao;
-            Path destino = diretorioFotos.resolve(nomeDestino).normalize();
-            if (!destino.getParent().equals(diretorioFotos)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nome de arquivo inválido");
+            String versao = java.util.UUID.randomUUID().toString();
+            novaFoto = diretorioFotos.resolve("usuario-" + id + "." + versao + ".png");
+            if (!javax.imageio.ImageIO.write(imagem, "png", novaFoto.toFile())) {
+                throw new IOException("Nao foi possivel codificar a imagem");
             }
-
-            try (InputStream in = arquivo.getInputStream();
-                 OutputStream out = Files.newOutputStream(destino, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-                in.transferTo(out);
+            u.setFotoPerfil("/api/usuarios/" + id + "/foto?v=" + versao);
+            var resposta = PerfilResponse.from(usuarios.saveAndFlush(u));
+            Path gravada = novaFoto;
+            if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+                org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                        new org.springframework.transaction.support.TransactionSynchronization() {
+                            @Override
+                            public void afterCompletion(int status) {
+                                if (status != STATUS_COMMITTED) apagarFoto(gravada);
+                                else apagarFotoAnterior(id, fotoAnterior);
+                            }
+                        });
+            } else {
+                apagarFotoAnterior(id, fotoAnterior);
             }
-
-            String urlFoto = "/api/usuarios/" + id + "/foto?v=" + System.currentTimeMillis();
-            u.setFotoPerfil(urlFoto);
-            return PerfilResponse.from(usuarios.saveAndFlush(u));
+            return resposta;
+        } catch (javax.imageio.IIOException ex) {
+            apagarFoto(novaFoto);
+            u.setFotoPerfil(fotoAnterior);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Conteudo de imagem invalido", ex);
         } catch (IOException ex) {
+            apagarFoto(novaFoto);
+            u.setFotoPerfil(fotoAnterior);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Falha ao gravar foto de perfil", ex);
+        } catch (RuntimeException ex) {
+            apagarFoto(novaFoto);
+            u.setFotoPerfil(fotoAnterior);
+            throw ex;
         }
     }
 
     @Transactional(readOnly = true)
     public FotoPerfilDownload carregarFoto(Long id) {
+        var u = usuario(id);
         try {
-            if (!Files.exists(diretorioFotos)) {
-                throw new ResourceNotFoundException("Foto de perfil não encontrada");
-            }
-
-            try (var stream = Files.list(diretorioFotos)) {
-                Path arquivoEncontrado = stream
-                        .filter(p -> p.getFileName().toString().startsWith("usuario-" + id + "."))
-                        .findFirst()
-                        .orElseThrow(() -> new ResourceNotFoundException("Foto de perfil não encontrada"));
-
-                String nome = arquivoEncontrado.getFileName().toString().toLowerCase(Locale.ROOT);
-                MediaType mediaType = MediaType.IMAGE_JPEG;
-                if (nome.endsWith(".png")) {
-                    mediaType = MediaType.IMAGE_PNG;
-                } else if (nome.endsWith(".webp")) {
-                    mediaType = MediaType.parseMediaType("image/webp");
-                } else if (nome.endsWith(".gif")) {
-                    mediaType = MediaType.IMAGE_GIF;
-                }
-
-                return new FotoPerfilDownload(new FileSystemResource(arquivoEncontrado), mediaType);
-            }
+            Path foto = localizarFoto(id, u.getFotoPerfil());
+            String nome = foto.getFileName().toString().toLowerCase(Locale.ROOT);
+            MediaType tipo = nome.endsWith(".png") ? MediaType.IMAGE_PNG
+                    : nome.endsWith(".gif") ? MediaType.IMAGE_GIF
+                    : nome.endsWith(".webp") ? MediaType.parseMediaType("image/webp")
+                    : MediaType.IMAGE_JPEG;
+            return new FotoPerfilDownload(new FileSystemResource(foto), tipo);
         } catch (IOException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Falha ao carregar foto de perfil", ex);
         }
     }
 
+    private Path localizarFoto(Long id, String url) throws IOException {
+        if (url == null || !Files.isDirectory(diretorioFotos)) {
+            throw new ResourceNotFoundException("Foto de perfil nao encontrada");
+        }
+        String versao = url.contains("?v=") ? url.substring(url.indexOf("?v=") + 3) : "";
+        // Legacy uploads used a timestamp in the URL and a fixed filename.
+        boolean versionada = versao.matches("[a-f0-9-]{36}");
+        String prefixo = "usuario-" + id + "." + (versionada ? versao + "." : "");
+        try (var arquivos = Files.list(diretorioFotos)) {
+            return arquivos.filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().startsWith(prefixo))
+                    .filter(p -> versionada || p.getFileName().toString().matches("usuario-" + id + "[.](jpg|jpeg|png|gif|webp)"))
+                    .findFirst().orElseThrow(() -> new ResourceNotFoundException("Foto de perfil nao encontrada"));
+        }
+    }
+
+    private void apagarFotoAnterior(Long id, String url) {
+        if (url == null) return;
+        try {
+            apagarFoto(localizarFoto(id, url));
+        } catch (IOException | ResourceNotFoundException ex) {
+            // The new photo is already persisted; a missing old file does not invalidate it.
+        }
+    }
+
+    private void apagarFoto(Path foto) {
+        if (foto == null) return;
+        try {
+            Files.deleteIfExists(foto);
+        } catch (IOException ex) {
+            org.slf4j.LoggerFactory.getLogger(PerfilService.class).warn("Falha ao remover foto {}", foto, ex);
+        }
+    }
+
     public PerfilResponse removerFoto(Long id) {
         var u = usuario(id);
-        limparFotosAntigas(id);
+        String fotoAnterior = u.getFotoPerfil();
         u.setFotoPerfil(null);
-        return PerfilResponse.from(usuarios.saveAndFlush(u));
-    }
-
-    private void limparFotosAntigas(Long id) {
-        if (!Files.exists(diretorioFotos)) return;
-        try (var stream = Files.list(diretorioFotos)) {
-            stream.filter(p -> p.getFileName().toString().startsWith("usuario-" + id + "."))
-                    .forEach(p -> {
-                        try { Files.deleteIfExists(p); } catch (IOException ignored) {}
+        try {
+            var resposta = PerfilResponse.from(usuarios.saveAndFlush(u));
+            if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+                org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override
+                        public void afterCompletion(int status) {
+                            if (status == STATUS_COMMITTED) apagarFotoAnterior(id, fotoAnterior);
+                        }
                     });
-        } catch (IOException ignored) {}
-    }
-
-    private String extrairExtensao(String nomeArquivo, String contentType) {
-        if (contentType != null) {
-            if (contentType.equalsIgnoreCase("image/png")) return ".png";
-            if (contentType.equalsIgnoreCase("image/webp")) return ".webp";
-            if (contentType.equalsIgnoreCase("image/gif")) return ".gif";
-            if (contentType.equalsIgnoreCase("image/jpeg") || contentType.equalsIgnoreCase("image/jpg")) return ".jpg";
-        }
-        if (nomeArquivo != null && nomeArquivo.contains(".")) {
-            String ext = nomeArquivo.substring(nomeArquivo.lastIndexOf('.')).toLowerCase(Locale.ROOT);
-            if (ext.matches("\\.(jpg|jpeg|png|webp|gif)")) {
-                return ext.equals(".jpeg") ? ".jpg" : ext;
+            } else {
+                apagarFotoAnterior(id, fotoAnterior);
             }
+            return resposta;
+        } catch (RuntimeException ex) {
+            u.setFotoPerfil(fotoAnterior);
+            throw ex;
         }
-        return ".jpg";
     }
 
     private void verificarEmail(String email, Long id) {

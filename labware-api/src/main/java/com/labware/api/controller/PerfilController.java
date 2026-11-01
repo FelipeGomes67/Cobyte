@@ -112,7 +112,7 @@ public class PerfilController {
         service.senha(UsuarioLogado.id(jwt),r);
     }
 
-    @Operation(summary = "Enviar foto de perfil", description = "Upload de imagem (JPEG, PNG, WEBP) para o perfil do usuário logado.")
+    @Operation(summary = "Enviar foto de perfil", description = "Upload de JPEG, PNG ou GIF, até 10 MB e 20 megapixels. Conteúdo validado e convertido para PNG.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Foto de perfil atualizada"),
             @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
