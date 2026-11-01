@@ -58,7 +58,7 @@ public class NotificacaoController {
     @PutMapping("/api/notificacoes/marcar-todas-lidas")
     @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
     public void marcar(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) { service.marcarTodas(UsuarioLogado.id(jwt)); }
-    @Operation(summary = "Consultar preferências de alertas", description = "Preferências persistidas em Usuario. Chaves ausentes têm valor padrão true.")
+    @Operation(summary = "Consultar preferências de alertas", description = "Filtros por tipo de aviso. Chaves ausentes têm valor padrão true. Todo aviso permitido também é enviado por e-mail.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
@@ -67,7 +67,7 @@ public class NotificacaoController {
     })
     @GetMapping("/api/usuarios/me/configuracoes-notificacao")
     public ConfiguracaoNotificacaoRequest preferencias(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) { return service.preferencias(UsuarioLogado.id(jwt)); }
-    @Operation(summary = "Atualizar preferências de alertas", description = "Substitui novasMensagens, alteracoesStatus e atribuicoes. As três opções são obrigatórias.")
+    @Operation(summary = "Atualizar preferências de alertas", description = "Substitui novasMensagens, alteracoesStatus e atribuicoes. As três opções são obrigatórias e filtram tanto os avisos internos quanto os e-mails; não há permissão separada de e-mail.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),

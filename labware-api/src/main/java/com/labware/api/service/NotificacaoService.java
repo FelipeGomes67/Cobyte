@@ -46,19 +46,19 @@ public class NotificacaoService {
 
     @Transactional(readOnly = true)
     public ConfiguracaoNotificacaoRequest preferencias(Long id) {
-        var p = usuario(id).getPreferenciasNotificacao();
-        return new ConfiguracaoNotificacaoRequest(permitida(p, "novasMensagens"), permitida(p, "alteracoesStatus"), permitida(p, "atribuicoes"), Boolean.TRUE.equals(p.get("notificarEmail")));
+        return preferenciasDe(usuario(id));
     }
 
     public ConfiguracaoNotificacaoRequest preferencias(Long id, ConfiguracaoNotificacaoRequest r) {
         var u = usuario(id);
-        var p = new HashMap<String, Object>(u.getPreferenciasNotificacao());
+        var p = new HashMap<String, Object>(u.getPreferenciasNotificacao() == null
+                ? Collections.emptyMap() : u.getPreferenciasNotificacao());
         p.put("novasMensagens", r.novasMensagens());
         p.put("alteracoesStatus", r.alteracoesStatus());
         p.put("atribuicoes", r.atribuicoes());
-        if (r.notificarEmail() != null) p.put("notificarEmail", r.notificarEmail());
+        p.remove("notificarEmail");
         u.setPreferenciasNotificacao(p);
-        return r;
+        return preferenciasDe(u);
     }
 
     public void emitir(Usuario destinatario, Long autorId, Chamado chamado, String tipo, String titulo, String texto) {
@@ -79,13 +79,17 @@ public class NotificacaoService {
                 .titulo(titulo)
                 .mensagem(texto)
                 .build());
-        if (Boolean.TRUE.equals(prefs.get("notificarEmail"))) {
-            eventos.publishEvent(new EmailService.EmailNotificacao(destinatario.getEmail(), titulo, texto));
-        }
+        eventos.publishEvent(new EmailService.EmailNotificacao(destinatario.getEmail(), titulo, texto));
     }
 
     private boolean permitida(Map<String, Object> p, String chave) {
-        return p != null && !Boolean.FALSE.equals(p.get(chave));
+        return p == null || !Boolean.FALSE.equals(p.get(chave));
+    }
+
+    private ConfiguracaoNotificacaoRequest preferenciasDe(Usuario u) {
+        var p = u.getPreferenciasNotificacao();
+        return new ConfiguracaoNotificacaoRequest(permitida(p, "novasMensagens"),
+                permitida(p, "alteracoesStatus"), permitida(p, "atribuicoes"));
     }
 
     private Usuario usuario(Long id) {

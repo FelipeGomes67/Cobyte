@@ -9,11 +9,5 @@ public record ConfiguracaoNotificacaoRequest(
         @Schema(description = "Receber alertas de mudança de status.", example = "true")
         @NotNull Boolean alteracoesStatus,
         @Schema(description = "Receber alertas de atribuição de chamados.", example = "true")
-        @NotNull Boolean atribuicoes,
-        @Schema(description = "Enviar também por e-mail; habilitado somente quando true.")
-        Boolean notificarEmail
-) {
-    public ConfiguracaoNotificacaoRequest(Boolean novasMensagens, Boolean alteracoesStatus, Boolean atribuicoes) {
-        this(novasMensagens, alteracoesStatus, atribuicoes, null);
-    }
-}
+        @NotNull Boolean atribuicoes
+) {}
