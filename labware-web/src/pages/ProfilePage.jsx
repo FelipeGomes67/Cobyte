@@ -49,82 +49,85 @@ export default function ProfilePage() {
           <h1>Perfil</h1>
         </div>
       </div>
+<section className="panel profile-panel">
 
-      <section className="panel profile-panel">
-        <span className="avatar avatar-large">
-          {initials}
-        </span>
+  {/* Cabeçalho do perfil */}
+  <div className="profile-top">
+    <span className="avatar avatar-large" />
 
-        <div>
-            <button
-              type="button"
-              className="btn-cancel"
-              onClick={handleCancel}
-            >
-              Editar
-            </button>
-          <h2>{form.name}</h2>
-          <p>{form.email}</p>
-        </div>
-     
-        <h2>Informações</h2>
+    <div className="profile-header">
+      <h2>{form.name}</h2>
+      <p>{form.email}</p>
+    </div>
 
-        <form onSubmit={handleSave}>
-          <div className="profile-info">
-          
-             
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Nome Completo"
-              />
-   
-          
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="Email"
-              />
-          
+    <button
+      type="button"
+      className="btn-cancel"
+      onClick={handleCancel}
+    >
+      Editar
+    </button>
+  </div>
 
-          
-              <input
-                name="cargo"
-                value={form.cargo}
-                onChange={handleChange}
-                placeholder="Cargo"
-              />
-        
+  {/* Informações abaixo do cabeçalho */}
+  <div className="profile-content">
 
-        
-              <input
-                type="tel"
-                name="tel"
-                value={form.tel}
-                onChange={handleChange}
-                placeholder="Telefone"
-              />
-           
-          </div>
+    <h2>Informações</h2>
 
-          <div className="profile-actions">
-            <button type="submit" className="btn-save">
-              Salvar
-            </button>
+    <form onSubmit={handleSave}>
 
-            <button
-              type="button"
-              className="btn-cancel"
-              onClick={handleCancel}
-            >
-              Cancelar
-            </button>
-          </div>
-        </form>
-      </section>
+      <div className="profile-info">
+
+        <input
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          placeholder="Nome Completo"
+        />
+
+        <input
+          type="email"
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="Email"
+        />
+
+        <input
+          name="cargo"
+          value={form.cargo}
+          onChange={handleChange}
+          placeholder="Cargo"
+        />
+
+        <input
+          type="tel"
+          name="tel"
+          value={form.tel}
+          onChange={handleChange}
+          placeholder="Telefone"
+        />
+
+      </div>
+
+      <div className="profile-actions">
+        <button type="submit" className="btn-save">
+          Salvar
+        </button>
+
+        <button
+          type="button"
+          className="btn-cancel"
+          onClick={handleCancel}
+        >
+          Cancelar
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</section>
     </>
   );
 }
