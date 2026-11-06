@@ -12,6 +12,7 @@ import { TicketsPage } from './pages/TicketsPage';
 function AuthenticatedRoutes() {
   const page = useRoutes([
     { path: '/notificacoes', element: <Notificacoes /> },
+    { path: '/detalhes', element: <DetalhesChamado /> },
     { path: '/chamado/:id', element: <DetalhesChamado /> },
     { path: '/dashboard', element: <TicketsPage mode="dashboard" /> },
     { path: '/chamados', element: <TicketsPage mode="all" /> },

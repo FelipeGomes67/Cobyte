@@ -1,17 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400;500;600;700&family=Big+Shoulders+Text:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400;500;600;700;800&display=swap');
 
-/* Regra Global para evitar transbordamento no mobile */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
 .notificacoes-container {
-  padding: 32px;
-  max-width: 1000px;
+  padding: 40px 32px;
+  max-width: 1040px;
   margin: 0 auto;
   width: 100%;
   font-family: '42dot Sans', sans-serif;
   overflow-x: hidden;
+}
+
+.notificacoes-header {
+  margin-bottom: 28px;
 }
 
 .notificacoes-header .subtitulo-app {
@@ -19,30 +22,22 @@
   font-weight: 500;
   font-size: 14px;
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .notificacoes-header h1 {
-  font-family: 'Big Shoulders Text', sans-serif;
-  font-size: 28px;
+  font-family: '42dot Sans', sans-serif;
+  font-size: 32px;
   color: #185DF1;
   font-weight: 800;
   margin: 0 0 6px 0;
+  letter-spacing: -0.5px;
 }
 
 .notificacoes-header .descricao-pagina {
   color: #666666;
-  font-size: 13px;
-  margin: 0 0 24px 0;
-}
-
-.card-notificacoes-wrapper {
-  background-color: #ffffff;
-  border: 1px solid #EAEAEA;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  width: 100%;
+  font-size: 14px;
+  margin: 0;
 }
 
 .tabs-notificacao {
@@ -65,11 +60,11 @@
   background: #ffffff;
   border: 1px solid #E5E7EB;
   font-family: '42dot Sans', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   color: #555555;
   cursor: pointer;
-  padding: 6px 16px;
-  border-radius: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
   font-weight: 500;
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -91,12 +86,12 @@
   background: #F3F4F6;
   border: none;
   font-family: '42dot Sans', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   color: #185DF1;
   font-weight: 600;
   cursor: pointer;
-  padding: 6px 14px;
-  border-radius: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
   transition: background 0.2s ease;
 }
 
@@ -115,21 +110,21 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 20px;
-  border: 1px solid #F0F0F0;
-  border-radius: 10px;
+  padding: 18px 20px;
+  border: 1px solid #EAEAEA;
+  border-radius: 12px;
   background-color: #ffffff;
   transition: all 0.2s ease;
   width: 100%;
 }
 
 .item-notificacao:hover {
-  border-color: #E2E8F0;
+  border-color: #D1D5DB;
 }
 
 .status-icon-circle {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -146,21 +141,16 @@
 }
 
 .status-icon-circle.alerta {
-  background-color: rgba(254, 240, 138, 0.35);
-}
-
-.status-icon-circle img {
-  width: 18px;
-  height: 18px;
+  background-color: #FEF3C7;
 }
 
 .item-info-conteudo {
   flex: 1;
-  min-width: 0; /* Permite que o texto faça quebra de linha corretamente */
+  min-width: 0;
 }
 
 .item-titulo {
-  font-size: 13px;
+  font-size: 14px;
   margin: 0 0 4px 0;
   color: #111827;
   font-weight: 600;
@@ -178,10 +168,10 @@
   background-color: #185DF1;
   color: #ffffff;
   border: none;
-  padding: 8px 18px;
+  padding: 10px 22px;
   border-radius: 8px;
   font-family: '42dot Sans', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -199,15 +189,9 @@
   font-size: 13px;
 }
 
-/* Responsividade Mobile */
-
 @media (max-width: 768px) {
   .notificacoes-container {
-    padding: 16px 12px;
-  }
-
-  .card-notificacoes-wrapper {
-    padding: 14px 12px;
+    padding: 20px 16px;
   }
 
   .tabs-notificacao {
@@ -220,16 +204,10 @@
     overflow-x: auto;
     padding-bottom: 6px;
     width: 100%;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .tabs-grupo::-webkit-scrollbar {
-    display: none;
   }
 
   .tab-btn-n {
     flex-shrink: 0;
-    padding: 6px 12px;
   }
 
   .btn-link-marcar-lidas {
@@ -240,7 +218,7 @@
   .item-notificacao {
     flex-direction: column;
     align-items: flex-start;
-    padding: 12px;
+    padding: 14px;
   }
 
   .item-info-conteudo {
@@ -250,6 +228,6 @@
   .btn-acao-ver-chamado {
     width: 100%;
     text-align: center;
-    margin-top: 4px;
+    margin-top: 6px;
   }
 }
