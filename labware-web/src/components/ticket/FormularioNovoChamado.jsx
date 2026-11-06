@@ -135,7 +135,7 @@ export default function FormularioNovoChamado() {
             className={`btn-toggle-modo ${modo === 'voz' ? 'ativo' : ''}`}
             onClick={() => setModo('voz')}
           >
-            <img src="/icons/mic.svg" alt="" /> Relatar por Voz
+            <img src="../icons/mic.svg" alt="" /> Relatar por Voz
           </button>
           <button
             type="button"
