@@ -1,0 +1,4 @@
+# STT Service - Dependências de desenvolvimento e testes
+-r requirements.txt
+httpx>=0.27.0
+pytest>=8.0.0

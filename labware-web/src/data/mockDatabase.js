@@ -4,11 +4,12 @@ const PASSWORD_KEY = 'labware-demo-password';
 const SESSION_KEY = 'labware-session';
 const demoCredentials = { email: 'demo@labware.com.br', password: 'Labware123!' };
 
-const currentUser = {
+const currentUser = { 
   id: 'user-1',
   name: 'Mariana Costa',
-  role: 'Analista de Suporte',
+  cargo: 'Analista de Suporte',
   email: 'mariana.costa@labware.com.br',
+  tel: '(11) 4225-2000',
 };
 
 const initialTickets = [

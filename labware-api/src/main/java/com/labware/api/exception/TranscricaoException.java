@@ -1,7 +1,10 @@
 package com.labware.api.exception;
 
-public class TranscricaoException extends RuntimeException {
-    public TranscricaoException(String message) {
-        super(message);
+import org.springframework.http.HttpStatusCode;
+import org.springframework.web.server.ResponseStatusException;
+
+public class TranscricaoException extends ResponseStatusException {
+    public TranscricaoException(int status, String mensagem) {
+        super(HttpStatusCode.valueOf(status), mensagem);
     }
 }

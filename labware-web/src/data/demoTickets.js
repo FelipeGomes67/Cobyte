@@ -1,0 +1,11 @@
+// Registros fictícios para pré-visualização da interface; não representam dados de clientes.
+export const DEMO_TICKETS = [
+  { id: 'CH-1048', title: 'Erro ao acessar o painel de análises', category: 'Acesso', priority: 'Alta', status: 'Em andamento', ownerId: 'user-1', createdAt: '2026-10-24T13:20:00.000Z', source: 'demo', rating: 4.8, firstResponseMinutes: 18, slaDueAt: '2026-10-25T13:20:00.000Z' },
+  { id: 'CH-1047', title: 'Integração com sistema de estoque', category: 'Integração', priority: 'Média', status: 'Aberto', ownerId: 'user-2', createdAt: '2026-10-23T10:05:00.000Z', source: 'demo' },
+  { id: 'CH-1046', title: 'Lentidão na sincronização de pedidos', category: 'Indisponibilidade', priority: 'Urgente', status: 'Em andamento', ownerId: 'user-1', createdAt: '2026-10-21T15:40:00.000Z', source: 'demo', firstResponseMinutes: 32, slaDueAt: '2026-10-22T15:40:00.000Z' },
+  { id: 'CH-1045', title: 'Dúvida sobre permissões de usuário', category: 'Dúvida', priority: 'Baixa', status: 'Resolvido', ownerId: 'user-3', createdAt: '2026-10-19T09:15:00.000Z', resolvedAt: '2026-10-19T13:15:00.000Z', slaDueAt: '2026-10-20T09:15:00.000Z', source: 'demo', rating: 4.5, firstResponseMinutes: 24 },
+  { id: 'CH-1044', title: 'Atualização de credenciais da API', category: 'Segurança', priority: 'Crítica', status: 'Resolvido', ownerId: 'user-1', createdAt: '2026-10-16T11:30:00.000Z', resolvedAt: '2026-10-16T17:30:00.000Z', slaDueAt: '2026-10-17T11:30:00.000Z', source: 'demo', rating: 5, firstResponseMinutes: 12 },
+  { id: 'CH-1043', title: 'Relatório mensal não carrega', category: 'Indisponibilidade', priority: 'Alta', status: 'Aberto', ownerId: 'user-2', createdAt: '2026-10-12T14:10:00.000Z', source: 'demo' },
+  { id: 'CH-1042', title: 'Configuração de integração fiscal', category: 'Integração', priority: 'Média', status: 'Resolvido', ownerId: 'user-1', createdAt: '2026-10-08T08:45:00.000Z', resolvedAt: '2026-10-08T15:45:00.000Z', slaDueAt: '2026-10-09T08:45:00.000Z', source: 'demo', rating: 4.2, firstResponseMinutes: 28 },
+  { id: 'CH-1041', title: 'Solicitação de novo acesso', category: 'Acesso', priority: 'Baixa', status: 'Resolvido', ownerId: 'user-3', createdAt: '2026-10-02T16:00:00.000Z', resolvedAt: '2026-10-02T20:00:00.000Z', slaDueAt: '2026-10-03T16:00:00.000Z', source: 'demo', rating: 4.7, firstResponseMinutes: 20 },
+];

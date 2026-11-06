@@ -1,4 +1,8 @@
 package com.labware.api.repository;
 
-public class PrioridadeContagemRepository {
+import com.labware.api.model.enums.Prioridade;
+
+public interface PrioridadeContagemRepository {
+    Prioridade getPrioridade();
+    long getQuantidade();
 }

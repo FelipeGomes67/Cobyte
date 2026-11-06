@@ -1,11 +1,131 @@
-import { UserRound } from 'lucide-react';
-import { getCurrentUser } from '../data/mockDatabase';
+import { useState } from 'react';
+import { useAutenticacao } from '../hooks/useAuth';
 
 export default function ProfilePage() {
-  const user = getCurrentUser();
-  const initials = user.name.split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase();
-  return <>
-    <div className="page-heading"><div><div className="eyebrow">Central de Suporte</div><h1>Meu perfil</h1><p>Informações da conta conectada.</p></div></div>
-    <section className="panel profile-panel"><span className="avatar avatar-large">{initials}</span><div><h2>{user.name}</h2><p>{user.role} · Central de Suporte</p><p>{user.email}</p></div><span className="profile-status"><UserRound size={15}/> Conectado</span></section>
-  </>;
+  const { usuario: user } = useAutenticacao();
+
+  const initialData = {
+    name: user.name || '',
+    email: user.email || '',
+    cargo: user.cargo || '',
+    tel: user.telefone || user.tel || '',
+  };
+
+  const [form, setForm] = useState(initialData);
+  const [savedData, setSavedData] = useState(initialData);
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    setSavedData({ ...form });
+    alert('Alterações salvas com sucesso!');
+  };
+
+  const handleCancel = () => {
+    setForm({ ...savedData });
+  };
+
+  const initials = form.name
+    .split(' ')
+    .filter(Boolean)
+    .map(part => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  return (
+    <>
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow">Central de Suporte</div>
+          <h1>Perfil</h1>
+        </div>
+      </div>
+<section className="panel profile-panel">
+
+  {/* Cabeçalho do perfil */}
+  <div className="profile-top">
+    <span className="avatar avatar-large">{initials}</span>
+
+    <div className="profile-header">
+      <h2>{form.name}</h2>
+      <p>{form.email}</p>
+    </div>
+
+    <button
+      type="button"
+      className="btn-cancel"
+      onClick={handleCancel}
+    >
+      Editar
+    </button>
+  </div>
+
+  {/* Informações abaixo do cabeçalho */}
+  <div className="profile-content">
+
+    <h2>Informações</h2>
+
+    <form onSubmit={handleSave}>
+
+      <div className="profile-info">
+
+        <input
+          name="name"
+          value={form.name}
+          onChange={handleChange}
+          placeholder="Nome Completo"
+        />
+
+        <input
+          type="email"
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="Email"
+        />
+
+        <input
+          name="cargo"
+          value={form.cargo}
+          onChange={handleChange}
+          placeholder="Cargo"
+        />
+
+        <input
+          type="tel"
+          name="tel"
+          value={form.tel}
+          onChange={handleChange}
+          placeholder="Telefone"
+        />
+
+      </div>
+
+      <div className="profile-actions">
+        <button type="submit" className="btn-save">
+          Salvar
+        </button>
+
+        <button
+          type="button"
+          className="btn-cancel"
+          onClick={handleCancel}
+        >
+          Cancelar
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</section>
+    </>
+  );
 }

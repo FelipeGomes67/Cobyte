@@ -1,0 +1,41 @@
+# Ambientes virtuais
+.venv/
+env/
+venv/
+
+# Caches e bytecode Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Pesos de modelos de IA (evitar comitar gigabytes no repositório)
+models/*
+!models/.gitkeep
+
+# Variáveis de ambiente locais
+.env
+.env.local
+
+# Áudios gerados e temporários
+tools/audios_gerados/
+audios_gerados/
+*.wav
+*.mp3
+*.ogg
+*.m4a
+*.flac
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDEs e Sistema Operacional
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+

@@ -1,4 +1,3 @@
-import React from 'react';
 import FormularioNovoChamado from "../components/ticket/FormularioNovoChamado";
 
 export default function NovoChamado() {

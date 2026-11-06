@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 /** Situação de um prazo de SLA. Derivada dos prazos e das datas reais, nunca gravada no banco. */
 public enum SlaStatus {
+    NAO_APLICAVEL,
     SEM_PRAZO,   // prazo ainda não calculado
     NO_PRAZO,    // em andamento, dentro do prazo
     EM_RISCO,    // em andamento, com 80% ou mais do prazo consumido
