@@ -6,18 +6,24 @@ import com.labware.api.model.entity.Chamado;
 import com.labware.api.model.enums.OrigemChamado;
 import com.labware.api.model.enums.StatusChamado;
 import com.labware.api.repository.ChamadoRepository;
+import com.labware.api.repository.UsuarioRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class ChamadoService {
 
     private final ChamadoRepository chamadoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     public List<ChamadoResponse> listarTodos(){
      return chamadoRepository.findAll()
@@ -54,9 +60,19 @@ public class ChamadoService {
     }
 
 
-    public ChamadoResponse abrirChamado(AbrirChamadoRequest request) {
+    @Transactional
+    public ChamadoResponse abrirChamado(Long solicitanteId, AbrirChamadoRequest request) {
+        var solicitante = usuarioRepository.findById(solicitanteId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuário inválido"));
+        var empresa = solicitante.getEmpresa();
+        if (empresa == null || !empresa.isAtiva()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Vincule-se a uma empresa ativa antes de abrir chamados");
+        }
+
         Chamado chamado = new Chamado();
 
+        chamado.setProtocolo(gerarProtocolo());
         chamado.setTitulo(request.getTitulo());
         chamado.setDescricao(request.getDescricao());
         chamado.setPrioridade(request.getPrioridade());
@@ -64,13 +80,16 @@ public class ChamadoService {
 
         chamado.setStatus(StatusChamado.ABERTO);
         chamado.setOrigem(OrigemChamado.TEXTO);
+        chamado.setSolicitante(solicitante);
+        chamado.setEmpresa(empresa);
 
-        // O solicitante e a empresa serão definidos
-        // na integração com a autenticação.
-
-        Chamado salvo = chamadoRepository.save(chamado);
+        Chamado salvo = chamadoRepository.saveAndFlush(chamado);
 
         return converterParaResponse(salvo);
+    }
+
+    private String gerarProtocolo() {
+        return "CH" + UUID.randomUUID().toString().replace("-", "").substring(0, 18).toUpperCase();
     }
 
     private ChamadoResponse converterParaResponse

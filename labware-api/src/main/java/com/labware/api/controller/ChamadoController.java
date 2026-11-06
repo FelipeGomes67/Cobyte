@@ -3,13 +3,15 @@ package com.labware.api.controller;
 import com.labware.api.dto.request.AbrirChamadoRequest;
 import com.labware.api.dto.response.ChamadoResponse;
 import com.labware.api.service.ChamadoService;
-import com.labware.api.model.entity.Chamado;
+import com.labware.api.config.UsuarioLogado;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,10 +45,11 @@ public class ChamadoController {
     // Criar Chamado
     @PostMapping
     public  ResponseEntity<ChamadoResponse> abrirChamado(
+            @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody AbrirChamadoRequest request){
 
         ChamadoResponse response =
-                chamadoService.abrirChamado(request);
+                chamadoService.abrirChamado(UsuarioLogado.id(jwt), request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
