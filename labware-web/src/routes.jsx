@@ -4,7 +4,10 @@ import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
-import { NewTicketPage, TicketsPage } from './pages/TicketsPage';
+import { TicketsPage } from './pages/TicketsPage';
+import NovoChamado from './pages/NovoChamado';
+import Notificacoes from './pages/Notificacoes';
+import DetalhesChamado from './pages/DetalhesChamado';
 import { useAutenticacao } from './hooks/useAuth';
 
 function ExigirAutenticacao() {
@@ -32,11 +35,13 @@ export default function RotasAplicacao() {
     <Route path="/login" element={<SomentePublico/>}/>
     <Route path="/cadastro" element={<SomentePublico/>}/>
     <Route element={<ExigirAutenticacao/>}>
+      <Route path="/notificacoes" element={<Notificacoes/>}/>
+      <Route path="/chamado/:id" element={<DetalhesChamado/>}/>
       <Route path="/dashboard" element={<TicketsPage mode="dashboard"/>}/>
       <Route path="/dashboard/:ticketId" element={<TicketsPage mode="dashboard"/>}/>
       <Route path="/chamados" element={<TicketsPage mode="all"/>}/>
       <Route path="/chamados/:ticketId" element={<TicketsPage mode="all"/>}/>
-      <Route path="/chamados/novo" element={<NewTicketPage/>}/>
+      <Route path="/chamados/novo" element={<NovoChamado/>}/>
       <Route path="/meus-chamados" element={<TicketsPage mode="mine"/>}/>
       <Route path="/meus-chamados/:ticketId" element={<TicketsPage mode="mine"/>}/>
       <Route path="/historico" element={<TicketsPage mode="history"/>}/>

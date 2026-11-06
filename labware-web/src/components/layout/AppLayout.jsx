@@ -15,6 +15,7 @@ const pageNames = {
   '/configuracoes': 'Configurações',
   '/perfil': 'Meu perfil',
   '/chamados/novo': 'Novo chamado',
+  '/notificacoes': 'Notificações',
 };
 
 export default function AppLayout() {
@@ -25,7 +26,7 @@ export default function AppLayout() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const notificationRef = useRef(null);
-  const ehDetalheChamado = /^\/(dashboard|chamados|meus-chamados|historico)\/[^/]+\/?$/.test(location.pathname)
+  const ehDetalheChamado = /^\/(dashboard|chamado|chamados|meus-chamados|historico)\/[^/]+\/?$/.test(location.pathname)
     && location.pathname.replace(/\/$/, '') !== '/chamados/novo';
   const title = ehDetalheChamado ? 'Detalhes' : pageNames[location.pathname] || 'Central de Suporte';
   function leaveAccount() {
@@ -52,7 +53,7 @@ export default function AppLayout() {
 
   function openNotifications() {
     setNotificationsOpen(false);
-    navigate('/configuracoes?aba=notificacoes');
+    navigate('/notificacoes');
   }
 
   const isReportsPage = location.pathname === '/relatorios';
@@ -61,7 +62,7 @@ export default function AppLayout() {
     {menuOpen && <button className="mobile-scrim" onClick={() => setMenuOpen(false)} aria-label="Fechar menu"/>}
     <main className={`main-area ${isReportsPage ? 'main-area--reports' : ''}`}>
       <header className="topbar">
-        <button className="icon-button mobile-menu" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}>{menuOpen ? <X/> : <Menu/>}</button>
+        <button className="icon-button mobile-menu" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}>{menuOpen ? <X /> : <Menu />}</button>
         <div className="breadcrumb"><span>Central de Suporte</span><strong>{title}</strong></div>
         <div className="top-actions">
           <div className="notification-center" ref={notificationRef}>
@@ -71,7 +72,7 @@ export default function AppLayout() {
             {notificationsOpen && <section className="notification-popover" aria-label="Notificações recentes">
               <h2>Notificações</h2>
               <p className="notification-empty">O histórico de notificações será exibido quando estiver conectado ao serviço de chamados.</p>
-              <button className="notification-see-all" onClick={openNotifications}>Configurar notificações</button>
+              <button className="notification-see-all" onClick={openNotifications}>Ver notificações</button>
             </section>}
           </div>
           <ProfileMenu user={user} variant="header" onRequestLogout={() => setLogoutOpen(true)}/>
