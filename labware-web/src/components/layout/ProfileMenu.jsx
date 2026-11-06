@@ -106,7 +106,7 @@ export default function ProfileMenu({ user, onRequestLogout, onNavigate, variant
     onClick: toggleMenu,
     onKeyDown: handleTriggerKeyDown,
     'aria-expanded': open,
-    'aria-haspopup': 'menu',
+    'aria-haspopup': 'menu',  
     'aria-controls': rendered ? menuId : undefined,
   };
 
@@ -119,7 +119,7 @@ export default function ProfileMenu({ user, onRequestLogout, onNavigate, variant
     </div> : <button className="user-trigger" {...triggerProps}>
       <Avatar user={user}/><span className="user-name">{user.name}</span><ChevronDown size={15} className="profile-chevron"/>
     </button>}
-    {rendered && <div
+    {rendered && <div 
       id={menuId}
       ref={menuRef}
       className={`profile-menu ${variant === 'sidebar' ? 'sidebar-profile-menu' : 'header-profile-menu'} ${open ? 'is-open' : 'is-closing'}`}
