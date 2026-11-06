@@ -27,7 +27,6 @@ public class Chamado {
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String descricao;
-    private Double duracaoAudioSegundos;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

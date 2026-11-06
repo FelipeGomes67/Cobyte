@@ -1,40 +1,16 @@
-# LabWare · Central de Suporte
+# React + Vite
 
-Frontend React e Vite com login e cadastro integrados à API Spring Boot em `../labware-api`.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Executar
+Currently, two official plugins are available:
 
-Inicie a API na porta 8080 e execute neste diretório:
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-```sh
-npm install
-npm run dev
-```
+## React Compiler
 
-A URL da API é configurada pela constante `URL_API` em `src/services/service.js`, inicialmente `http://localhost:8080/api`. Esse arquivo centraliza a instância Axios, o envio do token e o tratamento de erros. Libere a origem do frontend no CORS da API (por padrão, `http://localhost:5173`).
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Autenticação
+## Expanding the ESLint configuration
 
-- Login: `POST /api/auth/login`, com `email` e `senha`.
-- Cadastro: `POST /api/auth/cadastrar`, com `nome`, `email` e `senha`; depois faz login automaticamente para obter o JWT.
-- O token é salvo no localStorage na chave `labware-token`. Senhas não são armazenadas no navegador.
-- Ao recarregar, `GET /api/auth/me` valida o token e recupera o usuário antes de liberar as rotas.
-- O cliente HTTP em `src/services/service.js` envia `Authorization: Bearer <token>` nas requisições autenticadas e encerra a sessão ao receber 401.
-- Sair remove o token. Contas devem existir na API; credenciais fictícias não autenticam mais.
-- Perfis SUPORTE e ADMIN usam as telas de suporte; CLIENTE usa as telas de cliente. A autorização efetiva continua sendo responsabilidade da API.
-
-## Validação
-
-Cadastro validado manualmente pelo responsável pelo projeto com a API real em 30/10/2026.
-
-```sh
-npm run lint
-npm run build
-node --test tests/authService.test.js
-```
-
-## Escopo atual
-
-Temporariamente, a tela de login oferece o botão sem estilo próprio “Acessar sem login”. Ele abre as telas com um visitante em memória, incluindo relatórios, sem gerar token ou autenticar na API. Ao recarregar, o acesso de visitante termina; o login normal continua disponível ao sair.
-
-A integração com a API cobre autenticação e cadastro. Chamados, relatórios e preferências ainda usam dados de demonstração e armazenamento local. O vínculo de um cliente com uma empresa deve ser feito no backend antes de abrir chamados reais. A troca de senha ainda não está integrada.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

@@ -1,3 +1,4 @@
+import React from 'react';
 import '../../css/DetalhesCliente.css';
 
 export default function DetalhesCliente({ status = 'ABERTO' }) {

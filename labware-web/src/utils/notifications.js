@@ -1,4 +1,4 @@
-import { getNotificationPreferences } from '../services/preferencesService';
+import { getNotificationPreferences } from '../data/mockDatabase';
 
 export async function requestBrowserNotifications() {
   const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
