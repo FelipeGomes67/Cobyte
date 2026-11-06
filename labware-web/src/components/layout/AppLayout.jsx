@@ -57,7 +57,8 @@ export default function AppLayout() {
   }
 
   const isReportsPage = location.pathname === '/relatorios';
-  return <div className={`app-shell ${isReportsPage ? 'app-shell--reports' : ''}`}>
+  const ehDashboard = location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/');
+  return <div className={`app-shell ${isReportsPage ? 'app-shell--reports' : ''} ${ehDashboard ? 'app-shell--dashboard' : ''}`}>
     <Sidebar open={menuOpen} onNavigate={() => setMenuOpen(false)} user={user} onRequestLogout={() => setLogoutOpen(true)}/>
     {menuOpen && <button className="mobile-scrim" onClick={() => setMenuOpen(false)} aria-label="Fechar menu"/>}
     <main className={`main-area ${isReportsPage ? 'main-area--reports' : ''}`}>
