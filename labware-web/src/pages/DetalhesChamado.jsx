@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getTicketById, addMessageToTicket, updateTicketStatus } from '../data/mockDatabase';
+import { getTicketById, addMessageToTicket } from '../data/mockDatabase';
 import '../css/DetalhesChamado.css';
 
 export default function DetalhesChamado() {
@@ -8,7 +8,6 @@ export default function DetalhesChamado() {
   const [chamado, setChamado] = useState(null);
   const [novaMensagem, setNovaMensagem] = useState('');
   const [tempo, setTempo] = useState(43103);
-  const [modalAberto, setModalAberto] = useState(false);
 
   const [rating, setRating] = useState('5');
   const [comentario, setComentario] = useState('');
@@ -46,17 +45,6 @@ export default function DetalhesChamado() {
     const ticketAtualizado = addMessageToTicket(chamado.id, novaMensagem);
     setChamado(ticketAtualizado);
     setNovaMensagem('');
-  };
-
-  const handleConfirmarStatus = () => {
-    const novoStatus = chamado.status === 'Resolvido' ? 'Aberto' : 'Resolvido';
-    const msg = novoStatus === 'Resolvido' ? 'Chamado fechado pelo suporte.' : 'Chamado reaberto pelo suporte.';
-
-    updateTicketStatus(chamado.id, novoStatus);
-    addMessageToTicket(chamado.id, msg);
-
-    setChamado(getTicketById(chamado.id));
-    setModalAberto(false);
   };
 
   const handleBaixarEvidencia = (nomeArquivo) => {
@@ -229,14 +217,6 @@ export default function DetalhesChamado() {
                 <strong className="valor-dado">{chamado.categoria || chamado.category || 'Pendente'}</strong>
               </div>
             </div>
-
-            <button 
-              type="button" 
-              className="btn-reabrir-chamado"
-              onClick={() => setModalAberto(true)}
-            >
-              {isResolvido ? '↻ Reabrir chamado' : 'Fechar chamado'}
-            </button>
           </div>
 
           {isResolvido && (
@@ -297,31 +277,6 @@ export default function DetalhesChamado() {
           )}
         </aside>
       </div>
-
-      {modalAberto && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <h3>{isResolvido ? 'Deseja reabrir este chamado?' : 'Deseja fechar este chamado?'}</h3>
-            <p>
-              O status do chamado mudará para <strong>{isResolvido ? 'Aberto' : 'Resolvido'}</strong> e a equipe de suporte será notificada.
-            </p>
-            <div className="modal-acoes">
-              <button 
-                className="btn-modal-cancelar" 
-                onClick={() => setModalAberto(false)}
-              >
-                Cancelar
-              </button>
-              <button 
-                className="btn-modal-confirmar" 
-                onClick={handleConfirmarStatus}
-              >
-                {isResolvido ? 'Sim, reabrir' : 'Sim, fechar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
