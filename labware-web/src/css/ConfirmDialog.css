@@ -1,0 +1,12 @@
+.dialog-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: #10182880; animation: fade-in .12s ease-out; }
+.confirm-dialog { position: relative; width: min(100%, 360px); padding: 24px; border: 1px solid var(--border); border-radius: 10px; background: white; box-shadow: 0 18px 55px #10182835; animation: rise-in .16s ease-out; }
+.dialog-close { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 5px; color: #657184; background: transparent; }
+.dialog-close:hover { background: #f1f3f6; }
+.dialog-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: #b93636; background: #fff0f0; }
+.confirm-dialog h2 { margin: 14px 0 5px; font-size: 15px; }
+.confirm-dialog p { margin: 0; color: var(--muted); font-size: 10px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 19px; }
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
