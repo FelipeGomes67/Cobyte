@@ -34,7 +34,7 @@ export function TicketsPage({ mode }) {
     <Heading title={title} description="Acompanhe solicitações e atualizações da equipe de suporte." action={createButton}/>
     {loading && <div className="panel loading-state" role="status">Carregando chamados…</div>}
     {dataError && <div className="data-warning" role="status">{dataError}</div>}
-    {!loading && <TabelaChamados tickets={tickets} query={query} onSearch={setQuery} rotaBase={mode === 'history' ? '/historico' : mode === 'mine' ? '/meus-chamados' : '/chamados'}/>}
+    {!loading && <TabelaChamados historico={mode === 'history'} titulo={mode === 'history' ? 'Histórico de chamados' : 'Solicitações'} tickets={tickets} query={query} onSearch={setQuery} rotaBase={mode === 'history' ? '/historico' : mode === 'mine' ? '/meus-chamados' : '/chamados'}/>}
     <div className="list-note"><Headset size={17}/> Precisa de ajuda? <a href="mailto:suporte@labware.com.br">Fale com o suporte LabWare</a></div>
   </>;
 }
