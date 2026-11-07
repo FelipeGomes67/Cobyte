@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import '../css/Notificacoes.css';
-import iconErro from '../../public/icons/alert-triangle.svg';
-import iconInfo from '../../public/icons/message-circle.svg';
-import iconAlerta from '../../public/icons/check-circle.svg';
+
+const iconErro = '/icons/alert-triangle.svg';
+const iconInfo = '/icons/message-circle.svg';
+const iconAlerta = '/icons/check-circle.svg';
 
 export default function Notificacoes() {
     const [abaAtiva, setAbaAtiva] = useState('nao-lidas');
