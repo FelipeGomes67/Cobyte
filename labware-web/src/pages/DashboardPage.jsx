@@ -504,10 +504,16 @@ export default function DashboardPage() {
     const intervalo = window.setInterval(() => definirAgora(Date.now()), 1000);
     return () => window.clearInterval(intervalo);
   }, []);
-  const chamadosUsuario =
-    usuario?.role === "support"
-      ? chamados
-      : chamados.filter((chamado) => chamado.ownerId === usuario?.id);
+  const ehCliente =
+    usuario?.role === "client" ||
+    usuario?.perfil === "CLIENTE";
+  const ehSuporte =
+    usuario?.role === "support" ||
+    usuario?.perfil === "SUPORTE" ||
+    usuario?.perfil === "ADMIN";
+  const chamadosUsuario = ehSuporte
+    ? chamados
+    : chamados.filter((chamado) => chamado.ownerId === usuario?.id);
   const dados = calcularDashboard(chamadosUsuario, agora);
 
   return (
@@ -543,7 +549,7 @@ export default function DashboardPage() {
               tipo="category"
             />
           </div>
-          <GraficoVolume dias={dados.evolucao} />
+          {!ehCliente && <GraficoVolume dias={dados.evolucao} />}
           <ChamadosPrioritarios chamados={dados.prioritarios} agora={agora} />
         </>
       )}
