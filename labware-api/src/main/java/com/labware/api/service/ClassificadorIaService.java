@@ -124,7 +124,7 @@ public class ClassificadorIaService {
                 parcial=basica(resultado.prioridade(),resultado.categoria());
             }
         } catch (Exception e) {
-            log.warn("Falha na triagem enriquecida: tipo={}", e.getClass().getSimpleName());
+            log.warn("Falha na triagem enriquecida: tipo={}, mensagem={}", e.getClass().getSimpleName(), e.getMessage());
         }
         try {
             var resultado=chatClient.prompt()
@@ -149,8 +149,25 @@ public class ClassificadorIaService {
                     .call().entity(ClassificacaoBasica.class);
             if(resultado!=null&&resultado.prioridadeGeradaIa()!=null&&resultado.categoriaGeradaIa()!=null)
                 return Optional.of(basica(resultado.prioridadeGeradaIa(),resultado.categoriaGeradaIa()));
-        } catch(Exception e) { log.warn("Triagem básica indisponível: tipo={}",e.getClass().getSimpleName()); }
-        return Optional.ofNullable(parcial);
+        } catch(Exception e) {
+            log.warn("Triagem básica indisponível: tipo={}, mensagem={}", e.getClass().getSimpleName(), e.getMessage());
+        }
+        if (parcial != null) {
+            return Optional.of(parcial);
+        }
+        log.warn("Triagem por IA indisponível ou resposta incompleta. Aplicando classificação padrão de fallback (Prioridade MEDIA, Categoria DUVIDA).");
+        return Optional.of(fallbackPadrao());
+    }
+
+    private ClassificacaoIaResultadoReponse fallbackPadrao() {
+        return new ClassificacaoIaResultadoReponse(
+                com.labware.api.model.enums.Prioridade.MEDIA,
+                com.labware.api.model.enums.CategoriaChamado.DUVIDA,
+                "Classificação padrão aplicada automaticamente após indisponibilidade temporária ou resposta incompleta da IA.",
+                null,
+                null,
+                null
+        );
     }
 
     public record ClassificacaoBasica(com.labware.api.model.enums.Prioridade prioridadeGeradaIa,

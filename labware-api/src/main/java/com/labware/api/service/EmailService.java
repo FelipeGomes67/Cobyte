@@ -31,8 +31,8 @@ public class EmailService {
             mensagem.setText(evento.texto());
             mailSender.send(mensagem);
             log.info("E-mail de notificação enviado com sucesso para: {}", evento.destinatario());
-        } catch (org.springframework.mail.MailException ex) {
-            log.error("Falha ao enviar e-mail de notificação para {}", evento.destinatario(), ex);
+        } catch (Exception e) {
+            log.error("Falha ao enviar e-mail de notificação: {}", e.getMessage());
         }
     }
 }

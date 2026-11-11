@@ -16,6 +16,7 @@ import com.labware.api.model.enums.Prioridade;
 import com.labware.api.model.enums.StatusChamado;
 import com.labware.api.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ChamadoService {
 
     private final ChamadoRepository chamadoRepository;
@@ -139,11 +141,39 @@ public class ChamadoService {
             return id;
         });
 
-        // 2) Chamada à IA fora de transação
-        Optional<ClassificacaoIaResultadoReponse> ia = classificador.classificar(req.titulo(), req.descricao());
+        // 2) Chamada à IA fora de transação com tratamento seguro
+        Optional<ClassificacaoIaResultadoReponse> iaResultado;
+        try {
+            iaResultado = classificador.classificar(req.titulo(), req.descricao());
+        } catch (Exception e) {
+            log.error("Erro inesperado ao classificar chamado com IA: {}", e.getMessage(), e);
+            iaResultado = Optional.of(new ClassificacaoIaResultadoReponse(
+                    Prioridade.MEDIA,
+                    CategoriaChamado.DUVIDA,
+                    "Classificação padrão aplicada após falha no serviço de IA."
+            ));
+        }
+        final Optional<ClassificacaoIaResultadoReponse> ia = iaResultado;
 
-        // 3) Aplica classificação e SLA
-        return tx.execute(status -> aplicarClassificacao(chamadoId, ia));
+        // 3) Aplica classificação e SLA garantindo retorno 201 com o chamado criado
+        try {
+            return tx.execute(status -> aplicarClassificacao(chamadoId, ia));
+        } catch (Exception e) {
+            log.error("Erro ao aplicar classificação no chamado {}: {}", chamadoId, e.getMessage(), e);
+            return tx.execute(status -> {
+                Chamado chamado = chamadoRepository.findById(chamadoId).orElseThrow();
+                if (chamado.getPrioridade() == null) {
+                    chamado.setPrioridade(Prioridade.MEDIA);
+                }
+                if (chamado.getCategoria() == null) {
+                    chamado.setCategoria(CategoriaChamado.DUVIDA);
+                }
+                if (chamado.getPrazoResolucao() == null && chamado.getPrioridade().minutosResolucao() != null) {
+                    chamado.setPrazoResolucao(chamado.getAbertoEm().plusMinutes(chamado.getPrioridade().minutosResolucao()));
+                }
+                return toResponse(chamado);
+            });
+        }
     }
 
     // ---------------------------------------------------------------
@@ -300,9 +330,9 @@ public class ChamadoService {
     private ChamadoResponse aplicarClassificacao(Long chamadoId, Optional<ClassificacaoIaResultadoReponse> ia) {
         Chamado chamado = chamadoRepository.findById(chamadoId).orElseThrow();
 
-        // Se a IA falhar ou não devolver prioridade, usa MEDIA para o SLA já começar a contar
-        Prioridade prioridade = ia.map(ClassificacaoIaResultadoReponse::prioridade).orElse(Prioridade.MEDIA);
-        CategoriaChamado categoria = ia.map(ClassificacaoIaResultadoReponse::categoria).orElse(null);
+        // Se a IA falhar ou não devolver prioridade/categoria, usa MEDIA e DUVIDA para o SLA e classificação
+        Prioridade prioridade = ia.map(ClassificacaoIaResultadoReponse::prioridade).filter(java.util.Objects::nonNull).orElse(Prioridade.MEDIA);
+        CategoriaChamado categoria = ia.map(ClassificacaoIaResultadoReponse::categoria).filter(java.util.Objects::nonNull).orElse(CategoriaChamado.DUVIDA);
 
         chamado.setPrioridade(prioridade);
         chamado.setCategoria(categoria);
@@ -312,24 +342,40 @@ public class ChamadoService {
         if (prioridade.minutosResolucao() != null) {
             // A regra vigente prevalece sobre políticas antigas já existentes no banco.
             chamado.setPrazoResolucao(chamado.getAbertoEm().plusMinutes(prioridade.minutosResolucao()));
-            politicaSlaRepository.findByPrioridade(prioridade).ifPresent(p ->
-                    chamado.setPrazoPrimeiraResposta(chamado.getAbertoEm().plusMinutes(p.getMinutosPrimeiraResposta())));
+            politicaSlaRepository.findByPrioridade(prioridade).ifPresentOrElse(
+                    p -> chamado.setPrazoPrimeiraResposta(chamado.getAbertoEm().plusMinutes(p.getMinutosPrimeiraResposta())),
+                    () -> chamado.setPrazoPrimeiraResposta(chamado.getAbertoEm().plusMinutes(120))
+            );
         }
-        atribuirAutomaticamente(chamado);
+        try {
+            atribuirAutomaticamente(chamado);
+        } catch (Exception e) {
+            log.error("Falha ao atribuir automaticamente o chamado {}: {}", chamado.getProtocolo(), e.getMessage());
+        }
 
-        ia.ifPresent(r -> classificacaoIaRepository.save(ClassificacaoIa.builder()
-                .chamado(chamado)
-                .categoriaSugerida(r.categoria())
-                .prioridadeSugerida(r.prioridade())
-                .justificativa(r.justificativa())
-                .modelo(modeloIa)
-                .tituloGeradoIa(r.tituloGeradoIa())
-                .sintomaObservadoIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().sintomaObservado())
-                .impactoOperacionalIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().impactoOperacional())
-                .slaMetaMinutos(prioridade.minutosResolucao())
-                .build()));
+        ia.ifPresent(r -> {
+            try {
+                classificacaoIaRepository.save(ClassificacaoIa.builder()
+                        .chamado(chamado)
+                        .categoriaSugerida(r.categoria() != null ? r.categoria() : categoria)
+                        .prioridadeSugerida(r.prioridade() != null ? r.prioridade() : prioridade)
+                        .justificativa(r.justificativa() != null ? r.justificativa() : "Classificação automática padrão.")
+                        .modelo(modeloIa)
+                        .tituloGeradoIa(r.tituloGeradoIa())
+                        .sintomaObservadoIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().sintomaObservado())
+                        .impactoOperacionalIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().impactoOperacional())
+                        .slaMetaMinutos(prioridade.minutosResolucao())
+                        .build());
+            } catch (Exception e) {
+                log.error("Falha ao salvar auditoria de classificação IA para o chamado {}: {}", chamado.getProtocolo(), e.getMessage());
+            }
+        });
 
-        registrarHistorico(chamado, null, null, prioridade.name());
+        try {
+            registrarHistorico(chamado, null, null, prioridade.name());
+        } catch (Exception e) {
+            log.error("Falha ao registrar histórico do chamado {}: {}", chamado.getProtocolo(), e.getMessage());
+        }
         return ChamadoResponse.from(chamado, ia.isPresent());
     }
 
@@ -342,8 +388,16 @@ public class ChamadoService {
                         .thenComparing(Usuario::getId))
                 .ifPresent(suporte -> {
                     chamado.setResponsavel(suporte);
-                    registrarHistorico(chamado, null, null, "ATRIBUICAO_AUTOMATICA:" + suporte.getId());
-                    notificacoes.emitir(suporte, null, chamado, "ATRIBUICAO", "Chamado atribuído automaticamente", chamado.getProtocolo());
+                    try {
+                        registrarHistorico(chamado, null, null, "ATRIBUICAO_AUTOMATICA:" + suporte.getId());
+                    } catch (Exception e) {
+                        log.error("Falha ao registrar histórico de atribuição automática: {}", e.getMessage());
+                    }
+                    try {
+                        notificacoes.emitir(suporte, null, chamado, "ATRIBUICAO", "Chamado atribuído automaticamente", chamado.getProtocolo());
+                    } catch (Exception e) {
+                        log.error("Falha ao emitir notificação de atribuição automática: {}", e.getMessage());
+                    }
                 });
     }
 
