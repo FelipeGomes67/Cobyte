@@ -1,12 +1,25 @@
 import { useEffect, useState } from 'react';
-import { readTicketData, subscribeTickets } from '../services/ticketService';
+import { obterMeusChamados, readTicketData, subscribeTickets } from '../services/ticketService';
 
 export function useTickets() {
   const [data, setData] = useState({ tickets: [], loading: true, error: null });
   useEffect(() => {
-    const refresh = () => setData({ ...readTicketData(), loading: false });
-    refresh();
-    return subscribeTickets(refresh);
+    let ativo = true;
+    async function carregar() {
+      try {
+        const tickets = await obterMeusChamados();
+        if (ativo) {
+          setData({ tickets, loading: false, error: null });
+        }
+      } catch (err) {
+        if (ativo) {
+          const fallback = readTicketData();
+          setData({ ...fallback, loading: false, error: err.message });
+        }
+      }
+    }
+    carregar();
+    return subscribeTickets(carregar);
   }, []);
   return data;
 }

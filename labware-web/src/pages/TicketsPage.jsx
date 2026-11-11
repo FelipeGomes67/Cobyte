@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Headset } from 'lucide-react';
-import { createTicket } from '../services/ticketService';
+import { createTicket, obterMeusChamados } from '../services/ticketService';
 import { sendNotification } from '../utils/notifications';
 import { useAutenticacao } from '../hooks/useAuth';
-import { useTickets } from '../hooks/useTickets';
 import TabelaChamados from '../components/ticket/TabelaChamados';
 
 function Heading({ title, description, action }) {
@@ -13,9 +12,11 @@ function Heading({ title, description, action }) {
 
 export function TicketsPage({ mode }) {
   const [query, setQuery] = useState('');
+  const [chamadosApi, setChamadosApi] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const { usuario: user } = useAutenticacao();
-  const { tickets: allTickets, loading, error: dataError } = useTickets();
   const ehSuporte =
     user?.role === 'support' ||
     user?.perfil === 'SUPORTE' ||
@@ -23,17 +24,44 @@ export function TicketsPage({ mode }) {
   const ehCliente =
     user?.perfil === 'CLIENTE' ||
     user?.role === 'client';
+
+  useEffect(() => {
+    let ativo = true;
+    async function carregar() {
+      try {
+        setLoading(true);
+        const lista = await obterMeusChamados();
+        if (ativo) {
+          setChamadosApi(lista);
+          setError(null);
+        }
+      } catch (err) {
+        if (ativo) {
+          setError(err.message || 'Falha ao carregar chamados');
+        }
+      } finally {
+        if (ativo) {
+          setLoading(false);
+        }
+      }
+    }
+    carregar();
+    return () => {
+      ativo = false;
+    };
+  }, []);
+
   const userTickets = ehSuporte
-    ? allTickets
-    : (allTickets || []).filter(ticket => ticket.ownerId === user?.id);
+    ? chamadosApi
+    : (chamadosApi || []).filter(ticket => !ticket.ownerId || ticket.ownerId === user?.id || ticket.solicitante === user?.nome);
   let tickets = userTickets;
   let title = 'Todos os chamados';
   if (mode === 'mine') {
     title = 'Meus chamados';
-    tickets = (allTickets || []).filter(ticket => ticket.ownerId === user?.id);
+    tickets = (chamadosApi || []).filter(ticket => !ticket.ownerId || ticket.ownerId === user?.id || ticket.solicitante === user?.nome);
   } else if (mode === 'history') {
     title = 'Histórico de chamados';
-    tickets = (tickets || []).filter(ticket => ticket.status === 'Resolvido');
+    tickets = (tickets || []).filter(ticket => ticket.status === 'Resolvido' || ticket.status === 'Fechado');
   } else if (!ehSuporte) {
     title = 'Meus chamados';
   }
@@ -46,10 +74,14 @@ export function TicketsPage({ mode }) {
   return <>
     <Heading title={title} description="Acompanhe solicitações e atualizações da equipe de suporte." action={createButton}/>
     {loading && <div className="panel loading-state" role="status">Carregando chamados…</div>}
-    {dataError && <div className="data-warning" role="status">{dataError}</div>}
-    {!loading && <TabelaChamados historico={mode === 'history'} titulo={mode === 'history' ? 'Histórico de chamados' : 'Solicitações'} tickets={tickets} query={query} onSearch={setQuery} rotaBase={mode === 'history' ? '/historico' : mode === 'mine' ? '/meus-chamados' : '/chamados'}/>}
+    {error && <div className="data-warning" role="status">{error}</div>}
+    {!loading && <TabelaChamados historico={mode === 'history'} titulo={mode === 'history' ? 'Histórico de chamados' : 'Solicitações'} tickets={tickets} query={query} onSearch={setQuery} rotaBase="/chamados"/>}
     <div className="list-note"><Headset size={17}/> Precisa de ajuda? <a href="mailto:suporte@labware.com.br">Fale com o suporte LabWare</a></div>
   </>;
+}
+
+export function MeusChamados() {
+  return <TicketsPage mode="mine" />;
 }
 
 export function NewTicketPage() {
