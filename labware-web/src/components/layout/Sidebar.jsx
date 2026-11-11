@@ -1,49 +1,100 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutGrid, PlusCircle, FileText, History, Bell } from 'lucide-react';
+import {
+  LayoutGrid,
+  Ticket,
+  FileText,
+  History,
+  ClipboardCheck,
+  PlusCircle,
+  Bell,
+} from 'lucide-react';
 import ProfileMenu from './ProfileMenu';
+import { useAutenticacao } from '../../hooks/useAuth';
 
-export default function Sidebar({ open, onNavigate, user, onRequestLogout }) {
+export default function Sidebar({ open, onNavigate, user: userProp, onRequestLogout }) {
+  const { usuario: userContext } = useAutenticacao();
+  const user = userProp || userContext;
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const isDashboardActive = currentPath === '/dashboard';
-  const isNovoChamadoActive = currentPath === '/chamados/novo' || currentPath === '/novo-chamado';
-  const isMeusChamadosActive = (currentPath === '/chamados' || currentPath === '/meus-chamados') && !isNovoChamadoActive;
-  const isHistoricoActive = currentPath === '/historico';
-  const isNotificacoesActive = currentPath === '/notificacoes';
+  const ehSuporte =
+    user?.role === 'support' ||
+    user?.perfil === 'SUPORTE' ||
+    user?.perfil === 'ADMIN';
 
-  const navItems = [
-    {
-      label: 'DashBoard',
-      to: '/dashboard',
-      Icon: LayoutGrid,
-      active: isDashboardActive,
-    },
-    {
-      label: 'Fazer Chamado',
-      to: '/chamados/novo',
-      Icon: PlusCircle,
-      active: isNovoChamadoActive,
-    },
-    {
-      label: 'Meus Chamados',
-      to: '/chamados',
-      Icon: FileText,
-      active: isMeusChamadosActive,
-    },
-    {
-      label: 'Histórico',
-      to: '/historico',
-      Icon: History,
-      active: isHistoricoActive,
-    },
-    {
-      label: 'Notificações',
-      to: '/notificacoes',
-      Icon: Bell,
-      active: isNotificacoesActive,
-    },
-  ];
+  // Itens dinâmicos de acordo com o perfil do usuário
+  const navItems = ehSuporte
+    ? [
+        {
+          label: 'DashBoard',
+          to: '/dashboard',
+          Icon: LayoutGrid,
+          active: currentPath === '/dashboard',
+        },
+        {
+          label: 'Todos Chamados',
+          to: '/chamados',
+          Icon: Ticket,
+          active:
+            (currentPath === '/chamados' || currentPath === '/todos-chamados') &&
+            currentPath !== '/chamados/novo' &&
+            currentPath !== '/novo-chamado',
+        },
+        {
+          label: 'Meus Chamados',
+          to: '/meus-chamados',
+          Icon: FileText,
+          active: currentPath === '/meus-chamados',
+        },
+        {
+          label: 'Histórico de Chamados',
+          to: '/historico',
+          Icon: History,
+          active: currentPath === '/historico',
+        },
+        {
+          label: 'Relatório',
+          to: '/relatorios',
+          Icon: ClipboardCheck,
+          active: currentPath === '/relatorios',
+        },
+      ]
+    : [
+        {
+          label: 'DashBoard',
+          to: '/dashboard',
+          Icon: LayoutGrid,
+          active: currentPath === '/dashboard',
+        },
+        {
+          label: 'Fazer Chamado',
+          to: '/chamados/novo',
+          Icon: PlusCircle,
+          active:
+            currentPath === '/chamados/novo' || currentPath === '/novo-chamado',
+        },
+        {
+          label: 'Meus Chamados',
+          to: '/chamados',
+          Icon: FileText,
+          active:
+            currentPath === '/chamados' &&
+            currentPath !== '/chamados/novo' &&
+            currentPath !== '/novo-chamado',
+        },
+        {
+          label: 'Histórico',
+          to: '/historico',
+          Icon: History,
+          active: currentPath === '/historico',
+        },
+        {
+          label: 'Notificações',
+          to: '/notificacoes',
+          Icon: Bell,
+          active: currentPath === '/notificacoes',
+        },
+      ];
 
   return (
     <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>

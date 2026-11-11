@@ -16,16 +16,22 @@ export function TicketsPage({ mode }) {
   const navigate = useNavigate();
   const { usuario: user } = useAutenticacao();
   const { tickets: allTickets, loading, error: dataError } = useTickets();
-  const userTickets = user.role === 'support' ? allTickets : allTickets.filter(ticket => ticket.ownerId === user.id);
+  const ehSuporte =
+    user?.role === 'support' ||
+    user?.perfil === 'SUPORTE' ||
+    user?.perfil === 'ADMIN';
+  const userTickets = ehSuporte
+    ? allTickets
+    : (allTickets || []).filter(ticket => ticket.ownerId === user?.id);
   let tickets = userTickets;
   let title = 'Todos os chamados';
   if (mode === 'mine') {
     title = 'Meus chamados';
-    tickets = userTickets.filter(ticket => ticket.ownerId === user.id);
+    tickets = (allTickets || []).filter(ticket => ticket.ownerId === user?.id);
   } else if (mode === 'history') {
     title = 'Histórico de chamados';
-    tickets = tickets.filter(ticket => ticket.status === 'Resolvido');
-  } else if (user.role !== 'support') {
+    tickets = (tickets || []).filter(ticket => ticket.status === 'Resolvido');
+  } else if (!ehSuporte) {
     title = 'Meus chamados';
   }
 
