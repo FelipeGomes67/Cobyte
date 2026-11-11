@@ -38,13 +38,23 @@ def save_temp_audio(
         ) as destino:
             temp_path = destino.name
             total_bytes = 0
-            while bloco := upload_file.file.read(chunk_size):
+
+            # Garante que o stream de áudio esteja posicionado no início
+            file_obj = getattr(upload_file, "file", upload_file)
+            if hasattr(file_obj, "seek"):
+                try:
+                    file_obj.seek(0)
+                except Exception:
+                    pass
+
+            while bloco := file_obj.read(chunk_size):
                 total_bytes += len(bloco)
                 if total_bytes > max_bytes:
                     raise HTTPException(
                         status_code=413, detail="Áudio excede o tamanho permitido"
                     )
                 destino.write(bloco)
+            destino.flush()
 
         if total_bytes == 0:
             raise HTTPException(status_code=400, detail="Arquivo de áudio vazio")
@@ -52,7 +62,10 @@ def save_temp_audio(
         yield (temp_path, total_bytes)
     finally:
         try:
-            upload_file.file.close()
+            if hasattr(upload_file, "file") and hasattr(upload_file.file, "close"):
+                upload_file.file.close()
+            elif hasattr(upload_file, "close"):
+                upload_file.close()
         except OSError:
             logger.error("Falha ao fechar stream de upload")
 

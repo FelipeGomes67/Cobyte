@@ -14,7 +14,14 @@ def carregar_modelo(settings: Settings):
     from faster_whisper import WhisperModel
 
     compute_type = "int8" if settings.device == "cpu" else "float16"
-    modelo_origem = settings.model_path or "small"
+    modelo_origem = settings.model_path
+
+    if not modelo_origem:
+        pasta_padrao = Path(__file__).resolve().parent.parent.parent / "models" / "small"
+        if (pasta_padrao / "model.bin").is_file():
+            modelo_origem = str(pasta_padrao)
+        else:
+            modelo_origem = "small"
 
     logger.info(
         "Carregando modelo Faster-Whisper: device=%s compute_type=%s origem=%s",
