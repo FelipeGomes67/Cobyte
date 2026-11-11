@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Headset } from 'lucide-react';
 import { createTicket } from '../services/ticketService';
 import { sendNotification } from '../utils/notifications';
@@ -20,6 +20,9 @@ export function TicketsPage({ mode }) {
     user?.role === 'support' ||
     user?.perfil === 'SUPORTE' ||
     user?.perfil === 'ADMIN';
+  const ehCliente =
+    user?.perfil === 'CLIENTE' ||
+    user?.role === 'client';
   const userTickets = ehSuporte
     ? allTickets
     : (allTickets || []).filter(ticket => ticket.ownerId === user?.id);
@@ -35,7 +38,11 @@ export function TicketsPage({ mode }) {
     title = 'Meus chamados';
   }
 
-  const createButton = <button className="primary-button" onClick={() => navigate('/chamados/novo')}><span>＋</span> Novo chamado</button>;
+  const createButton = ehCliente ? (
+    <button className="primary-button btn-novo-chamado" onClick={() => navigate('/chamados/novo')}>
+      <span>＋</span> Novo chamado
+    </button>
+  ) : null;
   return <>
     <Heading title={title} description="Acompanhe solicitações e atualizações da equipe de suporte." action={createButton}/>
     {loading && <div className="panel loading-state" role="status">Carregando chamados…</div>}
@@ -53,6 +60,11 @@ export function NewTicketPage() {
   const [priority, setPriority] = useState('Média');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
+
+  const ehCliente = user?.perfil === 'CLIENTE' || user?.role === 'client';
+  if (!ehCliente) {
+    return <Navigate to="/chamados" replace />;
+  }
 
   function submit(event) {
     event.preventDefault();

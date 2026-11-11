@@ -44,6 +44,14 @@ export function ExigirSuporte({ children }) {
   return ehSuporte ? children : <Navigate to="/dashboard" replace />;
 }
 
+export function ExigirCliente({ children }) {
+  const { usuario } = useAutenticacao();
+  const ehCliente =
+    usuario?.perfil === 'CLIENTE' ||
+    usuario?.role === 'client';
+  return ehCliente ? children : <Navigate to="/chamados" replace />;
+}
+
 export function PublicRoute({ children }) {
   const { usuario, inicializando } = useAutenticacao();
   const token = obterToken();
@@ -98,8 +106,22 @@ export default function RotasAplicacao() {
           <Route path="/dashboard/:ticketId" element={<DetalhesChamado />} />
           <Route path="/chamados" element={<TicketsPage mode="all" />} />
           <Route path="/todos-chamados" element={<TicketsPage mode="all" />} />
-          <Route path="/chamados/novo" element={<NovoChamado />} />
-          <Route path="/novo-chamado" element={<NovoChamado />} />
+          <Route
+            path="/chamados/novo"
+            element={
+              <ExigirCliente>
+                <NovoChamado />
+              </ExigirCliente>
+            }
+          />
+          <Route
+            path="/novo-chamado"
+            element={
+              <ExigirCliente>
+                <NovoChamado />
+              </ExigirCliente>
+            }
+          />
           <Route path="/chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/todos-chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/meus-chamados" element={<TicketsPage mode="mine" />} />

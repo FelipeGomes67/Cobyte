@@ -6,7 +6,6 @@ import {
   History,
   ClipboardCheck,
   PlusCircle,
-  Bell,
 } from 'lucide-react';
 import ProfileMenu from './ProfileMenu';
 import { useAutenticacao } from '../../hooks/useAuth';
@@ -17,6 +16,9 @@ export default function Sidebar({ open, onNavigate, user: userProp, onRequestLog
   const location = useLocation();
   const currentPath = location.pathname;
 
+  const ehCliente =
+    user?.perfil === 'CLIENTE' ||
+    user?.role === 'client';
   const ehSuporte =
     user?.role === 'support' ||
     user?.perfil === 'SUPORTE' ||
@@ -66,13 +68,17 @@ export default function Sidebar({ open, onNavigate, user: userProp, onRequestLog
           Icon: LayoutGrid,
           active: currentPath === '/dashboard',
         },
-        {
-          label: 'Fazer Chamado',
-          to: '/chamados/novo',
-          Icon: PlusCircle,
-          active:
-            currentPath === '/chamados/novo' || currentPath === '/novo-chamado',
-        },
+        ...(ehCliente
+          ? [
+              {
+                label: 'Fazer Chamado',
+                to: '/chamados/novo',
+                Icon: PlusCircle,
+                active:
+                  currentPath === '/chamados/novo' || currentPath === '/novo-chamado',
+              },
+            ]
+          : []),
         {
           label: 'Meus Chamados',
           to: '/chamados',
