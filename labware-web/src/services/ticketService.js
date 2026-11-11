@@ -1,4 +1,6 @@
+import api from './api.js';
 import { DEMO_TICKETS } from '../data/demoTickets';
+import { prepararArquivoAudio } from './sttService.js';
 
 const STORAGE_KEY = 'labware-tickets';
 const CHANGE_EVENT = 'labware:tickets-changed';
@@ -10,7 +12,6 @@ function markLegacySource(ticket) {
   return {
     ...ticket,
     source,
-    // Legacy demo rows get their demo-only semantics from the separate fixture file.
     ...(source === 'demo' && demoRecord ? {
       firstResponseMinutes: ticket.firstResponseMinutes ?? ticket.responseMinutes ?? demoRecord.firstResponseMinutes,
       resolvedAt: ticket.resolvedAt ?? demoRecord.resolvedAt,
@@ -46,6 +47,77 @@ function persist(tickets) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
+
+export function gerarTituloDeDescricao(descricao) {
+  if (!descricao) return 'Abertura de Chamado';
+  const primeiraLinha = descricao.trim().split('\n')[0].trim();
+  const primeiraFrase = primeiraLinha.split(/[.?!]/)[0].trim();
+  const base = primeiraFrase || primeiraLinha || 'Abertura de Chamado';
+  return base.length > 80 ? `${base.slice(0, 77)}...` : base;
+}
+
+/**
+ * Criação real de chamado na labware-api com multipart, anexo obrigatório e triagem por IA
+ */
+export async function criarChamadoApi({
+  titulo,
+  descricao,
+  origem = 'TEXTO',
+  duracaoAudioSegundos = null,
+  arquivos = [],
+  audio = null,
+}) {
+  const descricaoFinal = (descricao || '').trim();
+  if (!descricaoFinal) {
+    throw new Error('A descrição do problema é obrigatória.');
+  }
+
+  if (!arquivos || arquivos.length === 0) {
+    throw new Error('É obrigatório anexar um arquivo para abrir o chamado.');
+  }
+
+  const tituloFinal = (titulo || gerarTituloDeDescricao(descricaoFinal)).trim();
+  const formData = new FormData();
+
+  // DTO JSON para @RequestPart("chamado")
+  const chamadoPayload = {
+    titulo: tituloFinal,
+    descricao: descricaoFinal,
+    origem: origem === 'VOZ' ? 'VOZ' : 'TEXTO',
+    duracaoAudioSegundos: duracaoAudioSegundos ? Number(duracaoAudioSegundos) : null,
+  };
+
+  formData.append(
+    'chamado',
+    new Blob([JSON.stringify(chamadoPayload)], { type: 'application/json' })
+  );
+
+  // Campos diretos para compatibilidade com handlers multipart
+  formData.append('descricao', descricaoFinal);
+  formData.append('titulo', tituloFinal);
+
+  // Arquivos anexos obrigatórios
+  arquivos.forEach((file) => {
+    formData.append('arquivos', file);
+    formData.append('arquivo', file);
+  });
+
+  // Áudio original se houver
+  if (audio) {
+    const audioFinal = await prepararArquivoAudio(audio);
+    formData.append('audio', audioFinal, audioFinal.name || 'gravacao.wav');
+  }
+
+  const { data } = await api.post('/chamados', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return data;
+}
+
+export const criarChamado = criarChamadoApi;
 
 export function createTicket({ title, category, description, priority, ownerId }) {
   const tickets = getTickets();

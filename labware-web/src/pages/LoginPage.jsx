@@ -113,9 +113,6 @@ export default function LoginPage({ modo = 'login' }) {
           )}
         </button>
         <div className="auth-bottom">
-          {ehCadastro && (
-            <p className="auth-footnote">Use pelo menos 8 caracteres. O cadastro cria uma conta cliente.</p>
-          )}
           <p className="auth-switch">
             {ehCadastro ? (
               <>Já tem uma conta? Faça <Link to="/login">Login</Link></>

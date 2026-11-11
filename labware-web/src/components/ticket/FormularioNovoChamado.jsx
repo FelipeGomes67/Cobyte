@@ -1,28 +1,53 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { transcreverAudio } from '../../services/sttService';
+import { criarChamadoApi } from '../../services/ticketService';
 import '../../css/FormularioNovoChamado.css';
 
 export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
+  const navigate = useNavigate();
   const [modo, setModo] = useState(modoInicial);
   const [textos, setTextos] = useState({ trans: '', desc: '' });
   const [arquivos, setArquivos] = useState([]);
+  const [audioBlob, setAudioBlob] = useState(null);
   const [gravando, setGravando] = useState(false);
   const [pausado, setPausado] = useState(false);
   const [tocando, setTocando] = useState(false);
   const [tempo, setTempo] = useState(0);
+  const [transcrevendo, setTranscrevendo] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [erroAudio, setErroAudio] = useState('');
+  const [erroGeral, setErroGeral] = useState('');
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const audioPlayerRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const audioFileInputRef = useRef(null);
 
   useEffect(() => {
     let t;
-    if (gravando && !pausado) t = setInterval(() => setTempo((prev) => prev + 1), 1000);
+    if (gravando && !pausado) {
+      t = setInterval(() => setTempo((prev) => prev + 1), 1000);
+    }
     return () => clearInterval(t);
   }, [gravando, pausado]);
 
+  // Limpa streams de microfone ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.stream) {
+        mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
   const iniciarOuRetomar = async () => {
+    setErroAudio('');
     if (tocando && audioPlayerRef.current) {
       audioPlayerRef.current.pause();
       setTocando(false);
@@ -35,14 +60,18 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
         audioChunksRef.current = [];
 
         mediaRecorderRef.current.ondataavailable = (e) => {
-          if (e.data.size > 0) audioChunksRef.current.push(e.data);
+          if (e.data && e.data.size > 0) {
+            audioChunksRef.current.push(e.data);
+          }
         };
 
-        mediaRecorderRef.current.start();
+        mediaRecorderRef.current.start(250);
         setGravando(true);
         setPausado(false);
-      } catch {
-        alert('Não foi possível acessar o microfone.');
+        setAudioBlob(null);
+      } catch (err) {
+        console.error('Erro ao acessar microfone:', err);
+        setErroAudio('Permissão de microfone negada ou dispositivo não encontrado.');
       }
     } else if (pausado) {
       mediaRecorderRef.current?.resume();
@@ -58,11 +87,40 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
   };
 
   const toggleGravacao = () => {
-    if (!gravando || pausado) iniciarOuRetomar();
-    else pausarGravacao();
+    if (!gravando || pausado) {
+      iniciarOuRetomar();
+    } else {
+      pausarGravacao();
+    }
   };
 
-  const ouvirGravacao = () => {
+  const obterBlobFinal = () => {
+    return new Promise((resolve) => {
+      if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
+        if (audioChunksRef.current.length > 0) {
+          const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          setAudioBlob(blob);
+          resolve(blob);
+        } else {
+          resolve(audioBlob);
+        }
+        return;
+      }
+
+      mediaRecorderRef.current.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        resolve(blob);
+      };
+
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream?.getTracks().forEach((track) => track.stop());
+      setGravando(false);
+      setPausado(false);
+    });
+  };
+
+  const ouvirGravacao = async () => {
     if (gravando && mediaRecorderRef.current?.state === 'recording') {
       mediaRecorderRef.current.pause();
       setPausado(true);
@@ -74,10 +132,14 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
       return;
     }
 
-    if (audioChunksRef.current.length > 0) {
-      const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-      const url = URL.createObjectURL(blob);
+    let blobParaTocar = audioBlob;
+    if (!blobParaTocar && audioChunksRef.current.length > 0) {
+      blobParaTocar = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      setAudioBlob(blobParaTocar);
+    }
 
+    if (blobParaTocar) {
+      const url = URL.createObjectURL(blobParaTocar);
       audioPlayerRef.current = new Audio(url);
       audioPlayerRef.current.play();
       setTocando(true);
@@ -91,29 +153,125 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
       setTocando(false);
     }
     if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
+      if (mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
       mediaRecorderRef.current.stream?.getTracks().forEach((track) => track.stop());
     }
     setGravando(false);
     setPausado(false);
     setTempo(0);
+    setAudioBlob(null);
     audioChunksRef.current = [];
+    setErroAudio('');
+  };
+
+  const enviarAudioParaTranscricao = async () => {
+    setErroAudio('');
+    setTranscrevendo(true);
+
+    try {
+      const blob = await obterBlobFinal();
+      if (!blob || blob.size === 0) {
+        throw new Error('Nenhum áudio foi gravado ainda.');
+      }
+
+      const resultado = await transcreverAudio(blob);
+      if (resultado?.transcricao) {
+        setTextos((prev) => ({
+          ...prev,
+          trans: resultado.transcricao,
+        }));
+      } else {
+        throw new Error('Não foi possível obter o texto transcrito da API.');
+      }
+    } catch (err) {
+      console.error('Erro na transcrição:', err);
+      setErroAudio(err.message || 'Falha ao processar o áudio.');
+    } finally {
+      setTranscrevendo(false);
+    }
+  };
+
+  const handleAudioFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setErroAudio('');
+    setTranscrevendo(true);
+    setAudioBlob(file);
+
+    try {
+      const resultado = await transcreverAudio(file);
+      if (resultado?.transcricao) {
+        setTextos((prev) => ({
+          ...prev,
+          trans: resultado.transcricao,
+        }));
+      }
+    } catch (err) {
+      console.error('Erro ao transcrever arquivo de áudio:', err);
+      setErroAudio(err.message || 'Falha ao processar arquivo de áudio.');
+    } finally {
+      setTranscrevendo(false);
+      e.target.value = '';
+    }
   };
 
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files || []);
     if (selectedFiles.length === 0) return;
 
-    const novosArquivos = selectedFiles.map((f) => ({
-      name: f.name,
-      size: `${(f.size / (1024 * 1024)).toFixed(1)} MB`
-    }));
-    setArquivos((prev) => [...prev, ...novosArquivos]);
+    setArquivos((prev) => [...prev, ...selectedFiles]);
+    setErroGeral('');
+    e.target.value = '';
   };
 
-  const submit = (e) => {
+  const formatFileSize = (bytes) => {
+    if (!bytes && bytes !== 0) return '0 MB';
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const submit = async (e) => {
     e.preventDefault();
-    alert('O envio de chamados ainda não está conectado neste formulário.');
+    setErroGeral('');
+
+    const texto = modo === 'voz' ? textos.trans.trim() : textos.desc.trim();
+    if (!texto) {
+      setErroGeral('Por favor, descreva o problema antes de enviar o chamado.');
+      return;
+    }
+
+    // Regra estrita de anexo obrigatório
+    if (!arquivos || arquivos.length === 0) {
+      setErroGeral('É obrigatório anexar um arquivo para abrir o chamado.');
+      return;
+    }
+
+    setEnviando(true);
+
+    try {
+      let audioFinal = null;
+      if (modo === 'voz') {
+        audioFinal = audioBlob || (audioChunksRef.current.length > 0 ? new Blob(audioChunksRef.current, { type: 'audio/webm' }) : null);
+      }
+
+      await criarChamadoApi({
+        descricao: texto,
+        origem: modo === 'voz' ? 'VOZ' : 'TEXTO',
+        duracaoAudioSegundos: modo === 'voz' && tempo > 0 ? tempo : null,
+        arquivos,
+        audio: audioFinal,
+      });
+
+      // Redireciona com sucesso para a lista de chamados
+      navigate('/chamados');
+    } catch (err) {
+      console.error('Erro ao criar chamado:', err);
+      setErroGeral(err.message || 'Não foi possível registrar o chamado. Tente novamente.');
+    } finally {
+      setEnviando(false);
+    }
   };
 
   const fmtTempo = `${String(Math.floor(tempo / 60)).padStart(2, '0')}:${String(tempo % 60).padStart(2, '0')}`;
@@ -154,17 +312,26 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 type="button"
                 className={`btn-gravador-circulo ${gravando && !pausado ? 'gravando' : ''}`}
                 onClick={toggleGravacao}
+                title={!gravando ? 'Iniciar gravação' : pausado ? 'Retomar gravação' : 'Pausar gravação'}
               >
                 <img src="/icons/mic.svg" alt="Mic" />
               </button>
 
               <p className="instrucao-audio">
-                {!gravando
+                {transcrevendo
+                  ? 'Transcrevendo áudio com inteligência artificial…'
+                  : !gravando
                   ? 'Clique no microfone para começar a gravar.'
                   : pausado
                   ? 'Gravação pausada.'
                   : 'Fale naturalmente. Estamos aqui para ajudar.'}
               </p>
+
+              {erroAudio && (
+                <p className="subtexto-instrucao" style={{ color: '#dc2626', fontWeight: 500, margin: '4px 0 12px', textAlign: 'center' }}>
+                  {erroAudio}
+                </p>
+              )}
 
               <div className="waveform-container">
                 {Array.from({ length: 32 }).map((_, i) => (
@@ -183,7 +350,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                   type="button"
                   className="btn-audio-acao"
                   onClick={iniciarOuRetomar}
-                  disabled={!gravando || !pausado}
+                  disabled={!gravando || !pausado || transcrevendo}
                 >
                   ⏸ Retomar
                 </button>
@@ -192,7 +359,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                   type="button"
                   className="btn-audio-acao"
                   onClick={ouvirGravacao}
-                  disabled={!gravando && tempo === 0}
+                  disabled={(!gravando && tempo === 0 && !audioBlob) || transcrevendo}
                 >
                   {tocando ? '⏸ Pausar Áudio' : '▷ Ouvir Gravação'}
                 </button>
@@ -201,7 +368,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                   type="button"
                   className="btn-audio-acao"
                   onClick={excluirERegravar}
-                  disabled={!gravando && tempo === 0}
+                  disabled={(!gravando && tempo === 0 && !audioBlob) || transcrevendo}
                 >
                   ↻ Excluir e Regravar
                 </button>
@@ -209,10 +376,11 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 <button
                   type="button"
                   className="btn-audio-enviar"
-                  disabled={!gravando && tempo === 0}
-                  onClick={() => alert('A transcrição ainda não está conectada neste formulário.')}
+                  disabled={(!gravando && tempo === 0 && !audioBlob) || transcrevendo}
+                  onClick={enviarAudioParaTranscricao}
                 >
-                  <img src="/icons/enviar.svg" alt="" className="icone-enviar-branco" /> Enviar
+                  <img src="/icons/enviar.svg" alt="" className="icone-enviar-branco" />
+                  <span>{transcrevendo ? 'Transcrevendo…' : 'Enviar'}</span>
                 </button>
               </div>
             </div>
@@ -222,11 +390,21 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 className="campo-transcricao"
                 placeholder="Texto transcrito..."
                 value={textos.trans}
-                onChange={(e) => setTextos({ ...textos, trans: e.target.value })}
+                onChange={(e) => {
+                  setTextos({ ...textos, trans: e.target.value });
+                  setErroGeral('');
+                }}
+                disabled={transcrevendo || enviando}
               />
               <label className="aviso-transcricao" style={{ cursor: 'pointer' }}>
                 Ou anexe um arquivo de áudio ⌵
-                <input type="file" accept="audio/*" onChange={handleFileSelect} hidden />
+                <input
+                  type="file"
+                  ref={audioFileInputRef}
+                  accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac"
+                  onChange={handleAudioFileUpload}
+                  hidden
+                />
               </label>
             </div>
           </section>
@@ -238,7 +416,11 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
               className="campo-textarea-descricao"
               placeholder="Descreva o problema detalhadamente ou cole a mensagem de erro aqui..."
               value={textos.desc}
-              onChange={(e) => setTextos({ ...textos, desc: e.target.value })}
+              onChange={(e) => {
+                setTextos({ ...textos, desc: e.target.value });
+                setErroGeral('');
+              }}
+              disabled={enviando}
             />
           </section>
         )}
@@ -270,6 +452,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 type="button"
                 className="btn-upload-opcao"
                 onClick={() => cameraInputRef.current?.click()}
+                disabled={enviando}
               >
                 <img src="/icons/Camera.svg" alt="Câmera" /> Tirar Foto
               </button>
@@ -277,6 +460,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 type="button"
                 className="btn-upload-opcao"
                 onClick={() => fileInputRef.current?.click()}
+                disabled={enviando}
               >
                 <img src="/icons/icone_clips.svg" alt="Anexo" /> Procurar Arquivo
               </button>
@@ -294,12 +478,13 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                     <img src="/icons/file.svg" alt="Arquivo" />
                   </div>
                   <div className="info-anexo">
-                    <strong>{f.name}</strong> <small>{f.size}</small>
+                    <strong>{f.name}</strong> <small>{formatFileSize(f.size)}</small>
                   </div>
                   <button
                     type="button"
                     className="btn-remover-anexo"
                     onClick={() => setArquivos(arquivos.filter((_, idx) => idx !== i))}
+                    disabled={enviando}
                   >
                     ✕
                   </button>
@@ -309,10 +494,20 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           )}
         </section>
 
+        {erroGeral && (
+          <p className="subtexto-instrucao" style={{ color: '#dc2626', fontWeight: 600, margin: '0' }} role="alert">
+            {erroGeral}
+          </p>
+        )}
+
         <div className="rodape-formulario">
-          <button type="submit" className="btn-enviar-chamado-principal">
+          <button
+            type="submit"
+            className="btn-enviar-chamado-principal"
+            disabled={enviando || transcrevendo}
+          >
             <img src="/icons/enviar.svg" alt="" className="icone-enviar-branco" />
-            <span>Enviar Chamado</span>
+            <span>{enviando ? 'Enviando chamado…' : 'Enviar Chamado'}</span>
           </button>
         </div>
       </form>
