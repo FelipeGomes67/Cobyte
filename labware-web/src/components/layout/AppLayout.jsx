@@ -15,6 +15,7 @@ const pageNames = {
   '/configuracoes': 'Configurações',
   '/perfil': 'Meu perfil',
   '/chamados/novo': 'Novo chamado',
+  '/novo-chamado': 'Novo chamado',
   '/notificacoes': 'Notificações',
 };
 
@@ -27,8 +28,10 @@ export default function AppLayout() {
   const [logoutOpen, setLogoutOpen] = useState(false);
   const notificationRef = useRef(null);
   const ehDetalheChamado = /^\/(dashboard|chamado|chamados|meus-chamados|historico)\/[^/]+\/?$/.test(location.pathname)
-    && location.pathname.replace(/\/$/, '') !== '/chamados/novo';
+    && location.pathname.replace(/\/$/, '') !== '/chamados/novo'
+    && location.pathname.replace(/\/$/, '') !== '/novo-chamado';
   const title = ehDetalheChamado ? 'Detalhes' : pageNames[location.pathname] || 'Central de Suporte';
+
   function leaveAccount() {
     logout();
     setLogoutOpen(false);
@@ -58,29 +61,56 @@ export default function AppLayout() {
 
   const isReportsPage = location.pathname === '/relatorios';
   const ehDashboard = location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/');
-  return <div className={`app-shell ${isReportsPage ? 'app-shell--reports' : ''} ${ehDashboard ? 'app-shell--dashboard' : ''}`}>
-    <Sidebar open={menuOpen} onNavigate={() => setMenuOpen(false)} user={user} onRequestLogout={() => setLogoutOpen(true)}/>
-    {menuOpen && <button className="mobile-scrim" onClick={() => setMenuOpen(false)} aria-label="Fechar menu"/>}
-    <main className={`main-area ${isReportsPage ? 'main-area--reports' : ''}`}>
-      <header className="topbar">
-        <button className="icon-button mobile-menu" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}>{menuOpen ? <X /> : <Menu />}</button>
-        <div className="breadcrumb"><span>Central de Suporte</span><strong>{title}</strong></div>
-        <div className="top-actions">
-          <div className="notification-center" ref={notificationRef}>
-            <button className="icon-button notification-button" onClick={() => setNotificationsOpen(!notificationsOpen)} aria-label="Notificações" aria-expanded={notificationsOpen} aria-haspopup="true">
-              <Bell size={21}/>
-            </button>
-            {notificationsOpen && <section className="notification-popover" aria-label="Notificações recentes">
-              <h2>Notificações</h2>
-              <p className="notification-empty">O histórico de notificações será exibido quando estiver conectado ao serviço de chamados.</p>
-              <button className="notification-see-all" onClick={openNotifications}>Ver notificações</button>
-            </section>}
+  const isNotificacoesPage = location.pathname === '/notificacoes';
+
+  return (
+    <div className={`app-shell ${isReportsPage ? 'app-shell--reports' : ''} ${ehDashboard ? 'app-shell--dashboard' : ''} ${isNotificacoesPage ? 'app-shell--notificacoes' : ''}`}>
+      <Sidebar open={menuOpen} onNavigate={() => setMenuOpen(false)} user={user} onRequestLogout={() => setLogoutOpen(true)} />
+      {menuOpen && <button className="mobile-scrim" onClick={() => setMenuOpen(false)} aria-label="Fechar menu" />}
+      <main className={`main-area ${isReportsPage ? 'main-area--reports' : ''} ${isNotificacoesPage ? 'main-area--notificacoes' : ''}`}>
+        <header className="topbar">
+          <button className="icon-button mobile-menu" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}>
+            {menuOpen ? <X /> : <Menu />}
+          </button>
+
+          {isNotificacoesPage ? (
+            <div className="topbar-breadcrumb">
+              <span className="topbar-breadcrumb-sub">Suporte Labware</span>
+              <span className="topbar-breadcrumb-main">Notificações</span>
+            </div>
+          ) : (
+            <div className="breadcrumb"><span>Central de Suporte</span><strong>{title}</strong></div>
+          )}
+
+          <div className="top-actions">
+            <div className="notification-center" ref={notificationRef}>
+              <button
+                className="topbar-bell-button"
+                onClick={openNotifications}
+                aria-label="3 notificações não lidas"
+              >
+                <Bell size={26} strokeWidth={1.8} className="topbar-bell-svg" />
+                <span className="topbar-badge">3</span>
+              </button>
+              {notificationsOpen && (
+                <section className="notification-popover" aria-label="Notificações recentes">
+                  <h2>Notificações</h2>
+                  <p className="notification-empty">O histórico de notificações será exibido quando estiver conectado ao serviço de chamados.</p>
+                  <button className="notification-see-all" onClick={openNotifications}>Ver notificações</button>
+                </section>
+              )}
+            </div>
+            {!isNotificacoesPage && (
+              <ProfileMenu user={user} variant="header" onRequestLogout={() => setLogoutOpen(true)} />
+            )}
           </div>
-          <ProfileMenu user={user} variant="header" onRequestLogout={() => setLogoutOpen(true)}/>
+        </header>
+
+        <div className={`content-area ${isReportsPage ? 'content-area--reports' : ''} ${isNotificacoesPage ? 'content-area--notificacoes' : ''}`}>
+          <Outlet />
         </div>
-      </header>
-      <div className={`content-area ${isReportsPage ? 'content-area--reports' : ''}`}><Outlet/></div>
-    </main>
-    <ConfirmDialog open={logoutOpen} title="Sair da conta?" message="Sua sessão será encerrada neste dispositivo." confirmLabel="Sair da conta" onCancel={() => setLogoutOpen(false)} onConfirm={leaveAccount}/>
-  </div>;
+      </main>
+      <ConfirmDialog open={logoutOpen} title="Sair da conta?" message="Sua sessão será encerrada neste dispositivo." confirmLabel="Sair da conta" onCancel={() => setLogoutOpen(false)} onConfirm={leaveAccount} />
+    </div>
+  );
 }

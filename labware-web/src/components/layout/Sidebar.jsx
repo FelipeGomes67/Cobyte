@@ -1,26 +1,75 @@
-import { NavLink } from 'react-router-dom';
-import { MessageSquare } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { LayoutGrid, PlusCircle, FileText, History, Bell } from 'lucide-react';
 import ProfileMenu from './ProfileMenu';
 
-const links = [
-  { label: 'Dashboard', to: '/dashboard', icon: '/Painel.svg' },
-  { label: 'Todos Chamados', to: '/chamados', icon: '/Ticket.svg', supportOnly: true },
-  { label: 'Meus Chamados', to: '/meus-chamados', Icon: MessageSquare },
-  { label: 'Histórico de Chamados', to: '/historico', icon: '/Histórico.svg' },
-  { label: 'Relatório', to: '/relatorios', icon: '/Prancheta.svg', supportOnly: true },
-];
-
 export default function Sidebar({ open, onNavigate, user, onRequestLogout }) {
-  const visibleLinks = links.filter(link => !link.supportOnly || user.role === 'support');
-  return <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
-    <NavLink className="brand" to="/dashboard" onClick={onNavigate} aria-label="LabWare - início">
-      <img className="brand-logo" src="/Propriedade%201=Padr%C3%A3o.png" alt="LabWare"/>
-    </NavLink>
-    <nav className="side-nav" aria-label="Navegação principal">
-      {visibleLinks.map(({ label, to, icon, Icon }) => <NavLink key={to} to={to} onClick={onNavigate} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-        {icon ? <img src={icon} alt=""/> : <Icon size={18}/>}<span>{label}</span>
-      </NavLink>)}
-    </nav>
-    <div className="sidebar-account"><ProfileMenu user={user} onNavigate={onNavigate} onRequestLogout={onRequestLogout}/></div>
-  </aside>;
+  const location = useLocation();
+  const currentPath = location.pathname;
+
+  const isDashboardActive = currentPath === '/dashboard';
+  const isNovoChamadoActive = currentPath === '/chamados/novo' || currentPath === '/novo-chamado';
+  const isMeusChamadosActive = (currentPath === '/chamados' || currentPath === '/meus-chamados') && !isNovoChamadoActive;
+  const isHistoricoActive = currentPath === '/historico';
+  const isNotificacoesActive = currentPath === '/notificacoes';
+
+  const navItems = [
+    {
+      label: 'DashBoard',
+      to: '/dashboard',
+      Icon: LayoutGrid,
+      active: isDashboardActive,
+    },
+    {
+      label: 'Fazer Chamado',
+      to: '/chamados/novo',
+      Icon: PlusCircle,
+      active: isNovoChamadoActive,
+    },
+    {
+      label: 'Meus Chamados',
+      to: '/chamados',
+      Icon: FileText,
+      active: isMeusChamadosActive,
+    },
+    {
+      label: 'Histórico',
+      to: '/historico',
+      Icon: History,
+      active: isHistoricoActive,
+    },
+    {
+      label: 'Notificações',
+      to: '/notificacoes',
+      Icon: Bell,
+      active: isNotificacoesActive,
+    },
+  ];
+
+  return (
+    <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
+      <Link className="brand" to="/dashboard" onClick={onNavigate} aria-label="CoBYTE - início">
+        <img className="brand-logo" src="/Propriedade%201=Padr%C3%A3o.png" alt="CoBYTE" />
+      </Link>
+      <nav className="side-nav" aria-label="Navegação principal">
+        {navItems.map(({ label, to, Icon, active }) => (
+          <Link
+            key={label}
+            to={to}
+            onClick={onNavigate}
+            className={`nav-link ${active ? 'active' : ''}`}
+          >
+            <Icon size={19} className="nav-icon" />
+            <span>{label}</span>
+          </Link>
+        ))}
+      </nav>
+      <div className="sidebar-account">
+        <ProfileMenu
+          user={user || { name: 'Fidalgo', role: 'support' }}
+          onNavigate={onNavigate}
+          onRequestLogout={onRequestLogout}
+        />
+      </div>
+    </aside>
+  );
 }

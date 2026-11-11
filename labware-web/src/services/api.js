@@ -8,13 +8,12 @@ const baseEnv = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 export const API_BASE_URL = baseEnv.trim().replace(/\/+$/, '');
 
 export function obterToken() {
-  return localStorage.getItem(CHAVE_TOKEN) || localStorage.getItem('token');
+  return localStorage.getItem(CHAVE_TOKEN);
 }
 
 export function salvarToken(token) {
   if (token) {
     localStorage.setItem(CHAVE_TOKEN, token);
-    localStorage.setItem('token', token);
   }
 }
 

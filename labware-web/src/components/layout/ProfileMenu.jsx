@@ -113,11 +113,11 @@ export default function ProfileMenu({ user, onRequestLogout, onNavigate, variant
   return <div className={`profile-menu-anchor profile-menu-anchor--${variant}`} ref={rootRef} onBlur={handleBlur}>
     {variant === 'sidebar' ? <div className="sidebar-profile-trigger-row">
       <button className="sidebar-user" {...triggerProps}>
-        <Avatar user={user}/><span className="sidebar-user-label"><strong>{user.name}</strong><small>{roleLabel}</small></span>
+        <Avatar user={user}/><span className="sidebar-user-label"><strong>{user?.name || user?.nome || 'Fidalgo'}</strong><small>{roleLabel}</small></span>
       </button>
       <button className="profile-more-button" aria-label="Abrir menu do perfil" {...triggerProps}><Ellipsis size={18}/></button>
     </div> : <button className="user-trigger" {...triggerProps}>
-      <Avatar user={user}/><span className="user-name">{user.name}</span><ChevronDown size={15} className="profile-chevron"/>
+      <Avatar user={user}/><span className="user-name">{user?.name || user?.nome || 'Fidalgo'}</span><ChevronDown size={15} className="profile-chevron"/>
     </button>}
     {rendered && <div
       id={menuId}

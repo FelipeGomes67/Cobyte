@@ -5,3 +5,5 @@ labware-api/uploads/*
 
 # Preserva apenas o arquivo .gitkeep para que o Git rastreie a pasta
 !labware-api/uploads/.gitkeep
+
+AGENTS.md

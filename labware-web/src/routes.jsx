@@ -93,9 +93,9 @@ export default function RotasAplicacao() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/dashboard/:ticketId" element={<DetalhesChamado />} />
           <Route path="/chamados" element={<TicketsPage mode="all" />} />
-          <Route path="/chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/chamados/novo" element={<NovoChamado />} />
           <Route path="/novo-chamado" element={<NovoChamado />} />
+          <Route path="/chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/meus-chamados" element={<TicketsPage mode="mine" />} />
           <Route path="/meus-chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/historico" element={<TicketsPage mode="history" />} />
