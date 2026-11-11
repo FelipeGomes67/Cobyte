@@ -311,6 +311,15 @@ function GraficoVolume({ dias }) {
                 y2={20 + indice * 57.5}
               />
             ))}
+            {selecionado !== null && (
+              <line
+                className="dash-crosshair"
+                x1={ponto(0, selecionado).x}
+                x2={ponto(0, selecionado).x}
+                y1="0"
+                y2="270"
+              />
+            )}
             <polyline
               points={linha("abertos")}
               className="dash-line dash-line--opened"
@@ -368,10 +377,21 @@ function GraficoVolume({ dias }) {
             )}
           </div>
           {selecionado !== null && (
-            <div className="dash-chart-tooltip" role="status">
-              <strong>{dias[selecionado].data}</strong>
-              <span>Abertos: {dias[selecionado].abertos}</span>
-              <span>Fechados: {dias[selecionado].fechados}</span>
+            <div
+              className="dash-chart-tooltip"
+              role="status"
+              style={{
+                left: `${Math.min(88, Math.max(12, ponto(0, selecionado).x / 10))}%`,
+              }}
+            >
+              {" "}
+              <strong>{dias[selecionado].data}</strong>{" "}
+              <span className="dash-tooltip-opened">
+                Abertos: {dias[selecionado].abertos}
+              </span>{" "}
+              <span className="dash-tooltip-closed">
+                Fechados: {dias[selecionado].fechados}
+              </span>{" "}
             </div>
           )}
         </div>
@@ -504,16 +524,10 @@ export default function DashboardPage() {
     const intervalo = window.setInterval(() => definirAgora(Date.now()), 1000);
     return () => window.clearInterval(intervalo);
   }, []);
-  const ehCliente =
-    usuario?.role === "client" ||
-    usuario?.perfil === "CLIENTE";
-  const ehSuporte =
-    usuario?.role === "support" ||
-    usuario?.perfil === "SUPORTE" ||
-    usuario?.perfil === "ADMIN";
-  const chamadosUsuario = ehSuporte
-    ? chamados
-    : chamados.filter((chamado) => chamado.ownerId === usuario?.id);
+  const chamadosUsuario =
+    usuario?.role === "support"
+      ? chamados
+      : chamados.filter((chamado) => chamado.ownerId === usuario?.id);
   const dados = calcularDashboard(chamadosUsuario, agora);
 
   return (
@@ -549,7 +563,7 @@ export default function DashboardPage() {
               tipo="category"
             />
           </div>
-          {!ehCliente && <GraficoVolume dias={dados.evolucao} />}
+          <GraficoVolume dias={dados.evolucao} />
           <ChamadosPrioritarios chamados={dados.prioritarios} agora={agora} />
         </>
       )}

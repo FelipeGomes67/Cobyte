@@ -6,6 +6,7 @@ import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
 import DashboardPage from './pages/DashboardPage';
 import { TicketsPage } from './pages/TicketsPage';
+import MeusChamados from './pages/MeusChamados';
 import NovoChamado from './pages/NovoChamado';
 import Notificacoes from './pages/Notificacoes';
 import DetalhesChamado from './pages/DetalhesChamado';
@@ -102,6 +103,7 @@ export default function RotasAplicacao() {
         <Route element={<ProtectedRoute />}>
           <Route path="/notificacoes" element={<Notificacoes />} />
           <Route path="/chamado/:id" element={<DetalhesChamado />} />
+          <Route path="/chamados/:id" element={<DetalhesChamado />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/dashboard/:ticketId" element={<DetalhesChamado />} />
           <Route path="/chamados" element={<TicketsPage mode="all" />} />
@@ -124,7 +126,7 @@ export default function RotasAplicacao() {
           />
           <Route path="/chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/todos-chamados/:ticketId" element={<DetalhesChamado />} />
-          <Route path="/meus-chamados" element={<TicketsPage mode="mine" />} />
+          <Route path="/meus-chamados" element={<MeusChamados />} />
           <Route path="/meus-chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/historico" element={<TicketsPage mode="history" />} />
           <Route path="/historico/:ticketId" element={<DetalhesChamado />} />

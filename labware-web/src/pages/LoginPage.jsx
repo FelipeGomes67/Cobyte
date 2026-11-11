@@ -1,45 +1,49 @@
+
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useAutenticacao } from '../hooks/useAuth';
 
 export default function LoginPage({ modo = 'login' }) {
   const navegar = useNavigate();
   const localizacao = useLocation();
   const { autenticar, cadastrar, carregando, erroSessao } = useAutenticacao();
+
   const [erroLogin, definirErroLogin] = useState('');
   const [erroCadastro, definirErroCadastro] = useState('');
-  const [cadastrado, definirCadastrado] = useState(false);
+  const [mostrarSenha, definirMostrarSenha] = useState(false);
+
   const ehCadastro = modo === 'cadastro';
 
   async function enviarLogin(evento) {
     evento.preventDefault();
     definirErroLogin('');
+
     const formulario = new FormData(evento.currentTarget);
-    const email = formulario.get('email');
-    const senha = formulario.get('senha');
 
     try {
-      const usuario = await autenticar(email, senha);
+      const usuario = await autenticar(formulario.get('email'), formulario.get('senha'));
       const destino = localizacao.state?.from;
-      navegar(usuario?.role === 'support' && destino ? destino : '/dashboard', { replace: true });
+
+      navegar(usuario.role === 'support' && destino ? destino : '/dashboard', { replace: true });
     } catch (erro) {
-      definirErroLogin(erro.message || 'E-mail ou senha inválidos.');
+      definirErroLogin(erro.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');
     }
   }
 
   async function enviarCadastro(evento) {
     evento.preventDefault();
     definirErroCadastro('');
-    definirCadastrado(false);
+
     const formulario = new FormData(evento.currentTarget);
-    const nome = formulario.get('nome');
-    const email = formulario.get('email');
-    const senha = formulario.get('senha');
 
     try {
-      await cadastrar({ nome, email, senha });
-      definirCadastrado(true);
+      await cadastrar({
+        nome: formulario.get('nome'),
+        email: formulario.get('email'),
+        senha: formulario.get('senha')
+      });
+
       navegar('/dashboard', { replace: true });
     } catch (erro) {
       definirErroCadastro(erro.message || 'Não foi possível concluir o cadastro.');
@@ -47,81 +51,110 @@ export default function LoginPage({ modo = 'login' }) {
   }
 
   return (
-    <main className="auth-screen">
-      <form
-        className={`auth-card ${ehCadastro ? 'auth-card-register' : 'auth-card-login'}`}
-        onSubmit={ehCadastro ? enviarCadastro : enviarLogin}
-      >
-        <img className="auth-logo" src="/cobyte-logo-white.png" alt="COBYTE" />
-        <h1>{ehCadastro ? 'Cadastro' : 'Login'}</h1>
-        <div className="auth-fields">
-          {ehCadastro && (
-            <div className="auth-field">
-              <input
-                name="nome"
-                type="text"
-                placeholder="Nome"
-                aria-label="Nome"
-                required
-                minLength="2"
-                maxLength="255"
-                autoComplete="name"
-                disabled={carregando}
-                aria-describedby={erroCadastro ? 'register-error' : undefined}
-              />
+    <main className="tela-autenticacao">
+      <div className="conteudo-autenticacao">
+        <section className="identidade-marca">
+          <div className="logo-marca-conteudo">
+            <img className="logo-marca" src="/cobyte-logo-white.png" alt="CoByte" />
+          </div>
+
+          <div className="texto-apresentacao">
+            <h1>
+              Seu suporte,
+              <span className="destaque-claro">mais próximo.</span>
+              <span className="destaque-azul">Tudo conectado.</span>
+            </h1>
+
+            <p>
+              Acompanhe suas solicitações, converse com a equipe e fique por dentro de cada atualização em um só lugar.
+            </p>
+          </div>
+        </section>
+
+        <section className="cartao-autenticacao-conteudo">
+          <form className="cartao-autenticacao" onSubmit={ehCadastro ? enviarCadastro : enviarLogin}>
+            <div className="cabecalho-autenticacao">
+              <h2>{ehCadastro ? 'Crie sua conta' : 'Acesse sua plataforma'}</h2>
+              <p>
+                {ehCadastro
+                  ? 'Cadastre-se para acompanhar seus chamados e interagir com a equipe de suporte.'
+                  : 'Entre com suas credenciais para continuar.'}
+              </p>
             </div>
-          )}
-          <div className="auth-field">
-            <input
-              name="email"
-              maxLength="255"
-              type="email"
-              placeholder="Email"
-              aria-label="E-mail"
-              required
-              autoComplete={ehCadastro ? 'email' : 'username'}
-              disabled={carregando}
-              aria-describedby={ehCadastro ? (erroCadastro ? 'register-error' : undefined) : (erroLogin ? 'login-error' : undefined)}
-            />
-          </div>
-          <div className="auth-field">
-            <input
-              name="senha"
-              type="password"
-              placeholder="Senha"
-              aria-label="Senha"
-              required
-              minLength={ehCadastro ? 8 : undefined}
-              maxLength={ehCadastro ? 72 : undefined}
-              autoComplete={ehCadastro ? 'new-password' : 'current-password'}
-              disabled={carregando}
-              aria-describedby={ehCadastro ? (erroCadastro ? 'register-error' : undefined) : (erroLogin ? 'login-error' : undefined)}
-            />
-          </div>
-        </div>
-        {erroSessao && <p className="auth-message error" role="alert">{erroSessao}</p>}
-        {erroLogin && <p id="login-error" className="auth-message error" role="alert">{erroLogin}</p>}
-        {erroCadastro && <p id="register-error" className="auth-message error" role="alert">{erroCadastro}</p>}
-        {cadastrado && <p className="auth-message success" role="status">Cadastro concluído.</p>}
-        <button className="auth-submit" type="submit" disabled={carregando}>
-          {carregando ? (
-            <>
-              <LoaderCircle size={16} className="spin" /> {ehCadastro ? 'Cadastrando…' : 'Entrando…'}
-            </>
-          ) : (
-            ehCadastro ? 'Cadastrar' : 'Entrar'
-          )}
-        </button>
-        <div className="auth-bottom">
-          <p className="auth-switch">
-            {ehCadastro ? (
-              <>Já tem uma conta? Faça <Link to="/login">Login</Link></>
-            ) : (
-              <>Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link></>
-            )}
-          </p>
-        </div>
-      </form>
+
+            <div className="campos-autenticacao">
+              {ehCadastro && (
+                <div className="campo-autenticacao">
+                  <label htmlFor="nome">Nome completo</label>
+                  <div className="envoltorio-campo">
+                    <User size={18} className="icone-campo" />
+                    <input id="nome" name="nome" type="text" placeholder="Ex: João da Silva" required minLength={2} maxLength={255} autoComplete="name" />
+                  </div>
+                </div>
+              )}
+
+              <div className="campo-autenticacao">
+                <label htmlFor="email">E-mail</label>
+                <div className="envoltorio-campo">
+                  <Mail size={18} className="icone-campo" />
+                  <input id="email" name="email" type="email" placeholder="Ex: joao@email.com" required maxLength={255} autoComplete={ehCadastro ? 'email' : 'username'} />
+                </div>
+              </div>
+
+              <div className="campo-autenticacao">
+                <label htmlFor="senha">Senha</label>
+                <div className="envoltorio-campo">
+                  <Lock size={18} className="icone-campo" />
+                  <input id="senha" name="senha" type={mostrarSenha ? 'text' : 'password'} placeholder="Insira sua senha" required minLength={ehCadastro ? 8 : undefined} maxLength={ehCadastro ? 72 : undefined} autoComplete={ehCadastro ? 'new-password' : 'current-password'} />
+
+                  <button
+                    type="button"
+                    className="botao-visualizar-senha"
+                    onClick={() => definirMostrarSenha(!mostrarSenha)}
+                    aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {mostrarSenha ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                {ehCadastro && <span className="dica-senha">Mínimo de 8 caracteres.</span>}
+
+                {!ehCadastro && (
+                  <div className="recuperar-senha">
+                    <Link to="/esqueci-senha">Esqueceu sua senha?</Link>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {erroSessao && <p className="mensagem-autenticacao mensagem-erro" role="alert">{erroSessao}</p>}
+            {erroLogin && <p className="mensagem-autenticacao mensagem-erro" role="alert">{erroLogin}</p>}
+            {erroCadastro && <p className="mensagem-autenticacao mensagem-erro" role="alert">{erroCadastro}</p>}
+
+            <button className="botao-principal" type="submit" disabled={carregando}>
+              {carregando ? (
+                <>
+                  <LoaderCircle size={18} className="carregando" />
+                  {ehCadastro ? 'Cadastrando...' : 'Entrando...'}
+                </>
+              ) : (
+                <>
+                  {ehCadastro ? 'Cadastrar' : 'Entrar'}
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+
+            <div className="rodape-autenticacao">
+              <p className="link-autenticacao">
+                {ehCadastro
+                  ? <>Já tem uma conta? <Link to="/login">Faça login</Link></>
+                  : <>Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link></>}
+              </p>
+            </div>
+          </form>
+        </section>
+      </div>
     </main>
   );
 }

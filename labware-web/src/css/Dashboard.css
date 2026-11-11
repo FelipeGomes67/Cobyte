@@ -331,6 +331,10 @@
   height: 300px;
   margin: 0 22px 0 50px;
 }
+/* Substitui o contorno preto por uma linha pontilhada */
+.dash-plot-area svg g:focus {
+  outline: none;
+}
 .dash-y-axis {
   position: relative;
   color: #64748b;
@@ -385,20 +389,37 @@
   transform: translateX(-50%);
   white-space: nowrap;
 }
+.dash-crosshair {
+  stroke: #c7d0e8;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
 .dash-chart-tooltip {
   position: absolute;
   top: 10px;
-  right: 10px;
+  transform: translateX(-50%);
   display: grid;
-  gap: 3px;
+  gap: 4px;
   padding: 10px 14px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: white;
+  border-radius: 12px;
+  background: #fff;
   box-shadow: 0 4px 12px #17223512;
-  color: #475569;
-  font-size: 12px;
+  font-size: 13px;
+  white-space: nowrap;
   pointer-events: none;
+}
+.dash-chart-tooltip strong {
+  color: #111827;
+  font-size: 11px;
+}
+.dash-tooltip-opened {
+  color: #3b82f6;
+}
+.dash-tooltip-closed {
+  color: #10b981;
 }
 .dash-urgent {
   padding: 36px 24px 48px;
