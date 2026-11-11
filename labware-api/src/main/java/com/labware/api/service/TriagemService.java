@@ -34,13 +34,22 @@ public class TriagemService {
             ia.setSintomaObservadoIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().sintomaObservado());
             ia.setImpactoOperacionalIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().impactoOperacional());
             ia.setJustificativa(r.justificativa()); ia.setModelo(modelo); ia.setClassificadaEm(LocalDateTime.now());
-            // Repara somente chamados que nunca receberam categoria; preserva decisões já classificadas.
-            if(c.getCategoria()==null) {
-                c.setCategoria(r.categoria());c.setPrioridade(r.prioridade());
-                c.setPrazoResolucao(r.prioridade().minutosResolucao()==null?null:c.getAbertoEm().plusMinutes(r.prioridade().minutosResolucao()));
+            // Atualiza a classificação do chamado se não possuía categoria ou se usava triagem de fallback inicial
+            boolean eraFallback = ia.getJustificativa() != null && (
+                    ia.getJustificativa().contains("Triagem padrão aplicada") ||
+                    ia.getJustificativa().contains("triagem de emergência") ||
+                    ia.getJustificativa().contains("indisponibilidade/falha")
+            );
+
+            if (c.getCategoria() == null || eraFallback) {
+                c.setCategoria(r.categoria());
+                c.setPrioridade(r.prioridade());
+                c.setPrazoResolucao(r.prioridade().minutosResolucao() == null ? null : c.getAbertoEm().plusMinutes(r.prioridade().minutosResolucao()));
                 c.setPrazoPrimeiraResposta(null);
-                if(r.prioridade().minutosResolucao()!=null)politicas.findByPrioridade(r.prioridade()).ifPresent(p->
-                        c.setPrazoPrimeiraResposta(c.getAbertoEm().plusMinutes(p.getMinutosPrimeiraResposta())));
+                if (r.prioridade().minutosResolucao() != null) {
+                    politicas.findByPrioridade(r.prioridade()).ifPresent(p ->
+                            c.setPrazoPrimeiraResposta(c.getAbertoEm().plusMinutes(p.getMinutosPrimeiraResposta())));
+                }
             }
             ia.setTecnicoSugerido(null);
             ia.setSlaMetaMinutos(r.prioridade().minutosResolucao());

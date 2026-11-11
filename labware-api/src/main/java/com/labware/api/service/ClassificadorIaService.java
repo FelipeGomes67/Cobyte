@@ -38,6 +38,24 @@ public class ClassificadorIaService {
             Retorne estritamente o JSON do contrato, bem formado, fechando todas as chaves.
             """;
 
+    private static final String INSTRUCAO_CURTA = """
+            Você é um classificador de chamados de suporte técnico laboratorial.
+            Analise o relato e retorne APENAS um JSON estritamente com as chaves:
+            {"categoriaGeradaIa":"<CATEGORIA>","prioridadeGeradaIa":"<PRIORIDADE>"}
+
+            Categorias permitidas: INDISPONIBILIDADE, ERRO_FUNCIONAL, LENTIDAO, ACESSO, DUVIDA, MELHORIA.
+            Prioridades permitidas: CRITICA, ALTA, MEDIA, BAIXA, MELHORIA.
+
+            Regras rápidas:
+            - CRITICA: sistema ou setor totalmente inoperante / laudos travados.
+            - ALTA: funcionalidade importante com falha.
+            - MEDIA: falha parcial, dúvida ou impacto individual.
+            - BAIXA: ajuste visual ou melhoria menor.
+            - MELHORIA: solicitação de nova funcionalidade.
+
+            Responda APENAS o JSON fechado, sem markdown e sem nenhum texto antes ou depois.
+            """;
+
     private final ChatClient chatClient;
 
     public ClassificadorIaService(ChatClient.Builder builder) {
@@ -51,13 +69,15 @@ public class ClassificadorIaService {
         }
 
         String conteudo = "Título: " + titulo + "\nDescrição: " + descricao;
+
+        // -----------------------------------------------------------------
+        // TENTATIVA 1 (Enriquecida): Prompt completo buscando JSON detalhado
+        // -----------------------------------------------------------------
         try {
             var resultado = chatClient.prompt()
                     .options(org.springframework.ai.ollama.api.OllamaChatOptions.builder()
                             .temperature(0.1)
                             .format("json")
-                            // A instrução (~2,2 mil tokens) + schema do entity() + resposta precisam caber no contexto;
-                            // com 2048 o Ollama truncava o prompt e o JSON saía incompleto.
                             .numCtx(2048)
                             .numPredict(384))
                     .system(INSTRUCAO)
@@ -65,29 +85,61 @@ public class ClassificadorIaService {
                     .call().entity(ClassificacaoIaResultadoReponse.class);
 
             if (Thread.currentThread().isInterrupted()) {
-                log.debug("Classificação IA cancelada após execução do modelo (thread interrompida).");
+                log.debug("Classificação IA cancelada após tentativa 1 (thread interrompida).");
                 return Optional.of(fallbackPadrao());
             }
 
-            if (resultadoValido(resultado, titulo, descricao)) return Optional.of(resultado);
-            // Qualidade de redação não invalida uma categoria/prioridade válidas.
+            if (resultadoValido(resultado, titulo, descricao)) {
+                return Optional.of(resultado);
+            }
+
+            // REAPROVEITAMENTO PARCIAL: Se a validação estrita falhar mas categoria e prioridade existirem
             if (resultado != null && resultado.categoria() != null && resultado.prioridade() != null) {
-                log.debug("Triagem IA com enriquecimento incompleto; classificação básica preservada");
+                log.debug("Triagem IA com enriquecimento incompleto; preservando classificação básica parcial: {} / {}",
+                        resultado.categoria(), resultado.prioridade());
                 return Optional.of(basica(resultado.prioridade(), resultado.categoria()));
             }
         } catch (Exception e) {
             boolean interrompida = Thread.currentThread().isInterrupted();
-            boolean ehErroJson = e.toString().contains("UnexpectedEndOfInputException")
-                    || e.toString().contains("JsonProcessingException")
-                    || e.toString().contains("JsonEOFException");
+            log.debug("Tentativa 1 enriquecida falhou (interrompida={}): {}. Acionando tentativa 2 de emergência.",
+                    interrompida, e.getMessage());
+        }
 
-            if (interrompida || ehErroJson) {
-                log.debug("Parsing ou chamada da IA interrompida/abortada por timeout: tipo={}, mensagem={}", e.getClass().getSimpleName(), e.getMessage());
-            } else {
-                log.warn("Falha na triagem enriquecida da IA: tipo={}, mensagem={}", e.getClass().getSimpleName(), e.getMessage());
-            }
+        if (Thread.currentThread().isInterrupted()) {
             return Optional.of(fallbackPadrao());
         }
+
+        // -----------------------------------------------------------------
+        // TENTATIVA 2 (Prompt Curto de Emergência): Solicita APENAS categoria e prioridade
+        // -----------------------------------------------------------------
+        try {
+            log.debug("Executando tentativa 2 de emergência (prompt curto)");
+            var resultadoCurto = chatClient.prompt()
+                    .options(org.springframework.ai.ollama.api.OllamaChatOptions.builder()
+                            .temperature(0.0)
+                            .format("json")
+                            .numCtx(1024)
+                            .numPredict(256))
+                    .system(INSTRUCAO_CURTA)
+                    .user(u -> u.text("{chamado}").param("chamado", conteudo))
+                    .call().entity(ClassificacaoIaResultadoReponse.class);
+
+            if (Thread.currentThread().isInterrupted()) {
+                return Optional.of(fallbackPadrao());
+            }
+
+            if (resultadoCurto != null && resultadoCurto.categoria() != null && resultadoCurto.prioridade() != null) {
+                log.info("Triagem de emergência concluída com sucesso: {} / {}",
+                        resultadoCurto.categoria(), resultadoCurto.prioridade());
+                return Optional.of(basica(resultadoCurto.prioridade(), resultadoCurto.categoria()));
+            }
+        } catch (Exception e) {
+            log.warn("Tentativa 2 (prompt curto) também falhou: {}. Aplicando fallback final.", e.getMessage());
+        }
+
+        // -----------------------------------------------------------------
+        // FALLBACK FINAL: Classificação padrão garantida (Prioridade MEDIA e Categoria DUVIDA)
+        // -----------------------------------------------------------------
         return Optional.of(fallbackPadrao());
     }
 

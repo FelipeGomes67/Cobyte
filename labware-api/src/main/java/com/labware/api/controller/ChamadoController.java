@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import com.labware.api.config.UsuarioLogado;
 import com.labware.api.dto.response.ChamadoResponse;
 import com.labware.api.dto.request.AbrirChamadoRequest;
+import com.labware.api.dto.request.AlterarPrioridadeRequest;
 import com.labware.api.dto.request.AlterarStatusRequest;
 import com.labware.api.dto.request.AvaliacaoChamadoRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -156,6 +157,24 @@ public class ChamadoController {
                                          @Valid @RequestBody AlterarStatusRequest request) {
 
         return chamadoService.alterarStatus(id, UsuarioLogado.id(jwt), request);
+    }
+
+    @Operation(summary = "Alterar prioridade", description = "Somente SUPORTE ou ADMIN. Atualiza a prioridade, recalcula o prazo de resolução e registra no histórico.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
+            @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
+            @ApiResponse(responseCode = "403", ref = "#/components/responses/AcessoNegado"),
+            @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
+            @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
+    })
+    @PatchMapping("/{id}/prioridade")
+    @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
+    public ChamadoResponse alterarPrioridade(@PathVariable Long id,
+                                            @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+                                            @Valid @RequestBody AlterarPrioridadeRequest request) {
+
+        return chamadoService.alterarPrioridade(id, UsuarioLogado.id(jwt), request);
     }
 
     @Operation(summary = "Atribuir técnico", description = "SUPORTE/ADMIN. tecnicoId deve identificar SUPORTE ou ADMIN. Não aceita chamado encerrado.")

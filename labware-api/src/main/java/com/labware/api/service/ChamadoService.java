@@ -2,6 +2,7 @@ package com.labware.api.service;
 
 import com.labware.api.dto.response.ChamadoResponse;
 import com.labware.api.dto.request.AbrirChamadoRequest;
+import com.labware.api.dto.request.AlterarPrioridadeRequest;
 import com.labware.api.dto.request.AlterarStatusRequest;
 import com.labware.api.dto.request.AvaliacaoChamadoRequest;
 import com.labware.api.dto.response.ClassificacaoIaResultadoReponse;
@@ -163,19 +164,18 @@ public class ChamadoService {
         // Falha rápida (sem gastar tempo de IA) se o solicitante não puder abrir chamados.
         exigirSolicitanteCliente(buscarUsuario(solicitanteId));
 
-        // 1) Triagem por IA concluída (ou fallback após o timeout) ANTES de persistir o chamado.
-        final Optional<ClassificacaoIaResultadoReponse> ia = triarComIa(req);
-
-        // 2) Cria o chamado e os anexos em uma transação.
+        // ETAPA 1 (Transação DB): Salva o chamado inicial e envia os anexos para obter o chamadoId
         Long chamadoId = tx.execute(status -> {
             Long id = criarChamado(solicitanteId, req);
             arquivos.forEach(arquivo -> anexos.enviar(id, solicitanteId, arquivo));
-            if(audio!=null)anexos.enviar(id,solicitanteId,audio);
+            if (audio != null) anexos.enviar(id, solicitanteId, audio);
             return id;
         });
 
-        // 3) Grava prioridade, categoria, SLA e justificativa da IA. Três níveis para nunca devolver chamado sem triagem:
-        //    resultado da IA -> triagem padrão completa -> mínimo (prioridade/categoria/prazo).
+        // ETAPA 2 (Fora da Transação): Executa a chamada do classificador IA
+        final Optional<ClassificacaoIaResultadoReponse> ia = triarComIa(req);
+
+        // ETAPA 3 (Transação DB): Grava prioridade, categoria, SLA e salva a entidade ClassificacaoIa
         try {
             return tx.execute(status -> aplicarClassificacao(chamadoId, ia));
         } catch (Exception e) {
@@ -285,8 +285,10 @@ public class ChamadoService {
         chamado.setResponsavel(usuario);
         registrarHistorico(chamado, usuario, anterior, usuario.getNome());
 
-        if (chamado.getStatus() != StatusChamado.EM_ATENDIMENTO) {
+        if (chamado.getStatus() == StatusChamado.ABERTO) {
             mudarStatus(chamado, usuario, StatusChamado.EM_ATENDIMENTO);
+        } else {
+            chamadoRepository.save(chamado);
         }
         return toResponse(chamado);
     }
@@ -298,22 +300,48 @@ public class ChamadoService {
 
         Usuario responsavel = chamado.getResponsavel();
         if (responsavel == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Assuma o chamado antes de alterar o status");
-        }
-        if (!responsavel.getId().equals(usuario.getId()) && usuario.getPerfil() != PerfilUsuario.ADMIN) {
+            chamado.setResponsavel(usuario);
+            registrarHistorico(chamado, usuario, null, usuario.getNome());
+        } else if (!responsavel.getId().equals(usuario.getId()) && usuario.getPerfil() != PerfilUsuario.ADMIN) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Somente o responsável pelo chamado (ou um ADMIN) pode alterar o status");
         }
 
         StatusChamado atual = chamado.getStatus();
         StatusChamado novo = req.novoStatus();
-        if (!atual.podeIrPara(novo)) {
+        if (atual != novo && !atual.podeIrPara(novo)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Transição inválida: " + atual + " -> " + novo);
         }
 
-        mudarStatus(chamado, usuario, novo);
+        if (atual != novo) {
+            mudarStatus(chamado, usuario, novo);
+        } else {
+            chamadoRepository.save(chamado);
+        }
+        return toResponse(chamado);
+    }
+
+    @Transactional
+    public ChamadoResponse alterarPrioridade(Long chamadoId, Long usuarioId, AlterarPrioridadeRequest req) {
+        Chamado chamado = buscarEntidade(chamadoId);
+        Usuario usuario = buscarUsuarioDoSuporte(usuarioId);
+
+        Prioridade anterior = chamado.getPrioridade();
+        Prioridade nova = req.novaPrioridade();
+        if (nova == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A nova prioridade não pode ser nula");
+        }
+
+        chamado.setPrioridade(nova);
+        if (nova.minutosResolucao() != null && chamado.getAbertoEm() != null) {
+            chamado.setPrazoResolucao(chamado.getAbertoEm().plusMinutes(nova.minutosResolucao()));
+        } else {
+            chamado.setPrazoResolucao(null);
+        }
+
+        registrarHistorico(chamado, usuario, anterior != null ? anterior.name() : null, nova.name());
+        chamadoRepository.save(chamado);
         return toResponse(chamado);
     }
 
