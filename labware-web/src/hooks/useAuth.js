@@ -6,3 +6,6 @@ export function useAutenticacao() {
   if (!contexto) throw new Error('useAutenticacao deve ser usado dentro de ProvedorAutenticacao.');
   return contexto;
 }
+
+export const useAuth = useAutenticacao;
+export default useAutenticacao;
