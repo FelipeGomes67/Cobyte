@@ -2,6 +2,12 @@
 setlocal
 cd /d "%~dp0"
 
+:: Rota exata apontando para o arquivo .exe do Mailpit
+set "MAILPIT_PATH=C:\Users\52611156808\Desktop\projetos\Cobyte\mailpit-windows-amd64\mailpit.exe"
+
+echo Iniciando Mailpit em http://localhost:8025...
+start /b "" "%MAILPIT_PATH%" > nul 2>&1
+
 if not exist ".venv\Scripts\python.exe" (
   echo [ERRO] Ambiente virtual .venv nao encontrado.
   echo Execute no terminal: py -3.12 -m venv .venv ^&^& .\.venv\Scripts\pip install -r requirements.txt
