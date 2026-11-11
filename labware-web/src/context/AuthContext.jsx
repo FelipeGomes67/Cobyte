@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { obterUsuarioDaSessao, cadastrarUsuario, entrar, sair } from '../services/authService';
+import { obterUsuarioDaSessao, cadastrarUsuario, entrar, sair, normalizarUsuario } from '../services/authService';
 import { EVENTO_SESSAO_EXPIRADA } from '../services/api';
 import { ContextoAutenticacao } from './authContext';
 
@@ -62,6 +62,14 @@ export function ProvedorAutenticacao({ children: conteudo }) {
     definirUsuario(null);
   }, []);
 
+  const atualizarUsuario = useCallback(novosDados => {
+    definirUsuario(prev => {
+      if (!prev && !novosDados) return null;
+      const mesclado = typeof novosDados === 'function' ? novosDados(prev) : { ...prev, ...novosDados };
+      return mesclado ? normalizarUsuario(mesclado) : null;
+    });
+  }, []);
+
   const valor = useMemo(() => ({
     usuario,
     user: usuario,
@@ -75,7 +83,9 @@ export function ProvedorAutenticacao({ children: conteudo }) {
     register: cadastrar,
     desconectar,
     logout: desconectar,
-  }), [usuario, carregando, inicializando, erroSessao, autenticar, cadastrar, desconectar]);
+    atualizarUsuario,
+    updateUser: atualizarUsuario,
+  }), [usuario, carregando, inicializando, erroSessao, autenticar, cadastrar, desconectar, atualizarUsuario]);
 
   return <ContextoAutenticacao.Provider value={valor}>{conteudo}</ContextoAutenticacao.Provider>;
 }
