@@ -22,12 +22,18 @@ public record CriarMensagemRequest(
     // Aceita o contrato antigo invertendo a semantica, evitando publicar uma nota interna legada.
     @JsonCreator
     public static CriarMensagemRequest criar(@JsonProperty("conteudo") String conteudo,
+                                             @JsonProperty("texto") String texto,
+                                             @JsonProperty("mensagem") String mensagem,
                                              @JsonProperty("visivelApenasSuporte") Boolean apenasSuporte,
                                              @JsonProperty("visivelAoCliente") Boolean aoCliente,
                                              @JsonProperty("anexoId") Long anexoId) {
+        String textoFinal = conteudo != null && !conteudo.isBlank() ? conteudo
+                : texto != null && !texto.isBlank() ? texto
+                : mensagem != null && !mensagem.isBlank() ? mensagem : "";
+
         if (apenasSuporte != null && aoCliente != null && apenasSuporte.equals(aoCliente)) {
             throw new IllegalArgumentException("Indicadores de visibilidade conflitantes");
         }
-        return new CriarMensagemRequest(conteudo, apenasSuporte != null ? apenasSuporte : Boolean.FALSE.equals(aoCliente), anexoId);
+        return new CriarMensagemRequest(textoFinal, apenasSuporte != null ? apenasSuporte : Boolean.FALSE.equals(aoCliente), anexoId);
     }
 }

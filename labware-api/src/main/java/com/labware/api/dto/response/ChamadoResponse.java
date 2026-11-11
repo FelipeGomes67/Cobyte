@@ -63,6 +63,18 @@ public record ChamadoResponse(
         Double duracaoAudioSegundos,
         @Schema(description = "ID do responsável; null se não atribuído.", example = "2")
         Long responsavelId,
+        @Schema(description = "ID do solicitante (cliente que abriu o chamado).", example = "1")
+        Long solicitanteId,
+        @Schema(description = "E-mail do solicitante.", example = "cliente@labware.com")
+        String solicitanteEmail,
+        @Schema(description = "Justificativa da IA para a prioridade e categoria.")
+        String justificativaIa,
+        @Schema(description = "Título técnico gerado pela IA.")
+        String tituloGeradoIa,
+        @Schema(description = "Sintoma observado gerado pela IA.")
+        String sintomaObservadoIa,
+        @Schema(description = "Impacto operacional gerado pela IA.")
+        String impactoOperacionalIa,
         @Schema(description = "Nome de origem para o frontend: PORTAL_TEXTO ou AUDIO_VOZ.", example = "PORTAL_TEXTO")
         String origemFrontend,
         @Schema(description = "Tempo até o prazo de resolução ou descrição da conclusão/violação.", example = "1h 20min restantes")
@@ -74,10 +86,18 @@ public record ChamadoResponse(
 ) {
 
     public static ChamadoResponse from(Chamado c, boolean classificadoPorIa) {
-        return from(c,classificadoPorIa,false);
+        return from(c, classificadoPorIa, false);
     }
 
     public static ChamadoResponse from(Chamado c, boolean classificadoPorIa, boolean temNovaMensagem) {
+        return from(c, null, classificadoPorIa, temNovaMensagem);
+    }
+
+    public static ChamadoResponse from(Chamado c, com.labware.api.model.entity.ClassificacaoIa ia, boolean temNovaMensagem) {
+        return from(c, ia, ia != null, temNovaMensagem);
+    }
+
+    public static ChamadoResponse from(Chamado c, com.labware.api.model.entity.ClassificacaoIa ia, boolean classificadoPorIa, boolean temNovaMensagem) {
         LocalDateTime agora = LocalDateTime.now();
 
         boolean melhoria = c.getPrioridade() == Prioridade.MELHORIA;
@@ -112,6 +132,12 @@ public record ChamadoResponse(
                 classificadoPorIa,
                 c.getDuracaoAudioSegundos(),
                 c.getResponsavel()!=null ? c.getResponsavel().getId() : null,
+                c.getSolicitante()!=null ? c.getSolicitante().getId() : null,
+                c.getSolicitante()!=null ? c.getSolicitante().getEmail() : null,
+                ia != null ? ia.getJustificativa() : null,
+                ia != null ? ia.getTituloGeradoIa() : null,
+                ia != null ? ia.getSintomaObservadoIa() : null,
+                ia != null ? ia.getImpactoOperacionalIa() : null,
                 c.getOrigem()==OrigemChamado.VOZ ? "AUDIO_VOZ" : "PORTAL_TEXTO",
                 formatar(c,agora), resolucao, temNovaMensagem
         );

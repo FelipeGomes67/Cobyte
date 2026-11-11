@@ -52,8 +52,12 @@ public class MensagemService {
         Usuario autor = buscarUsuario(usuarioId);
         acesso.exigir(chamado, autor);
 
-        if (chamado.getStatus() == StatusChamado.FECHADO) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Chamado fechado não aceita mensagens");
+        if (req.conteudo() == null || req.conteudo().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O texto da mensagem é obrigatório");
+        }
+
+        if (chamado.getStatus() == StatusChamado.RESOLVIDO || chamado.getStatus() == StatusChamado.FECHADO) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Chamado encerrado não aceita novas mensagens");
         }
 
         boolean ehSuporte = acesso.ehSuporte(autor);

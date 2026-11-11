@@ -88,7 +88,7 @@ public class ChamadoController {
             @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
             @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
     })
-    @GetMapping
+    @GetMapping({"", "/meus"})
     public com.labware.api.dto.response.PaginaResponse<ChamadoResponse> listar(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
                                                                                @Parameter(description = "Filtro por solicitante, aplicado somente para SUPORTE/ADMIN.", example = "1")
                                                                                @RequestParam(required=false) Long solicitanteId,
