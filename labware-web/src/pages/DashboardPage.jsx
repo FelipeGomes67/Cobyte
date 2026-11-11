@@ -16,14 +16,14 @@ function Indicadores({ dados }) {
       <div className="dash-metric-heading"><h2>Chamados Ativos na Fila</h2><Etiqueta>{dados.total} no total</Etiqueta></div>
       <strong className="dash-value">{dados.ativos}</strong>
       <ul className="dash-status-summary">{dados.status.filter(item => !['RESOLVIDO', 'FECHADO'].includes(item.chave)).map(item =>
-        <li key={item.chave}><i style={{ '--cor': item.cor }} aria-hidden="true"/>{item.nome}: <span>{item.quantidade}</span></li>)}</ul>
+        <li key={item.chave}><i style={{ '--cor': item.cor }} aria-hidden="true" />{item.nome}: <span>{item.quantidade}</span></li>)}</ul>
     </article>
     <article className="dash-card dash-metric">
       <div className="dash-metric-heading"><h2>Cumprimento de SLA</h2><Etiqueta tom="verde">Meta: 90%</Etiqueta></div>
       <strong className="dash-value">{dados.cumprimentoSla === null ? '—' : `${dados.cumprimentoSla.toFixed(1)}%`}</strong>
       <p>{dados.cumprimentoSla === null ? 'Sem chamados concluídos com SLA' : dentroMeta ? 'Excelente · Dentro da meta' : 'Atenção · Abaixo da meta'}</p>
       <div className={`dash-progress dash-sla-progress ${dentroMeta ? '' : 'dash-progress--alerta'}`} role="meter" aria-label="Cumprimento de SLA" aria-valuemin={0} aria-valuemax={100} aria-valuenow={dados.cumprimentoSla ?? 0} aria-valuetext={dados.cumprimentoSla === null ? 'Sem dados' : `${dados.cumprimentoSla.toFixed(1)}%`}>
-        <span style={{ width: `${dados.cumprimentoSla ?? 0}%` }}/>
+        <span style={{ width: `${dados.cumprimentoSla ?? 0}%` }} />
       </div>
     </article>
     <article className="dash-card dash-metric">
@@ -49,17 +49,17 @@ function DistribuicaoStatus({ itens, total }) {
     return [...resultado, { ...item, inicio, fim: inicio + (total ? item.quantidade / total * 100 : 0) }];
   }, []);
   return <section className="dash-card dash-distribution dash-distribution--status">
-    <CabecalhoGrafico contexto="FLUXO OPERACIONAL" titulo="Distribuição por Status" etiqueta={`${total} chamados`}/>
+    <CabecalhoGrafico contexto="FLUXO OPERACIONAL" titulo="Distribuição por Status" etiqueta={`${total} chamados`} />
     <div className="dash-donut-wrap">
       <svg className="dash-donut" viewBox="0 0 220 220" role="img" aria-label={`Distribuição de ${total} chamados por status; quantidades na legenda abaixo`}>
-        <circle cx="110" cy="110" r="84" fill="none" stroke="#e8edf3" strokeWidth="28"/>
+        <circle cx="110" cy="110" r="84" fill="none" stroke="#e8edf3" strokeWidth="28" />
         <g transform="rotate(-90 110 110)">{segmentos.filter(item => item.quantidade > 0).map(item =>
-          <circle key={item.chave} cx="110" cy="110" r="84" fill="none" stroke={item.cor} strokeWidth="28" pathLength="100" strokeDasharray={`${item.fim - item.inicio} ${100 - (item.fim - item.inicio)}`} strokeDashoffset={-item.inicio}/>)}</g>
+          <circle key={item.chave} cx="110" cy="110" r="84" fill="none" stroke={item.cor} strokeWidth="28" pathLength="100" strokeDasharray={`${item.fim - item.inicio} ${100 - (item.fim - item.inicio)}`} strokeDashoffset={-item.inicio} />)}</g>
         <text x="110" y="107" className="dash-donut-total">{total}</text><text x="110" y="130" className="dash-donut-label">NO TOTAL</text>
       </svg>
     </div>
     <ul className="dash-status-legend">{itens.map(item => <li key={item.chave}>
-      <span><i style={{ '--cor': item.cor }} aria-hidden="true"/>{item.nome}</span>
+      <span><i style={{ '--cor': item.cor }} aria-hidden="true" />{item.nome}</span>
       <strong>{item.quantidade}</strong><span className="dash-percentage">{(total ? item.quantidade / total * 100 : 0).toFixed(1)}%</span>
     </li>)}</ul>
   </section>;
@@ -67,12 +67,12 @@ function DistribuicaoStatus({ itens, total }) {
 
 function DistribuicaoBarras({ contexto, titulo, etiqueta, itens, total, tipo }) {
   return <section className={`dash-card dash-distribution dash-distribution--${tipo}`}>
-    <CabecalhoGrafico contexto={contexto} titulo={titulo} etiqueta={etiqueta}/>
+    <CabecalhoGrafico contexto={contexto} titulo={titulo} etiqueta={etiqueta} />
     <ul className="dash-bars">{itens.map(item => {
       const percentual = total ? item.quantidade / total * 100 : 0;
       return <li key={item.chave || item.nome} style={{ '--cor': item.cor }}>
         <div className="dash-bar-label"><span className="dash-bar-name">{item.nome}</span><strong>{item.quantidade}</strong><span className="dash-percentage">{percentual.toFixed(1)}%</span></div>
-        <div className="dash-progress" role="meter" aria-label={item.nome} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentual} aria-valuetext={`${item.quantidade} chamados, ${percentual.toFixed(1)}%`}><span style={{ width: `${percentual}%` }}/></div>
+        <div className="dash-progress" role="meter" aria-label={item.nome} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentual} aria-valuetext={`${item.quantidade} chamados, ${percentual.toFixed(1)}%`}><span style={{ width: `${percentual}%` }} /></div>
       </li>;
     })}</ul>
   </section>;
@@ -86,22 +86,23 @@ function GraficoVolume({ dias }) {
   const ponto = (valor, indice) => ({ x: 20 + indice / (dias.length - 1) * 960, y: 250 - valor / teto * 230 });
   const linha = campo => dias.map((dia, indice) => { const { x, y } = ponto(dia[campo], indice); return `${x},${y}`; }).join(' ');
   return <section className="dash-card dash-volume">
-    <div className="dash-volume-heading"><h2><span>Volume Diário: </span>Criados vs Resolvidos</h2><div className="dash-line-legend"><span><i/>Abertos</span><span><i/>Fechados</span></div></div>
+    <div className="dash-volume-heading"><h2><span>Volume Diário: </span>Criados vs Resolvidos</h2><div className="dash-line-legend"><span><i />Abertos</span><span><i />Fechados</span></div></div>
     <div className="dash-plot">
       <div className="dash-y-axis" aria-hidden="true">{[4, 3, 2, 1, 0].map(indice => <span key={indice} style={{ top: `${(20 + (4 - indice) / 4 * 230) / 270 * 100}%` }}>{indice * passo}</span>)}</div>
       <div className="dash-plot-area">
         <svg viewBox="0 0 1000 270" preserveAspectRatio="none" role="group" aria-label="Chamados criados e resolvidos por dia nos últimos 30 dias">
-          {[0, 1, 2, 3, 4].map(indice => <line key={indice} className="dash-grid-line" x1="20" x2="980" y1={20 + indice * 57.5} y2={20 + indice * 57.5}/>)}
-          <polyline points={linha('abertos')} className="dash-line dash-line--opened" vectorEffect="non-scaling-stroke"/>
-          <polyline points={linha('fechados')} className="dash-line dash-line--closed" vectorEffect="non-scaling-stroke"/>
+          {[0, 1, 2, 3, 4].map(indice => <line key={indice} className="dash-grid-line" x1="20" x2="980" y1={20 + indice * 57.5} y2={20 + indice * 57.5} />)}
+          {selecionado !== null && <line className="dash-crosshair" x1={ponto(0, selecionado).x} x2={ponto(0, selecionado).x} y1="0" y2="270" />}
+          <polyline points={linha('abertos')} className="dash-line dash-line--opened" vectorEffect="non-scaling-stroke" />
+          <polyline points={linha('fechados')} className="dash-line dash-line--closed" vectorEffect="non-scaling-stroke" />
           {dias.map((dia, indice) => <g key={dia.chave} tabIndex={0} role="img" aria-label={`${dia.data}: ${dia.abertos} abertos, ${dia.fechados} fechados`} onFocus={() => definirSelecionado(indice)} onBlur={() => definirSelecionado(null)} onMouseEnter={() => definirSelecionado(indice)} onMouseLeave={() => definirSelecionado(null)}>
-            <rect x={ponto(0, indice).x - 12} y="0" width="24" height="270" fill="transparent"/>
-            <circle cx={ponto(dia.abertos, indice).x} cy={ponto(dia.abertos, indice).y} r="4" className="dash-point--opened"/>
-            <circle cx={ponto(dia.fechados, indice).x} cy={ponto(dia.fechados, indice).y} r="4" className="dash-point--closed"/>
+            <rect x={ponto(0, indice).x - 12} y="0" width="24" height="270" fill="transparent" />
+            <circle cx={ponto(dia.abertos, indice).x} cy={ponto(dia.abertos, indice).y} r="4" className="dash-point--opened" />
+            <circle cx={ponto(dia.fechados, indice).x} cy={ponto(dia.fechados, indice).y} r="4" className="dash-point--closed" />
           </g>)}
         </svg>
         <div className="dash-x-axis" aria-hidden="true">{dias.map((dia, indice) => (indice % 5 === 0 || indice === dias.length - 1) && <span key={dia.chave} style={{ left: `${ponto(0, indice).x / 10}%` }}>{dia.data}</span>)}</div>
-        {selecionado !== null && <div className="dash-chart-tooltip" role="status"><strong>{dias[selecionado].data}</strong><span>Abertos: {dias[selecionado].abertos}</span><span>Fechados: {dias[selecionado].fechados}</span></div>}
+        {selecionado !== null && <div className="dash-chart-tooltip" role="status" style={{ left: `${Math.min(88, Math.max(12, ponto(0, selecionado).x / 10))}%` }}> <strong>{dias[selecionado].data}</strong> <span className="dash-tooltip-opened">Abertos: {dias[selecionado].abertos}</span> <span className="dash-tooltip-closed">Fechados: {dias[selecionado].fechados}</span> </div>}
       </div>
     </div>
   </section>;
@@ -147,14 +148,14 @@ export default function DashboardPage() {
     <h1 className="dash-sr-only">Dashboard de chamados</h1>
     {erro && <p className="dash-notice" role="alert">{erro}</p>}
     {carregando ? <div className="dash-card dash-empty" role="status">Carregando indicadores…</div> : <>
-      <Indicadores dados={dados}/>
+      <Indicadores dados={dados} />
       <div className="dash-distributions">
-        <DistribuicaoStatus itens={dados.status} total={dados.total}/>
-        <DistribuicaoBarras contexto="Severidade" titulo="Chamados por Prioridade" etiqueta={`${dados.prioridades.length} níveis`} itens={dados.prioridades} total={dados.total} tipo="priority"/>
-        <DistribuicaoBarras contexto="RECORRÊNCIA POR CATEGORIA" titulo="Chamados por Módulo" itens={dados.categorias} total={dados.total} tipo="category"/>
+        <DistribuicaoStatus itens={dados.status} total={dados.total} />
+        <DistribuicaoBarras contexto="Severidade" titulo="Chamados por Prioridade" etiqueta={`${dados.prioridades.length} níveis`} itens={dados.prioridades} total={dados.total} tipo="priority" />
+        <DistribuicaoBarras contexto="RECORRÊNCIA POR CATEGORIA" titulo="Chamados por Módulo" itens={dados.categorias} total={dados.total} tipo="category" />
       </div>
-      <GraficoVolume dias={dados.evolucao}/>
-      <ChamadosPrioritarios chamados={dados.prioritarios} agora={agora}/>
+      <GraficoVolume dias={dados.evolucao} />
+      <ChamadosPrioritarios chamados={dados.prioritarios} agora={agora} />
     </>}
   </div>;
 }
