@@ -53,7 +53,7 @@ export function gerarTituloDeDescricao(descricao) {
   const primeiraLinha = descricao.trim().split('\n')[0].trim();
   const primeiraFrase = primeiraLinha.split(/[.?!]/)[0].trim();
   const base = primeiraFrase || primeiraLinha || 'Abertura de Chamado';
-  return base.length > 80 ? `${base.slice(0, 77)}...` : base;
+  return base.length > 120 ? `${base.slice(0, 117)}...` : base;
 }
 
 /**
@@ -79,11 +79,15 @@ export async function criarChamadoApi({
   const tituloFinal = (titulo || gerarTituloDeDescricao(descricaoFinal)).trim();
   const formData = new FormData();
 
+  const origemUpper = String(origem || '').toUpperCase();
+  const ehVoz = origemUpper === 'VOZ' || origemUpper === 'AUDIO_VOZ';
+  const origemEnum = ehVoz ? 'VOZ' : 'TEXTO';
+
   // DTO JSON para @RequestPart("chamado")
   const chamadoPayload = {
     titulo: tituloFinal,
     descricao: descricaoFinal,
-    origem: origem === 'VOZ' ? 'VOZ' : 'TEXTO',
+    origem: origemEnum,
     duracaoAudioSegundos: duracaoAudioSegundos ? Number(duracaoAudioSegundos) : null,
   };
 
@@ -123,11 +127,13 @@ export function formatarNomeStatus(status) {
   switch (normalizado) {
     case 'ABERTO':
       return 'Aberto';
+    case 'EM_ANALISE':
+      return 'Em análise';
     case 'EM_ATENDIMENTO':
     case 'EM_ANDAMENTO':
-    case 'EM_ANALISE':
+      return 'Em atendimento';
     case 'AGUARDANDO_CLIENTE':
-      return 'Em Andamento';
+      return 'Aguardando cliente';
     case 'RESOLVIDO':
       return 'Resolvido';
     case 'FECHADO':
@@ -428,6 +434,49 @@ export async function obterChamadoPorId(id) {
 }
 
 export const criarChamado = criarChamadoApi;
+
+export async function alterarStatus(id, novoStatus) {
+  try {
+    const statusUpper = String(novoStatus || '').toUpperCase();
+    const { data } = await api.patch(`/chamados/${id}/status`, {
+      novoStatus: statusUpper,
+    });
+    return mapearDetalheChamadoApi(data);
+  } catch (error) {
+    throw new Error(
+      error?.response?.data?.message || 'Falha ao alterar status do chamado.',
+      { cause: error }
+    );
+  }
+}
+
+export async function alterarPrioridade(id, novaPrioridade) {
+  try {
+    const prioridadeUpper = String(novaPrioridade || '').toUpperCase();
+    const { data } = await api.patch(`/chamados/${id}/prioridade`, {
+      novaPrioridade: prioridadeUpper,
+      prioridade: prioridadeUpper,
+    });
+    return mapearDetalheChamadoApi(data);
+  } catch (error) {
+    throw new Error(
+      error?.response?.data?.message || 'Falha ao alterar prioridade do chamado.',
+      { cause: error }
+    );
+  }
+}
+
+export async function reabrirChamado(id) {
+  try {
+    const { data } = await api.post(`/chamados/${id}/reabrir`);
+    return mapearDetalheChamadoApi(data);
+  } catch (error) {
+    throw new Error(
+      error?.response?.data?.message || 'Falha ao reabrir o chamado.',
+      { cause: error }
+    );
+  }
+}
 
 export function createTicket({ title, category, description, priority, ownerId }) {
   const tickets = getTickets();

@@ -1,9 +1,19 @@
+const codigosStatus = {
+  Aberto: 'ABERTO',
+  'Em análise': 'EM_ANALISE',
+  'Em andamento': 'EM_ATENDIMENTO',
+  'Em atendimento': 'EM_ATENDIMENTO',
+  'Aguardando cliente': 'AGUARDANDO_CLIENTE',
+  Resolvido: 'RESOLVIDO',
+  Fechado: 'FECHADO',
+};
+
 const transicoes = {
-  ABERTO: ['EM_ANALISE'],
-  EM_ANALISE: ['EM_ATENDIMENTO', 'AGUARDANDO_CLIENTE'],
-  EM_ATENDIMENTO: ['AGUARDANDO_CLIENTE', 'RESOLVIDO'],
-  AGUARDANDO_CLIENTE: ['EM_ATENDIMENTO', 'RESOLVIDO'],
-  RESOLVIDO: ['FECHADO'],
+  ABERTO: ['EM_ANALISE', 'EM_ATENDIMENTO'],
+  EM_ANALISE: ['EM_ATENDIMENTO', 'AGUARDANDO_CLIENTE', 'RESOLVIDO'],
+  EM_ATENDIMENTO: ['EM_ANALISE', 'AGUARDANDO_CLIENTE', 'RESOLVIDO'],
+  AGUARDANDO_CLIENTE: ['EM_ATENDIMENTO', 'EM_ANALISE', 'RESOLVIDO'],
+  RESOLVIDO: ['FECHADO', 'EM_ATENDIMENTO'],
   FECHADO: [],
 };
 
@@ -22,7 +32,9 @@ export default function SelectStatus({
   aoAlterar,
   desabilitado = false,
 }) {
-  const opcoes = transicoes[statusAtual] || [];
+  const chave = codigosStatus[statusAtual] || String(statusAtual || '').toUpperCase();
+  const opcoes = transicoes[chave] || [];
+  const labelAtual = nomesStatus[chave] || nomesStatus[statusAtual] || statusAtual || 'Selecione um status';
 
   return (
     <label className="select-status">
@@ -35,7 +47,7 @@ export default function SelectStatus({
         onChange={evento => aoAlterar(evento.target.value)}
         disabled={desabilitado || !opcoes.length}
       >
-        <option value="">{nomesStatus[statusAtual] || 'Selecione um status'}</option>
+        <option value="">{`Status atual: ${labelAtual}`}</option>
         {opcoes.map(status => (
           <option key={status} value={status}>
             {nomesStatus[status]}
