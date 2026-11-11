@@ -4,6 +4,9 @@ import { transcreverAudio } from '../../services/sttService';
 import { criarChamadoApi } from '../../services/ticketService';
 import '../../css/FormularioNovoChamado.css';
 
+const MAX_ARQUIVO_BYTES = 10 * 1024 * 1024; // 10 MB individual
+const MAX_TOTAL_BYTES = 10 * 1024 * 1024; // 10 MB total (arquivos + áudio)
+
 export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
   const navigate = useNavigate();
   const [modo, setModo] = useState(modoInicial);
@@ -16,6 +19,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
   const [tempo, setTempo] = useState(0);
   const [transcrevendo, setTranscrevendo] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [arrastando, setArrastando] = useState(false);
   const [erroAudio, setErroAudio] = useState('');
   const [erroGeral, setErroGeral] = useState('');
 
@@ -87,6 +91,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
   };
 
   const toggleGravacao = () => {
+    if (enviando || transcrevendo) return;
     if (!gravando || pausado) {
       iniciarOuRetomar();
     } else {
@@ -182,6 +187,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           ...prev,
           trans: resultado.transcricao,
         }));
+        setErroGeral('');
       } else {
         throw new Error('Não foi possível obter o texto transcrito da API.');
       }
@@ -197,6 +203,12 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > MAX_ARQUIVO_BYTES) {
+      setErroAudio('O arquivo de áudio excede o limite máximo de 10 MB.');
+      e.target.value = '';
+      return;
+    }
+
     setErroAudio('');
     setTranscrevendo(true);
     setAudioBlob(file);
@@ -208,6 +220,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           ...prev,
           trans: resultado.transcricao,
         }));
+        setErroGeral('');
       }
     } catch (err) {
       console.error('Erro ao transcrever arquivo de áudio:', err);
@@ -218,17 +231,51 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
     }
   };
 
+  const validarEAdicionarArquivos = (novosArquivos) => {
+    if (!novosArquivos || novosArquivos.length === 0) return;
+
+    // 1. Validação individual: cada arquivo até 10 MB
+    for (const f of novosArquivos) {
+      if (f.size > MAX_ARQUIVO_BYTES) {
+        setErroGeral(`O arquivo "${f.name}" ultrapassa o limite individual de 10 MB.`);
+        return;
+      }
+    }
+
+    // 2. Validação total: soma total de arquivos + áudio até 10 MB
+    const tamanhoAudio = audioBlob?.size || 0;
+    const somaArquivosExistentes = arquivos.reduce((acc, f) => acc + (f.size || 0), 0);
+    const somanovo = novosArquivos.reduce((acc, f) => acc + (f.size || 0), 0);
+    const somaTotal = somaArquivosExistentes + somanovo + tamanhoAudio;
+
+    if (somaTotal > MAX_TOTAL_BYTES) {
+      setErroGeral('A soma total das evidências (arquivos + áudio) excede o limite máximo de 10 MB.');
+      return;
+    }
+
+    setArquivos((prev) => [...prev, ...novosArquivos]);
+    setErroGeral('');
+  };
+
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files || []);
-    if (selectedFiles.length === 0) return;
-
-    setArquivos((prev) => [...prev, ...selectedFiles]);
-    setErroGeral('');
+    validarEAdicionarArquivos(selectedFiles);
     e.target.value = '';
   };
 
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setArrastando(false);
+    if (enviando || transcrevendo) return;
+
+    const droppedFiles = Array.from(e.dataTransfer?.files || []);
+    validarEAdicionarArquivos(droppedFiles);
+  };
+
   const formatFileSize = (bytes) => {
-    if (!bytes && bytes !== 0) return '0 MB';
+    if (!bytes && bytes !== 0) return '0 KB';
+    if (bytes < 1024) return '< 1 KB';
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
@@ -238,33 +285,44 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
 
     const texto = modo === 'voz' ? textos.trans.trim() : textos.desc.trim();
     if (!texto) {
-      setErroGeral('Por favor, descreva o problema antes de enviar o chamado.');
+      if (modo === 'voz') {
+        setErroGeral('Por favor, grave o áudio e transcreva antes de enviar o chamado.');
+      } else {
+        setErroGeral('Por favor, descreva o problema antes de enviar o chamado.');
+      }
       return;
     }
 
-    // Regra estrita de anexo obrigatório
+    // Regra estrita de ao menos 1 anexo obrigatório
     if (!arquivos || arquivos.length === 0) {
-      setErroGeral('É obrigatório anexar um arquivo para abrir o chamado.');
+      setErroGeral('É obrigatório anexar ao menos 1 documento ou imagem antes de enviar o chamado.');
+      return;
+    }
+
+    // Validação da trava de tamanho total
+    let audioFinal = null;
+    if (modo === 'voz') {
+      audioFinal = audioBlob || (audioChunksRef.current.length > 0 ? new Blob(audioChunksRef.current, { type: 'audio/webm' }) : null);
+    }
+
+    const tamanhoTotal = arquivos.reduce((acc, f) => acc + (f.size || 0), (audioFinal?.size || 0));
+    if (tamanhoTotal > MAX_TOTAL_BYTES) {
+      setErroGeral('A soma total de arquivos e áudio ultrapassa o limite de 10 MB.');
       return;
     }
 
     setEnviando(true);
 
     try {
-      let audioFinal = null;
-      if (modo === 'voz') {
-        audioFinal = audioBlob || (audioChunksRef.current.length > 0 ? new Blob(audioChunksRef.current, { type: 'audio/webm' }) : null);
-      }
-
       await criarChamadoApi({
         descricao: texto,
-        origem: modo === 'voz' ? 'VOZ' : 'TEXTO',
+        origem: modo === 'voz' ? 'AUDIO_VOZ' : 'PORTAL_TEXTO',
         duracaoAudioSegundos: modo === 'voz' && tempo > 0 ? tempo : null,
         arquivos,
         audio: audioFinal,
       });
 
-      // Redireciona com sucesso para a lista de chamados
+      // Redireciona imediatamente para a lista de chamados após 201 Created
       navigate('/chamados');
     } catch (err) {
       console.error('Erro ao criar chamado:', err);
@@ -275,6 +333,8 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
   };
 
   const fmtTempo = `${String(Math.floor(tempo / 60)).padStart(2, '0')}:${String(tempo % 60).padStart(2, '0')}`;
+  const desabilitarGeral = enviando || transcrevendo;
+  const modoVozSemTranscricao = modo === 'voz' && !textos.trans.trim();
 
   return (
     <div className="novo-chamado-container">
@@ -292,6 +352,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
             type="button"
             className={`btn-toggle-modo ${modo === 'voz' ? 'ativo' : ''}`}
             onClick={() => setModo('voz')}
+            disabled={desabilitarGeral}
           >
             <img src="/icons/mic.svg" alt="" /> Relatar por Voz
           </button>
@@ -299,6 +360,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
             type="button"
             className={`btn-toggle-modo ${modo === 'texto' ? 'ativo' : ''}`}
             onClick={() => setModo('texto')}
+            disabled={desabilitarGeral}
           >
             <img src="/icons/digitar_icone.svg" alt="" /> Digitar Texto
           </button>
@@ -312,6 +374,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 type="button"
                 className={`btn-gravador-circulo ${gravando && !pausado ? 'gravando' : ''}`}
                 onClick={toggleGravacao}
+                disabled={desabilitarGeral}
                 title={!gravando ? 'Iniciar gravação' : pausado ? 'Retomar gravação' : 'Pausar gravação'}
               >
                 <img src="/icons/mic.svg" alt="Mic" />
@@ -350,7 +413,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                   type="button"
                   className="btn-audio-acao"
                   onClick={iniciarOuRetomar}
-                  disabled={!gravando || !pausado || transcrevendo}
+                  disabled={!gravando || !pausado || desabilitarGeral}
                 >
                   ⏸ Retomar
                 </button>
@@ -359,7 +422,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                   type="button"
                   className="btn-audio-acao"
                   onClick={ouvirGravacao}
-                  disabled={(!gravando && tempo === 0 && !audioBlob) || transcrevendo}
+                  disabled={(!gravando && tempo === 0 && !audioBlob) || desabilitarGeral}
                 >
                   {tocando ? '⏸ Pausar Áudio' : '▷ Ouvir Gravação'}
                 </button>
@@ -368,7 +431,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                   type="button"
                   className="btn-audio-acao"
                   onClick={excluirERegravar}
-                  disabled={(!gravando && tempo === 0 && !audioBlob) || transcrevendo}
+                  disabled={(!gravando && tempo === 0 && !audioBlob) || desabilitarGeral}
                 >
                   ↻ Excluir e Regravar
                 </button>
@@ -376,7 +439,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 <button
                   type="button"
                   className="btn-audio-enviar"
-                  disabled={(!gravando && tempo === 0 && !audioBlob) || transcrevendo}
+                  disabled={(!gravando && tempo === 0 && !audioBlob) || desabilitarGeral}
                   onClick={enviarAudioParaTranscricao}
                 >
                   <img src="/icons/enviar.svg" alt="" className="icone-enviar-branco" />
@@ -394,15 +457,16 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                   setTextos({ ...textos, trans: e.target.value });
                   setErroGeral('');
                 }}
-                disabled={transcrevendo || enviando}
+                disabled={desabilitarGeral}
               />
-              <label className="aviso-transcricao" style={{ cursor: 'pointer' }}>
+              <label className="aviso-transcricao" style={{ cursor: desabilitarGeral ? 'not-allowed' : 'pointer' }}>
                 Ou anexe um arquivo de áudio ⌵
                 <input
                   type="file"
                   ref={audioFileInputRef}
                   accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac"
                   onChange={handleAudioFileUpload}
+                  disabled={desabilitarGeral}
                   hidden
                 />
               </label>
@@ -410,7 +474,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           </section>
         ) : (
           <section>
-            <h3>Descreva o que aconteceu</h3>
+            <h3>Descreva o que aconteceu <span style={{ color: 'red' }}>*</span></h3>
             <p className="subtexto-instrucao">Inclua o erro apresentado e como afeta o seu trabalho.</p>
             <textarea
               className="campo-textarea-descricao"
@@ -420,14 +484,14 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 setTextos({ ...textos, desc: e.target.value });
                 setErroGeral('');
               }}
-              disabled={enviando}
+              disabled={desabilitarGeral}
             />
           </section>
         )}
 
         <section>
-          <h3 className="titulo-anexos">Anexos e evidências</h3>
-          <p className="subtexto-instrucao">Uma imagem ou documento ajuda a entender o problema.</p>
+          <h3 className="titulo-anexos">Anexos e evidências <span style={{ color: 'red' }}>*</span></h3>
+          <p className="subtexto-instrucao">Uma imagem ou documento ajuda a entender o problema. Limite de 10 MB total.</p>
 
           <input
             type="file"
@@ -435,6 +499,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
             accept="image/*"
             capture="environment"
             onChange={handleFileSelect}
+            disabled={desabilitarGeral}
             style={{ display: 'none' }}
           />
           <input
@@ -442,17 +507,28 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
             ref={fileInputRef}
             accept="image/png, image/jpeg, application/pdf"
             onChange={handleFileSelect}
+            disabled={desabilitarGeral}
             style={{ display: 'none' }}
           />
 
-          <div className="dropzone-box">
-            <p className="dropzone-texto">Arraste e solte os seus arquivos aqui</p>
+          <div
+            className={`dropzone-box ${arrastando ? 'arrastando' : ''} ${desabilitarGeral ? 'desabilitado' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (!desabilitarGeral) setArrastando(true);
+            }}
+            onDragLeave={() => setArrastando(false)}
+            onDrop={handleDrop}
+          >
+            <p className="dropzone-texto">
+              {arrastando ? 'Solte os arquivos aqui…' : 'Arraste e solte os seus arquivos aqui'}
+            </p>
             <div className="botoes-upload-grupo">
               <button
                 type="button"
                 className="btn-upload-opcao"
                 onClick={() => cameraInputRef.current?.click()}
-                disabled={enviando}
+                disabled={desabilitarGeral}
               >
                 <img src="/icons/Camera.svg" alt="Câmera" /> Tirar Foto
               </button>
@@ -460,13 +536,13 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 type="button"
                 className="btn-upload-opcao"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={enviando}
+                disabled={desabilitarGeral}
               >
                 <img src="/icons/icone_clips.svg" alt="Anexo" /> Procurar Arquivo
               </button>
             </div>
             <span className="dica-formatos">
-              PNG, JPG ou PDF - câmera do dispositivo disponível na aplicação
+              PNG, JPG ou PDF (máx. 10 MB cada e 10 MB no total)
             </span>
           </div>
 
@@ -484,7 +560,8 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                     type="button"
                     className="btn-remover-anexo"
                     onClick={() => setArquivos(arquivos.filter((_, idx) => idx !== i))}
-                    disabled={enviando}
+                    disabled={desabilitarGeral}
+                    title={`Remover ${f.name}`}
                   >
                     ✕
                   </button>
@@ -504,10 +581,12 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           <button
             type="submit"
             className="btn-enviar-chamado-principal"
-            disabled={enviando || transcrevendo}
+            disabled={desabilitarGeral || modoVozSemTranscricao || arquivos.length === 0}
           >
             <img src="/icons/enviar.svg" alt="" className="icone-enviar-branco" />
-            <span>{enviando ? 'Enviando chamado…' : 'Enviar Chamado'}</span>
+            <span>
+              {enviando ? 'Analisando e enviando…' : transcrevendo ? 'Transcrevendo…' : 'Enviar Chamado'}
+            </span>
           </button>
         </div>
       </form>
