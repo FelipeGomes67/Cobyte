@@ -99,6 +99,20 @@
 .notification-item-copy strong { font-size: 12px; font-weight: 600; }
 .notification-item-copy small { color: #8a96a8; font-size: 11px; }
 .notification-see-all { width: 100%; margin-top: 12px; border: 0; color: #2864dc; background: transparent; font-size: 12px; font-weight: 600; }
+/* Popover / Dropdown de Notificações do Topbar */
+.notification-dropdown-card { position: absolute; top: calc(100% + 8px); right: -10px; z-index: 50; width: 320px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12), 0 4px 6px rgba(15, 23, 42, 0.04); overflow: hidden; animation: pop-in 0.15s ease-out; }
+.notification-dropdown-header { background: #e0e7ff; padding: 12px 18px; border-bottom: 1px solid #c7d2fe; }
+.notification-dropdown-header h3 { margin: 0; font-size: 15px; font-weight: 700; color: #1e3a8a; }
+.notification-dropdown-list { display: flex; flex-direction: column; }
+.notification-dropdown-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 18px; border-bottom: 1px solid #f1f5f9; background: transparent; cursor: pointer; transition: background 0.15s ease; text-align: left; }
+.notification-dropdown-item:hover { background: #f8fafc; }
+.notification-dropdown-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #eff6ff; color: #2563eb; flex-shrink: 0; margin-top: 2px; }
+.notification-dropdown-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.notification-dropdown-copy strong { font-size: 13px; font-weight: 600; color: #1e293b; line-height: 1.35; }
+.notification-dropdown-copy small { font-size: 11.5px; color: #64748b; }
+.notification-dropdown-footer { padding: 10px 14px; background: #f8fafc; border-top: 1px solid #f1f5f9; }
+.btn-ver-todas-notificacoes { display: flex; align-items: center; justify-content: center; width: 100%; padding: 8px 12px; border: 1px solid #dbeafe; border-radius: 6px; background: #eff6ff; color: #1d4ed8; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s ease; }
+.btn-ver-todas-notificacoes:hover { background: #dbeafe; color: #1e40af; }
 .header-profile-menu { top: 54px; right: 0; width: 230px; padding: 9px; }
 .profile-menu a, .profile-menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px; border: 0; border-radius: 7px; background: transparent; text-align: left; font-size: 13px; }
 .profile-menu a:hover, .profile-menu button:hover { background: #f3f6fb; }

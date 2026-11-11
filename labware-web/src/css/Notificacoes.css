@@ -1,4 +1,6 @@
-/* Notificações - Design System Fiel à Imagem */
+@import url('https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400;500;600;700&family=Big+Shoulders+Text:wght@600;700;800&display=swap');
+
+/* Notificações - Design System Padronizado */
 
 .notificacoes-container {
   width: 100%;
@@ -7,20 +9,34 @@
 }
 
 .notificacoes-header {
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
-.notificacoes-main-title {
-  color: #185df1;
-  font-size: 24px;
-  font-weight: 700;
-  margin: 0 0 4px 0;
-  line-height: 1.25;
+.notificacoes-header .subtitulo-app {
+  display: block;
+  color: #0c54e0;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-family: '42dot Sans', sans-serif;
+  letter-spacing: normal;
 }
 
+.notificacoes-header .notificacoes-main-title {
+  font-family: 'Big Shoulders Text', '42dot Sans', sans-serif;
+  font-size: 34px;
+  font-weight: 800;
+  color: #0c54e0;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+.notificacoes-header .descricao-pagina,
 .notificacoes-main-desc {
-  color: #64748b;
-  font-size: 13.5px;
+  font-family: '42dot Sans', sans-serif;
+  color: #555555;
+  font-size: 14px;
   margin: 0;
   line-height: 1.4;
 }

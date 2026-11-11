@@ -88,12 +88,6 @@ export default function Sidebar({ open, onNavigate, user: userProp, onRequestLog
           Icon: History,
           active: currentPath === '/historico',
         },
-        {
-          label: 'Notificações',
-          to: '/notificacoes',
-          Icon: Bell,
-          active: currentPath === '/notificacoes',
-        },
       ];
 
   return (

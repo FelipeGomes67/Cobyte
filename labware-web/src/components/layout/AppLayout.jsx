@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Menu, X } from 'lucide-react';
 import Sidebar from './Sidebar';
 import ProfileMenu from './ProfileMenu';
+import NotificationDropdown from './NotificationDropdown';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { useAutenticacao } from '../../hooks/useAuth';
 
@@ -85,19 +86,20 @@ export default function AppLayout() {
           <div className="top-actions">
             <div className="notification-center" ref={notificationRef}>
               <button
+                type="button"
                 className="topbar-bell-button"
-                onClick={openNotifications}
+                onClick={() => setNotificationsOpen(prev => !prev)}
                 aria-label="3 notificações não lidas"
+                aria-expanded={notificationsOpen}
               >
                 <Bell size={26} strokeWidth={1.8} className="topbar-bell-svg" />
                 <span className="topbar-badge">3</span>
               </button>
               {notificationsOpen && (
-                <section className="notification-popover" aria-label="Notificações recentes">
-                  <h2>Notificações</h2>
-                  <p className="notification-empty">O histórico de notificações será exibido quando estiver conectado ao serviço de chamados.</p>
-                  <button className="notification-see-all" onClick={openNotifications}>Ver notificações</button>
-                </section>
+                <NotificationDropdown
+                  onClose={() => setNotificationsOpen(false)}
+                  onViewAll={openNotifications}
+                />
               )}
             </div>
             {!isNotificacoesPage && (

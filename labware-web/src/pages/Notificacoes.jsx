@@ -64,8 +64,9 @@ export default function Notificacoes() {
   return (
     <div className="notificacoes-container">
       <header className="notificacoes-header">
+        <span className="subtitulo-app">Suporte Labware</span>
         <h1 className="notificacoes-main-title">Notificações</h1>
-        <p className="notificacoes-main-desc">Acompanhe seus alertas importantes.</p>
+        <p className="descricao-pagina">Acompanhe seus alertas importantes.</p>
       </header>
 
       <div className="tabs-notificacao">
