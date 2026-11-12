@@ -1,12 +1,6 @@
-export const STATUS_DASHBOARD = [
-  { chave: 'ABERTO', nome: 'Aberto', cor: '#3b82f6' },
-  { chave: 'EM_ANALISE', nome: 'Em análise', cor: '#6366f1' },
-  { chave: 'EM_ATENDIMENTO', nome: 'Em atendimento', cor: '#0284c7' },
-  { chave: 'AGUARDANDO_SOLICITANTE', nome: 'Aguardando solicitante', cor: '#f59e0b' },
-  { chave: 'RESOLVIDO', nome: 'Resolvido', cor: '#10b981' },
-  { chave: 'FECHADO', nome: 'Fechado', cor: '#64748b' },
-  { chave: 'CANCELADO', nome: 'Cancelado', cor: '#94a3b8' },
-];
+import { STATUS_VISUAL, PRIORIDADE_VISUAL, obterVisualChamado } from '../utils/chamadoVisual';
+export const STATUS_DASHBOARD = Object.entries(STATUS_VISUAL)
+  .map(([chave, visual]) => ({ chave, ...visual }));
 
 function normalizar(valor = '') {
   return String(valor).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, '_');
@@ -66,13 +60,8 @@ export function calcularDashboard(chamados, agora) {
     return restante !== null && restante < 3600000;
   });
   const criticos = ativos.filter(chamado => normalizar(chamado.priority) === 'CRITICA');
-  const prioridades = [
-    { chave: 'CRITICA', nome: 'Crítica', cor: '#ef4444' },
-    { chave: 'ALTA', nome: 'Alta', cor: '#f97316' },
-    { chave: 'MEDIA', nome: 'Média', cor: '#f59e0b' },
-    { chave: 'BAIXA', nome: 'Baixa', cor: '#10b981' },
-    { chave: 'MELHORIA', nome: 'Melhoria', cor: '#8b5cf6' },
-  ];
+  const prioridades = Object.entries(PRIORIDADE_VISUAL)
+    .map(([chave, visual]) => ({ chave, ...visual }));
   const status = STATUS_DASHBOARD.map(item => ({ ...item, quantidade: 0 }));
   const categorias = ['Acesso', 'Integração', 'Indisponibilidade', 'Dúvida', 'Segurança', 'Outros']
     .map(nome => ({ nome, cor: '#3b82f6', quantidade: 0 }));
@@ -85,7 +74,7 @@ export function calcularDashboard(chamados, agora) {
     itemStatus.quantidade++;
     const chavePrioridade = normalizar(chamado.priority);
     if (!prioridades.some(item => item.chave === chavePrioridade)) {
-      prioridades.push({ chave: chavePrioridade, nome: chamado.priority || 'Não informada', cor: '#e15a38' });
+      prioridades.push({ chave: chavePrioridade, nome: chamado.priority || 'Não informada', cor: obterVisualChamado(chamado.priority, 'prioridade').cor });
     }
     const nomeCategoria = chamado.category || 'Outros';
     let categoria = categorias.find(item => item.nome === nomeCategoria);

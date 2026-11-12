@@ -1,12 +1,7 @@
+import { obterVisualChamado } from './chamadoVisual';
 export const REPORT_CATEGORIES = ['Indisponibilidade', 'Integração', 'Acesso', 'Dúvida', 'Segurança', 'Outros'];
-export const REPORT_PRIORITIES = [
-  { name: 'Crítica', color: '#dc3545' },
-  { name: 'Alta', color: '#f97316' },
-  { name: 'Média', color: '#3478f6' },
-  { name: 'Baixa', color: '#16a34a' },
-  { name: 'Sem prioridade', color: '#7b8798' },
-  { name: 'Melhoria', color: '#7c3aed' },
-];
+export const REPORT_PRIORITIES = ['Crítica', 'Alta', 'Média', 'Baixa', 'Sem prioridade', 'Melhoria']
+  .map(name => ({ name, color: obterVisualChamado(name, 'prioridade').cor }));
 
 function normalize(value) {
   return String(value ?? '')

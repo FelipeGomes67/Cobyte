@@ -1,3 +1,4 @@
+import ChamadoBadge from '../components/ticket/ChamadoBadge';
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAutenticacao } from "../hooks/useAuth";
@@ -470,15 +471,10 @@ function ChamadosPrioritarios({ chamados, agora }) {
                       </small>
                     </td>
                     <td data-label="Prioridade">
-                      <span className="dash-priority">{chamado.priority}</span>
+                      <ChamadoBadge tipo="prioridade" valor={chamado.priority} />
                     </td>
                     <td className="dash-ticket-status" data-label="Status">
-                      <span
-                        className="dash-status-badge"
-                        style={{ "--cor": status.cor }}
-                      >
-                        {status.nome}
-                      </span>
+                      <ChamadoBadge valor={status.nome} />
                     </td>
                     <td data-label="Tempo Restante SLA">
                       <span
