@@ -27,8 +27,8 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long>, org.spr
                 count(*) FILTER (WHERE status = 'FECHADO') AS "fechados",
                 count(*) FILTER (WHERE resolvido_em > prazo_resolucao) AS "resolvidosForaDoPrazo",
                 count(*) FILTER (WHERE prioridade = 'CRITICA'
-                    AND status NOT IN ('RESOLVIDO', 'FECHADO')) AS "incidentesCriticos",
-                count(*) FILTER (WHERE status NOT IN ('RESOLVIDO', 'FECHADO') AND (
+                    AND status NOT IN ('RESOLVIDO', 'FECHADO', 'CANCELADO')) AS "incidentesCriticos",
+                count(*) FILTER (WHERE status NOT IN ('RESOLVIDO', 'FECHADO', 'CANCELADO') AND (
                     (primeira_resposta_em IS NULL AND prazo_primeira_resposta >= CAST(:agora AS timestamp)
                         AND trunc(extract(epoch FROM prazo_primeira_resposta - aberto_em)) > 0
                         AND trunc(extract(epoch FROM CAST(:agora AS timestamp) - aberto_em)) * 100 >=

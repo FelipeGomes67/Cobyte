@@ -82,7 +82,11 @@ public record ChamadoResponse(
         @Schema(description = "Situação do SLA de resolução.", example = "NO_PRAZO")
         SlaStatus slaStatus,
         @Schema(description = "Há mensagem visível de outro autor após o marcador de leitura deste usuário.", example = "true")
-        boolean temNovaMensagem
+        boolean temNovaMensagem,
+        String motivoCancelamento,
+        LocalDateTime canceladoEm,
+        Long canceladoPorId,
+        String canceladoPorNome
 ) {
 
     public static ChamadoResponse from(Chamado c, boolean classificadoPorIa) {
@@ -100,7 +104,7 @@ public record ChamadoResponse(
     public static ChamadoResponse from(Chamado c, com.labware.api.model.entity.ClassificacaoIa ia, boolean classificadoPorIa, boolean temNovaMensagem) {
         LocalDateTime agora = LocalDateTime.now();
 
-        boolean melhoria = c.getPrioridade() == Prioridade.MELHORIA;
+        boolean melhoria = c.getPrioridade() == Prioridade.MELHORIA || c.getStatus() == StatusChamado.CANCELADO;
         SlaStatus primeira = melhoria ? SlaStatus.NAO_APLICAVEL : SlaStatus.calcular(
                 c.getAbertoEm(), c.getPrazoPrimeiraResposta(), c.getPrimeiraRespostaEm(), agora);
         SlaStatus resolucao = melhoria ? SlaStatus.NAO_APLICAVEL : SlaStatus.calcular(
@@ -139,7 +143,10 @@ public record ChamadoResponse(
                 ia != null ? ia.getSintomaObservadoIa() : null,
                 ia != null ? ia.getImpactoOperacionalIa() : null,
                 c.getOrigem()==OrigemChamado.VOZ ? "AUDIO_VOZ" : "PORTAL_TEXTO",
-                formatar(c,agora), resolucao, temNovaMensagem
+                formatar(c,agora), resolucao, temNovaMensagem,
+                c.getMotivoCancelamento(), c.getCanceladoEm(),
+                c.getCanceladoPor() == null ? null : c.getCanceladoPor().getId(),
+                c.getCanceladoPor() == null ? null : c.getCanceladoPor().getNome()
         );
     }
 
@@ -151,19 +158,21 @@ public record ChamadoResponse(
 
     @com.fasterxml.jackson.annotation.JsonProperty("slaMetaMinutos")
     public Long slaMetaMinutos() {
-        if (prioridade == Prioridade.MELHORIA || prazoResolucao == null || abertoEm == null) return null;
+        if (status == StatusChamado.CANCELADO || prioridade == Prioridade.MELHORIA || prazoResolucao == null || abertoEm == null) return null;
         return java.time.Duration.between(abertoEm, prazoResolucao).toMinutes();
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("slaMetaFormatado")
     public String slaMetaFormatado() {
         Long minutos = slaMetaMinutos();
+        if (status == StatusChamado.CANCELADO) return "Sem SLA (Cancelado)";
         if (prioridade == Prioridade.MELHORIA) return "Sem SLA (Melhoria)";
         if (minutos == null) return "Sem prazo";
         return minutos % 60 == 0 ? "SLA de " + minutos / 60 + "h" : "SLA de " + minutos + "min";
     }
 
     private static String formatar(Chamado c,LocalDateTime agora) {
+        if(c.getStatus()==StatusChamado.CANCELADO) return "Sem SLA (Cancelado)";
         if(c.getPrioridade()==Prioridade.MELHORIA) return "Sem SLA (Melhoria)";
         if(c.getPrazoResolucao()==null) return "Sem prazo";
         if(c.getResolvidoEm()!=null) return c.getResolvidoEm().isAfter(c.getPrazoResolucao()) ? "Concluído fora do prazo" : "Concluído no prazo";

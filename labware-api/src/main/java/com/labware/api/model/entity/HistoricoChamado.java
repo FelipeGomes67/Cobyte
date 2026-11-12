@@ -24,6 +24,9 @@ public class HistoricoChamado {
     private String valorAnterior;
     private String valorNovo;
 
+    @Column(columnDefinition = "TEXT")
+    private String observacao;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime alteradoEm;
 

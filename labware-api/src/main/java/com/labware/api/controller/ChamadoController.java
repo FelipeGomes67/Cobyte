@@ -152,7 +152,7 @@ public class ChamadoController {
             @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
     })
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
+    @PreAuthorize("hasAnyRole('CLIENTE','SUPORTE','ADMIN')")
     public ChamadoResponse alterarStatus(@PathVariable Long id,
                                          @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
                                          @Valid @RequestBody AlterarStatusRequest request) {
@@ -194,7 +194,7 @@ public class ChamadoController {
 
         return chamadoService.atribuir(id,UsuarioLogado.id(jwt),r.tecnicoId());
     }
-    @Operation(summary = "Reabrir chamado", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Aceita RESOLVIDO/FECHADO e muda para EM_ATENDIMENTO. Limpa resolução; preserva avaliação, responsável e prazos originais.")
+    @Operation(summary = "Reabrir chamado", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Aceita somente RESOLVIDO e muda para EM_ATENDIMENTO. Limpa resolução; preserva avaliação, responsável e prazos originais.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),

@@ -8,5 +8,6 @@ import jakarta.validation.constraints.NotNull;
 @Schema(description = "Transição de status sujeita ao fluxo e à autorização do responsável.")
 public record AlterarStatusRequest(
         @Schema(description = "Novo status permitido pelo fluxo do chamado.", example = "EM_ATENDIMENTO")
-        @NotNull(message = "O campo novoStatus é obrigatório") StatusChamado novoStatus
+        @NotNull(message = "O campo novoStatus é obrigatório") StatusChamado novoStatus,
+        @jakarta.validation.constraints.Size(max = 4000) String motivoCancelamento
 ) {}

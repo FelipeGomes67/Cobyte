@@ -34,7 +34,7 @@ public class PersistenciaTranscricaoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Nota interna exige salvarMensagem=true e salvarAnexo=false; anexos são visíveis ao cliente");
         }
-        if (salvarMensagem && chamado.getStatus() == StatusChamado.FECHADO) {
+        if (salvarMensagem && chamado.getStatus().finalizado()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Chamado fechado não aceita mensagens");
         }
     }

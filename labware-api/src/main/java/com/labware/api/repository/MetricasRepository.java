@@ -35,7 +35,7 @@ public class MetricasRepository {
                 avg(extract(epoch FROM resolvido_em - aberto_em) / 3600.0)
                     FILTER (WHERE resolvido_em IS NOT NULL AND resolvido_em >= aberto_em) AS tempo_medio_resolucao_horas,
                 count(*) FILTER (
-                    WHERE status NOT IN ('RESOLVIDO', 'FECHADO')
+                    WHERE status NOT IN ('RESOLVIDO', 'FECHADO', 'CANCELADO')
                       AND (
                         (resolvido_em IS NULL AND prazo_resolucao IS NOT NULL AND prazo_resolucao >= ? AND prazo_resolucao <= ?)
                         OR
@@ -213,7 +213,7 @@ public class MetricasRepository {
         StringBuilder sql = new StringBuilder("""
             SELECT id
             FROM chamado
-            WHERE status NOT IN ('RESOLVIDO', 'FECHADO')
+            WHERE status NOT IN ('RESOLVIDO', 'FECHADO', 'CANCELADO')
         """);
         List<Object> params = new ArrayList<>();
         if (empresaId != null) {

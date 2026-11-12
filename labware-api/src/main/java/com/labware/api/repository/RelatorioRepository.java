@@ -53,7 +53,7 @@ public class RelatorioRepository {
     }
     public List<Long> prioritarios(Long usuarioId) {
         return jdbc.queryForList("""
-            SELECT id FROM chamado WHERE responsavel_id=? AND status NOT IN ('RESOLVIDO','FECHADO')
+            SELECT id FROM chamado WHERE responsavel_id=? AND status NOT IN ('RESOLVIDO','FECHADO','CANCELADO')
             ORDER BY CASE prioridade WHEN 'CRITICA' THEN 0 WHEN 'ALTA' THEN 1 WHEN 'MEDIA' THEN 2 WHEN 'BAIXA' THEN 3 ELSE 4 END,
               prazo_resolucao NULLS LAST,aberto_em,id LIMIT 10
             """,Long.class,usuarioId);

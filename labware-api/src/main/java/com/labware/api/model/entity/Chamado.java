@@ -27,6 +27,13 @@ public class Chamado {
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String descricao;
+
+    @Column(columnDefinition = "TEXT")
+    private String motivoCancelamento;
+    private LocalDateTime canceladoEm;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cancelado_por_id")
+    private Usuario canceladoPor;
     private Double duracaoAudioSegundos;
 
     @Builder.Default

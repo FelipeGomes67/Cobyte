@@ -87,7 +87,7 @@ public class ChamadoService {
         Usuario autor=buscarUsuarioDoSuporte(usuarioId);
         Usuario tecnico=buscarUsuarioDoSuporte(tecnicoId);
         Chamado c=chamadoRepository.findParaAvaliacao(id).orElseThrow(()->new com.labware.api.exception.ResourceNotFoundException("Chamado não encontrado"));
-        if(c.getStatus()==StatusChamado.RESOLVIDO || c.getStatus()==StatusChamado.FECHADO)
+        if(c.getStatus()==StatusChamado.RESOLVIDO || c.getStatus().finalizado())
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Chamado já encerrado");
         registrarHistorico(c,autor,c.getResponsavel()==null?null:c.getResponsavel().getId().toString(),tecnicoId.toString());
         c.setResponsavel(tecnico);
@@ -101,8 +101,8 @@ public class ChamadoService {
         acesso.exigirEmpresaVinculada(u);
         Chamado c=chamadoRepository.findParaAvaliacao(id).orElseThrow(()->new com.labware.api.exception.ResourceNotFoundException("Chamado não encontrado"));
         acesso.exigir(c,u);
-        if(c.getStatus()!=StatusChamado.RESOLVIDO && c.getStatus()!=StatusChamado.FECHADO)
-            throw new ResponseStatusException(HttpStatus.CONFLICT,"Somente chamados encerrados podem ser reabertos");
+        if(c.getStatus()!=StatusChamado.RESOLVIDO)
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Somente chamados resolvidos podem ser reabertos; fechado e cancelado são finais");
         mudarStatus(c,u,StatusChamado.EM_ATENDIMENTO);
         return toResponse(c);
     }
@@ -233,7 +233,7 @@ public class ChamadoService {
                 .orElseThrow(() -> new com.labware.api.exception.ResourceNotFoundException("Chamado não encontrado"));
         Usuario usuario = buscarUsuarioDoSuporte(usuarioId);
 
-        if (chamado.getStatus() == StatusChamado.RESOLVIDO || chamado.getStatus() == StatusChamado.FECHADO) {
+        if (chamado.getStatus() == StatusChamado.RESOLVIDO || chamado.getStatus().finalizado()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Chamado já encerrado");
         }
 
@@ -249,7 +249,7 @@ public class ChamadoService {
         registrarHistorico(chamado, usuario, anterior, usuario.getNome());
 
         if (chamado.getStatus() == StatusChamado.ABERTO) {
-            mudarStatus(chamado, usuario, StatusChamado.EM_ATENDIMENTO);
+            mudarStatus(chamado, usuario, StatusChamado.EM_ANALISE);
         } else {
             chamadoRepository.save(chamado);
         }
@@ -260,29 +260,45 @@ public class ChamadoService {
     public ChamadoResponse alterarStatus(Long chamadoId, Long usuarioId, AlterarStatusRequest req) {
         Chamado chamado = chamadoRepository.findParaAvaliacao(chamadoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chamado não encontrado"));
-        Usuario usuario = buscarUsuarioDoSuporte(usuarioId);
-
-        Usuario responsavel = chamado.getResponsavel();
-        if (responsavel == null) {
-            chamado.setResponsavel(usuario);
-            registrarHistorico(chamado, usuario, null, usuario.getNome());
-        } else if (!responsavel.getId().equals(usuario.getId()) && usuario.getPerfil() != PerfilUsuario.ADMIN) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Somente o responsável pelo chamado (ou um ADMIN) pode alterar o status");
-        }
-
+        Usuario usuario = buscarUsuario(usuarioId);
+        acesso.exigir(chamado, usuario);
         StatusChamado atual = chamado.getStatus();
         StatusChamado novo = req.novoStatus();
+        if (atual.finalizado()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Chamado em estado final não pode ser alterado");
+        }
+        boolean cliente = usuario.getPerfil() == PerfilUsuario.CLIENTE;
+        if (cliente && novo != StatusChamado.CANCELADO && novo != StatusChamado.FECHADO) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solicitante pode cancelar ou confirmar a resolução");
+        }
+        if (novo == StatusChamado.FECHADO && !cliente) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "O fechamento deve ser confirmado pelo solicitante");
+        }
         if (atual != novo && !atual.podeIrPara(novo)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Transição inválida: " + atual + " -> " + novo);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Transição inválida: " + atual.codigo() + " -> " + (novo == null ? "" : novo.codigo()));
         }
-
-        if (atual != novo) {
-            mudarStatus(chamado, usuario, novo);
-        } else {
-            chamadoRepository.save(chamado);
+        if (atual == novo) return toResponse(chamado);
+        if (!cliente) {
+            Usuario responsavel = chamado.getResponsavel();
+            if (responsavel != null && !responsavel.getId().equals(usuario.getId()) && usuario.getPerfil() != PerfilUsuario.ADMIN) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o responsável ou ADMIN pode alterar o status");
+            }
+            if (responsavel == null) {
+                chamado.setResponsavel(usuario);
+                registrarHistorico(chamado, usuario, null, usuario.getNome());
+            }
         }
+        String motivo = null;
+        if (novo == StatusChamado.CANCELADO) {
+            motivo = req.motivoCancelamento() == null ? "" : req.motivoCancelamento().trim();
+            if (motivo.length() < 10 || motivo.length() > 4000) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe um relatório de cancelamento entre 10 e 4000 caracteres");
+            }
+            chamado.setMotivoCancelamento(motivo);
+            chamado.setCanceladoEm(LocalDateTime.now());
+            chamado.setCanceladoPor(usuario);
+        }
+        mudarStatus(chamado, usuario, novo, motivo);
         return toResponse(chamado);
     }
 
@@ -292,6 +308,9 @@ public class ChamadoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chamado não encontrado"));
         Usuario usuario = buscarUsuarioDoSuporte(usuarioId);
 
+        if (chamado.getStatus() != StatusChamado.EM_ANALISE) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Prioridade só pode ser alterada em Em Análise");
+        }
         Prioridade anterior = chamado.getPrioridade();
         Prioridade nova = req.novaPrioridade();
         if (nova == null) {
@@ -383,7 +402,8 @@ public class ChamadoService {
     }
 
     private ChamadoResponse aplicarClassificacao(Long chamadoId, Optional<ClassificacaoIaResultadoReponse> ia) {
-        Chamado chamado = chamadoRepository.findById(chamadoId).orElseThrow();
+        Chamado chamado = chamadoRepository.findParaAvaliacao(chamadoId).orElseThrow();
+        if (chamado.getStatus().finalizado()) return toResponse(chamado);
 
         // Se a IA falhar ou não devolver prioridade/categoria, usa MEDIA e DUVIDA para o SLA e classificação
         Prioridade prioridade = ia.map(ClassificacaoIaResultadoReponse::prioridade).filter(java.util.Objects::nonNull).orElse(Prioridade.MEDIA);
@@ -428,12 +448,16 @@ public class ChamadoService {
         } catch (Exception e) {
             log.error("Falha ao registrar histórico do chamado {}: {}", chamado.getProtocolo(), e.getMessage());
         }
+        if (chamado.getStatus() == StatusChamado.ABERTO) {
+            chamado.setStatus(StatusChamado.EM_ANALISE);
+            registrarHistorico(chamado, null, StatusChamado.ABERTO.name(), StatusChamado.EM_ANALISE.name());
+        }
         return toResponse(chamado);
     }
 
     private void atribuirAutomaticamente(Chamado chamado) {
         if (chamado.getResponsavel() != null) return;
-        var encerrados = List.of(StatusChamado.RESOLVIDO, StatusChamado.FECHADO);
+        var encerrados = List.of(StatusChamado.RESOLVIDO, StatusChamado.FECHADO, StatusChamado.CANCELADO);
         usuarioRepository.buscarSuportesParaDistribuicao().stream()
                 .min(java.util.Comparator.<Usuario>comparingLong(u ->
                                 chamadoRepository.countByResponsavelIdAndStatusNotIn(u.getId(), encerrados))
@@ -454,6 +478,13 @@ public class ChamadoService {
     }
 
     private void mudarStatus(Chamado chamado, Usuario usuario, StatusChamado novo) {
+        mudarStatus(chamado, usuario, novo, null);
+    }
+
+    private void mudarStatus(Chamado chamado, Usuario usuario, StatusChamado novo, String observacao) {
+        if (!chamado.getStatus().podeIrPara(novo)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Transição de status não permitida");
+        }
         StatusChamado anterior = chamado.getStatus();
         chamado.setStatus(novo);
 
@@ -462,7 +493,8 @@ public class ChamadoService {
         } else if ((anterior == StatusChamado.RESOLVIDO || anterior == StatusChamado.FECHADO) && novo == StatusChamado.EM_ATENDIMENTO) {
             chamado.setResolvidoEm(null); // chamado reaberto
         }
-        registrarHistorico(chamado, usuario, anterior.name(), novo.name());
+        historicoRepository.save(HistoricoChamado.builder().chamado(chamado).usuario(usuario)
+                .valorAnterior(anterior.codigo()).valorNovo(novo.codigo()).observacao(observacao).build());
         notificacoes.emitir(chamado.getSolicitante(),usuario.getId(),chamado,"STATUS","Status atualizado",chamado.getProtocolo()+" · "+novo.name());
         if(chamado.getResponsavel()!=null)
             notificacoes.emitir(chamado.getResponsavel(),usuario.getId(),chamado,"STATUS","Status atualizado",chamado.getProtocolo()+" · "+novo.name());

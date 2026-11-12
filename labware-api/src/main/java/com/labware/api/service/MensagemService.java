@@ -56,7 +56,7 @@ public class MensagemService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O texto da mensagem é obrigatório");
         }
 
-        if (chamado.getStatus() == StatusChamado.RESOLVIDO || chamado.getStatus() == StatusChamado.FECHADO) {
+        if (chamado.getStatus() == StatusChamado.RESOLVIDO || chamado.getStatus().finalizado()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Chamado encerrado não aceita novas mensagens");
         }
 
@@ -116,7 +116,8 @@ public class MensagemService {
 
     @Transactional(readOnly = true)
     public List<MensagemResponse> listar(Long chamadoId, Long usuarioId) {
-        Chamado chamado = buscarChamado(chamadoId);
+        Chamado chamado = chamadoRepository.findById(chamadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chamado não encontrado"));
         Usuario usuario = buscarUsuario(usuarioId);
         acesso.exigir(chamado, usuario);
 
@@ -130,7 +131,7 @@ public class MensagemService {
     // ---------------------------------------------------------------
 
     private Chamado buscarChamado(Long id) {
-        return chamadoRepository.findById(id)
+        return chamadoRepository.findParaAvaliacao(id)
                 .orElseThrow(() -> new ResourceNotFoundException( "Chamado não encontrado"));
     }
 

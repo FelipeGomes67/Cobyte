@@ -42,7 +42,7 @@ public class TriagemService {
             ia.setSintomaObservadoIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().sintomaObservado());
             ia.setImpactoOperacionalIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().impactoOperacional());
             ia.setJustificativa(r.justificativa()); ia.setModelo(modelo); ia.setClassificadaEm(LocalDateTime.now());
-            if (c.getCategoria() == null || eraFallback) {
+            if (c.getStatus() == StatusChamado.EM_ANALISE && (c.getCategoria() == null || eraFallback)) {
                 c.setCategoria(r.categoria());
                 c.setPrioridade(r.prioridade());
                 c.setPrazoResolucao(r.prioridade().minutosResolucao() == null ? null : c.getAbertoEm().plusMinutes(r.prioridade().minutosResolucao()));
@@ -59,7 +59,7 @@ public class TriagemService {
     }
     private Chamado buscarChamado(Long id) { return chamados.findById(id).orElseThrow(()->new ResourceNotFoundException("Chamado não encontrado")); }
     private void validar(Chamado c) {
-        if(c.getStatus()==StatusChamado.RESOLVIDO || c.getStatus()==StatusChamado.FECHADO)
+        if(c.getStatus()==StatusChamado.RESOLVIDO || c.getStatus().finalizado())
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Chamado encerrado não pode ser triado novamente");
     }
 }
