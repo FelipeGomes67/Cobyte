@@ -79,7 +79,18 @@ public class NotificacaoService {
                 .titulo(titulo)
                 .mensagem(texto)
                 .build());
-        eventos.publishEvent(new EmailService.EmailNotificacao(destinatario.getEmail(), titulo, texto));
+        String status = chamado == null ? null : switch (chamado.getStatus()) {
+            case ABERTO -> "Aberto";
+            case EM_ANALISE -> "Em análise";
+            case EM_ATENDIMENTO -> "Em atendimento";
+            case AGUARDANDO_CLIENTE -> "Aguardando solicitante";
+            case RESOLVIDO -> "Resolvido";
+            case FECHADO -> "Fechado";
+            case CANCELADO -> "Cancelado";
+        };
+        eventos.publishEvent(new EmailService.EmailNotificacao(destinatario.getEmail(), titulo, texto,
+                destinatario.getNome(), chamado == null ? null : chamado.getId(),
+                chamado == null ? null : chamado.getProtocolo(), chamado == null ? null : chamado.getTitulo(), status, tipo));
     }
 
     private boolean permitida(Map<String, Object> p, String chave) {

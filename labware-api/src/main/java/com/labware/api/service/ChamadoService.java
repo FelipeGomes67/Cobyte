@@ -392,6 +392,7 @@ public class ChamadoService {
 
         chamado.setProtocolo(String.format("LAB-%d-%05d", Year.now().getValue(), chamado.getId()));
         registrarHistorico(chamado, solicitante, null, chamado.getStatus().name());
+        notificacoes.emitir(solicitante, null, chamado, "ABERTURA", "Chamado registrado", chamado.getProtocolo() + " · " + chamado.getTitulo());
         return chamado.getId();
     }
 
