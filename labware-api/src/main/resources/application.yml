@@ -30,10 +30,8 @@ labware:
   cors:
     origens: http://localhost:5173
   ia:
-    # Tempo máximo que a abertura do chamado espera pela triagem da IA antes de aplicar o fallback.
     timeout-ms: ${IA_TIMEOUT_MS:10000}
     http-connect-timeout-ms: ${IA_HTTP_CONNECT_TIMEOUT_MS:2000}
-    # Deve ser MAIOR que timeout-ms (margem para o fallback decidir antes do HTTP abortar).
     http-read-timeout-ms: ${IA_HTTP_READ_TIMEOUT_MS:12000}
 
 spring:

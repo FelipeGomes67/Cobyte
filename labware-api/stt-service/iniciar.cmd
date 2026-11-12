@@ -2,11 +2,19 @@
 setlocal
 cd /d "%~dp0"
 
-:: Rota exata apontando para o arquivo .exe do Mailpit
-set "MAILPIT_PATH=C:\Users\52611156808\Desktop\projetos\Cobyte\mailpit-windows-amd64\mailpit.exe"
+:: Opção A: Caminho relativo (ajuste os ".." conforme a posição do .bat)
+set "MAILPIT_PATH=%~dp0..\mailpit-windows-amd64\mailpit.exe"
 
-echo Iniciando Mailpit em http://localhost:8025...
-start /b "" "%MAILPIT_PATH%" > nul 2>&1
+:: Opção B: Descomente a linha abaixo caso prefira usar a pasta do usuário
+:: set "MAILPIT_PATH=%USERPROFILE%\Desktop\projetos\Cobyte\mailpit-windows-amd64\mailpit.exe"
+
+if exist "%MAILPIT_PATH%" (
+  echo Iniciando Mailpit em http://localhost:8025...
+  start /b "" "%MAILPIT_PATH%" > nul 2>&1
+) else (
+  echo [AVISO] Mailpit nao encontrado em: %MAILPIT_PATH%
+  echo O servico continuara sem o Mailpit local.
+)
 
 if not exist ".venv\Scripts\python.exe" (
   echo [ERRO] Ambiente virtual .venv nao encontrado.
