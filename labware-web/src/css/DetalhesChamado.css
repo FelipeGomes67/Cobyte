@@ -927,3 +927,35 @@
     width: 100%;
   }
 }
+
+/* Alinhamento relativo ao usuário autenticado, incluindo a descrição inicial. */
+.detalhes-chamado-page .history-message-row.message-sent,
+.detalhes-chamado-page .history-message-row.message-received { min-width: 0; }
+.detalhes-chamado-page .message-sent { justify-content: flex-end; }
+.detalhes-chamado-page .message-sent > .avatar { order: 1; }
+.detalhes-chamado-page .message-sent .history-message-card {
+  align-self: flex-end;
+  margin-left: auto;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  border-radius: 14px 14px 4px 14px;
+}
+.detalhes-chamado-page .message-received .history-message-card {
+  align-self: flex-start;
+  margin-right: auto;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  border-radius: 14px 14px 14px 4px;
+}
+.detalhes-chamado-page .history-message-row .history-message-card {
+  min-width: 0;
+  max-width: 78%;
+}
+.detalhes-chamado-page .history-message-card p {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+.detalhes-chamado-page .message-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 6px; }
+.detalhes-chamado-page .message-header strong { margin: 0; overflow-wrap: anywhere; }
+.detalhes-chamado-page .message-header strong span { font-size: 11px; font-weight: 400; color: #64748b; }
+.detalhes-chamado-page .message-header time { font-size: 11px; color: #64748b; }

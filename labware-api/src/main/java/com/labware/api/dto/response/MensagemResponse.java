@@ -31,6 +31,15 @@ public record MensagemResponse(
         @Schema(description = "URL relativa para download autenticado.", example = "/api/chamados/anexos/10/download")
         String downloadUrl
 ) {
+    @com.fasterxml.jackson.annotation.JsonProperty("autorId")
+    public Long autorId() { return usuarioId; }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("autorNome")
+    public String autorNome() { return usuario; }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("autorPerfil")
+    public String autorPerfil() { return perfilUsuario; }
+
     public static MensagemResponse from(Mensagem m) {
         Long anexoId = m.getAnexo() != null ? m.getAnexo().getId() : null;
         return new MensagemResponse(m.getId(), m.getChamado().getId(), m.getUsuario().getId(),

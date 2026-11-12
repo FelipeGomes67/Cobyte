@@ -299,7 +299,8 @@ public class ChamadoService {
 
     @Transactional
     public ChamadoResponse alterarStatus(Long chamadoId, Long usuarioId, AlterarStatusRequest req) {
-        Chamado chamado = buscarEntidade(chamadoId);
+        Chamado chamado = chamadoRepository.findParaAvaliacao(chamadoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chamado não encontrado"));
         Usuario usuario = buscarUsuarioDoSuporte(usuarioId);
 
         Usuario responsavel = chamado.getResponsavel();
@@ -328,7 +329,8 @@ public class ChamadoService {
 
     @Transactional
     public ChamadoResponse alterarPrioridade(Long chamadoId, Long usuarioId, AlterarPrioridadeRequest req) {
-        Chamado chamado = buscarEntidade(chamadoId);
+        Chamado chamado = chamadoRepository.findParaAvaliacao(chamadoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chamado não encontrado"));
         Usuario usuario = buscarUsuarioDoSuporte(usuarioId);
 
         Prioridade anterior = chamado.getPrioridade();
@@ -336,6 +338,8 @@ public class ChamadoService {
         if (nova == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A nova prioridade não pode ser nula");
         }
+
+        if (anterior == nova) return toResponse(chamado);
 
         chamado.setPrioridade(nova);
         if (nova.minutosResolucao() != null && chamado.getAbertoEm() != null) {

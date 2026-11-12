@@ -59,6 +59,13 @@ function formatarData(dataIso) {
   }
 }
 
+function formatarDataHoraMensagem(valor) {
+  if (!valor) return 'Data não informada';
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return 'Data não informada';
+  return `${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+}
+
 function obterClassePrioridade(prioridade) {
   const p = String(prioridade || '').toUpperCase();
   if (p.includes('CRITIC') || p.includes('CRÍTICA')) return 'priority-critica';
@@ -220,6 +227,10 @@ function SecaoAnexos({ anexos }) {
 }
 
 function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
+  const { usuario } = useAutenticacao();
+  const solicitanteId = chamado.solicitanteId ?? chamado.ownerId ?? chamado.solicitante?.id;
+  const descricaoPropria = solicitanteId != null && usuario?.id != null
+    && String(solicitanteId) === String(usuario.id);
   const mensagens = Array.isArray(chamado.historico) && chamado.historico.length > 0
     ? chamado.historico
     : Array.isArray(chamado.historicoMensagens) && chamado.historicoMensagens.length > 0
@@ -285,31 +296,36 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
         <span className="conversation-date">{dataAbertura}</span>
       </div>
 
-      <div className="history-message-row">
+      <div className={`history-message-row ${descricaoPropria ? "message-sent" : "message-received"}`}>
         <div className="avatar small-avatar">
           {(chamado.solicitanteNome || 'C').charAt(0).toUpperCase()}
         </div>
         <div className="history-message-card customer-message">
-          <strong>{chamado.solicitanteNome || 'Solicitante'}</strong>
+          <header className="message-header">
+            <strong>{descricaoPropria ? 'Você' : chamado.solicitanteNome || 'Solicitante'} <span>· Cliente</span></strong>
+            <time dateTime={chamado.dataCriacao || chamado.abertoEm}>{formatarDataHoraMensagem(chamado.dataCriacao || chamado.abertoEm)}</time>
+          </header>
           <p>{chamado.descricao || chamado.description}</p>
         </div>
       </div>
 
       {mensagens.map((msg, index) => {
-        const ehSuporte = msg.ehSuporte;
-        const inicial = (msg.autor || (ehSuporte ? 'S' : 'C')).charAt(0).toUpperCase();
-
+        const autorId = msg.autorId ?? msg.usuarioId;
+        const propria = autorId != null && usuario?.id != null && String(autorId) === String(usuario.id);
+        const nome = msg.autorNome || msg.autor || msg.usuario || 'Usuário';
+        const perfil = { CLIENTE: 'Cliente', SUPORTE: 'Suporte', ADMIN: 'Administrador' }[msg.autorPerfil || msg.perfilUsuario]
+          || (msg.ehSuporte ? 'Suporte' : 'Cliente');
+        const data = msg.criadoEm || msg.enviadoEm;
         return (
-          <div
-            key={msg.id || index}
-            className={`history-message-row ${ehSuporte ? 'right-align' : ''}`}
-          >
-            {!ehSuporte && <div className="avatar small-avatar">{inicial}</div>}
-            <div className={`history-message-card ${ehSuporte ? 'support-message' : 'customer-message'}`}>
-              <strong>{msg.autor}</strong>
-              <p>{msg.texto}</p>
+          <div key={msg.id ?? index} className={`history-message-row ${propria ? 'message-sent' : 'message-received'}`}>
+            <div className="avatar small-avatar">{nome.charAt(0).toUpperCase()}</div>
+            <div className="history-message-card">
+              <header className="message-header">
+                <strong>{propria ? 'Você' : nome} <span>· {perfil}</span></strong>
+                <time dateTime={data || undefined}>{formatarDataHoraMensagem(data)}</time>
+              </header>
+              <p>{msg.texto ?? msg.conteudo}</p>
             </div>
-            {ehSuporte && <div className="avatar small-avatar support-avatar">{inicial}</div>}
           </div>
         );
       })}
@@ -384,7 +400,7 @@ function DetalhesEmAtendimento({
   const [statusSelecionado, setStatusSelecionado] = useState('');
   const [salvandoStatus, setSalvandoStatus] = useState(false);
 
-  const prioridadeNormalizada = String(chamado?.prioridade || chamado?.priority || 'MEDIA').toUpperCase();
+  const prioridadeNormalizada = String(chamado?.prioridade || chamado?.priority || 'MEDIA').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
   const [prioridadeSelecionada, setPrioridadeSelecionada] = useState(prioridadeNormalizada);
   const [salvandoPrioridade, setSalvandoPrioridade] = useState(false);
 
@@ -577,6 +593,7 @@ function DetalhesEmAtendimento({
                               onChange={(e) => setPrioridadeSelecionada(e.target.value)}
                               disabled={salvandoPrioridade}
                             >
+                              <option value="MELHORIA">Melhoria</option>
                               <option value="BAIXA">Baixa</option>
                               <option value="MEDIA">Média</option>
                               <option value="ALTA">Alta</option>
@@ -822,7 +839,12 @@ export default function DetalhesChamado() {
           onNovaMensagem={handleNovaMensagem}
           onReabrir={handleReabrir}
           reabrindo={reabrindo}
-          onChamadoAtualizado={setChamado}
+          onChamadoAtualizado={atualizado => setChamado(anterior => ({
+            ...anterior,
+            ...atualizado,
+            historico: anterior?.historico || [],
+            historicoMensagens: anterior?.historicoMensagens || [],
+          }))}
         />
       ) : (
         <>

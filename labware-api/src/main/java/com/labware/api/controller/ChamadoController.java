@@ -152,6 +152,7 @@ public class ChamadoController {
             @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
     })
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
     public ChamadoResponse alterarStatus(@PathVariable Long id,
                                          @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
                                          @Valid @RequestBody AlterarStatusRequest request) {

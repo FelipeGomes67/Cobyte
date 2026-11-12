@@ -267,10 +267,12 @@ export function mapearAnexoApi(a, indice) {
 }
 
 export function mapearMensagemApi(m, indice) {
-  const perfil = String(m.perfil ?? m.autorPerfil ?? m.tipo ?? '').toUpperCase();
+  const perfil = String(m.autorPerfil ?? m.perfilUsuario ?? m.perfil ?? m.tipo ?? '').toUpperCase();
   return {
     id: m.id ?? indice,
-    autor: textoDe(m.autor ?? m.usuario ?? m.remetente) || 'Usuário',
+    autorId: m.autorId ?? m.usuarioId ?? null,
+    autorPerfil: perfil,
+    autor: textoDe(m.autorNome ?? m.autor ?? m.usuario ?? m.remetente) || 'Usuário',
     texto: m.texto || m.mensagem || m.conteudo || '',
     criadoEm: m.criadoEm || m.enviadoEm || m.createdAt || m.data || null,
     ehSuporte: m.ehSuporte ?? ['SUPORTE', 'ADMIN'].includes(perfil),
@@ -444,7 +446,7 @@ export async function alterarStatus(id, novoStatus) {
     return mapearDetalheChamadoApi(data);
   } catch (error) {
     throw new Error(
-      error?.response?.data?.message || 'Falha ao alterar status do chamado.',
+      error?.message || 'Falha ao alterar status do chamado.',
       { cause: error }
     );
   }
@@ -455,12 +457,11 @@ export async function alterarPrioridade(id, novaPrioridade) {
     const prioridadeUpper = String(novaPrioridade || '').toUpperCase();
     const { data } = await api.patch(`/chamados/${id}/prioridade`, {
       novaPrioridade: prioridadeUpper,
-      prioridade: prioridadeUpper,
     });
     return mapearDetalheChamadoApi(data);
   } catch (error) {
     throw new Error(
-      error?.response?.data?.message || 'Falha ao alterar prioridade do chamado.',
+      error?.message || 'Falha ao alterar prioridade do chamado.',
       { cause: error }
     );
   }
