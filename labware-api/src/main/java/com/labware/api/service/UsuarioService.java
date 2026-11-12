@@ -17,6 +17,7 @@ import java.util.List;
 public class UsuarioService {
     private final UsuarioRepository usuarios;
     private final EmpresaRepository empresas;
+    private final NotificacaoService notificacoes;
 
     @Transactional(readOnly = true)
     public List<UsuarioResponse> pendentes() {
@@ -37,6 +38,8 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empresa inativa");
         }
         usuario.setEmpresa(empresa);
-        return UsuarioResponse.from(usuarios.save(usuario));
+        var salvo = usuarios.save(usuario);
+        notificacoes.emitirAprovacaoCadastro(salvo, empresa.getNome());
+        return UsuarioResponse.from(salvo);
     }
 }

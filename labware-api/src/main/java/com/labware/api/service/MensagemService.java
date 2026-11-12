@@ -101,17 +101,22 @@ public class MensagemService {
                     StatusChamado.AGUARDANDO_CLIENTE.codigo(), StatusChamado.EM_ATENDIMENTO.codigo());
             sla.aoAlterarStatus(chamado, autor, StatusChamado.EM_ATENDIMENTO);
             chamado.setStatus(StatusChamado.EM_ATENDIMENTO);
-            if(chamado.getResponsavel()!=null)
-                notificacoes.emitir(chamado.getResponsavel(),usuarioId,chamado,"STATUS","Status atualizado",chamado.getProtocolo()+" · EM_ATENDIMENTO");
-            else notificacoes.emitirParaSuportes(usuarioId,chamado,"STATUS","Status atualizado",chamado.getProtocolo()+" · EM_ATENDIMENTO");
+            String alteracao = "Alteração: Aguardando solicitante -> Em atendimento";
+            if (chamado.getResponsavel() != null)
+                notificacoes.emitir(chamado.getResponsavel(), usuarioId, chamado, "STATUS", "Status atualizado", alteracao, autor.getNome(), null);
+            else
+                notificacoes.emitirParaSuportes(usuarioId, chamado, "STATUS", "Status atualizado", alteracao, autor.getNome(), null);
         }
 
+        String tituloMsg = ehSuporte ? "Nova mensagem do suporte" : (visivel ? "Nova mensagem do cliente" : "Nova nota interna");
+        String textoMsg = req.conteudo() != null && !req.conteudo().isBlank() ? req.conteudo().trim() : "(Anexo)";
+
         if (ehSuporte && visivel) {
-            notificacoes.emitir(chamado.getSolicitante(),usuarioId,chamado,"MENSAGEM","Nova mensagem do suporte",chamado.getProtocolo());
-        } else if (chamado.getResponsavel()!=null) {
-            notificacoes.emitir(chamado.getResponsavel(),usuarioId,chamado,"MENSAGEM",visivel?"Nova mensagem do cliente":"Nova nota interna",chamado.getProtocolo());
+            notificacoes.emitir(chamado.getSolicitante(), usuarioId, chamado, "MENSAGEM", tituloMsg, textoMsg, autor.getNome(), null);
+        } else if (chamado.getResponsavel() != null) {
+            notificacoes.emitir(chamado.getResponsavel(), usuarioId, chamado, "MENSAGEM", tituloMsg, textoMsg, autor.getNome(), null);
         } else {
-            notificacoes.emitirParaSuportes(usuarioId,chamado,"MENSAGEM",visivel?"Nova mensagem do cliente":"Nova nota interna",chamado.getProtocolo());
+            notificacoes.emitirParaSuportes(usuarioId, chamado, "MENSAGEM", tituloMsg, textoMsg, autor.getNome(), null);
         }
         return MensagemResponse.from(mensagem);
     }

@@ -6,4 +6,14 @@ public enum Prioridade {
     private final Integer minutosResolucao;
     Prioridade(Integer minutosResolucao) { this.minutosResolucao = minutosResolucao; }
     public Integer minutosResolucao() { return minutosResolucao; }
+
+    public String descricaoFormatada() {
+        return switch (this) {
+            case CRITICA -> "Crítica";
+            case ALTA -> "Alta";
+            case MEDIA -> "Média";
+            case BAIXA -> "Baixa";
+            case MELHORIA -> "Melhoria";
+        };
+    }
 }

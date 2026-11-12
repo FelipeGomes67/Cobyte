@@ -21,6 +21,18 @@ public enum StatusChamado {
 
     public boolean finalizado() { return this == FECHADO || this == CANCELADO; }
 
+    public String descricaoFormatada() {
+        return switch (this) {
+            case ABERTO -> "Aberto";
+            case EM_ANALISE -> "Em análise";
+            case EM_ATENDIMENTO -> "Em atendimento";
+            case AGUARDANDO_CLIENTE -> "Aguardando solicitante";
+            case RESOLVIDO -> "Resolvido";
+            case FECHADO -> "Fechado";
+            case CANCELADO -> "Cancelado";
+        };
+    }
+
     public boolean podeIrPara(StatusChamado destino) {
         if (destino == null) return false;
         return switch (this) {

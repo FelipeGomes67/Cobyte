@@ -92,7 +92,9 @@ public class ChamadoService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Chamado já encerrado");
         registrarHistorico(c,autor,c.getResponsavel()==null?null:c.getResponsavel().getId().toString(),tecnicoId.toString());
         c.setResponsavel(tecnico);
-        notificacoes.emitir(tecnico,usuarioId,c,"ATRIBUICAO","Chamado atribuído",c.getProtocolo());
+        String detalheAtribuicao = "Chamado atribuído para o responsável " + tecnico.getNome();
+        String prazo = c.getPrazoResolucao() != null ? "Prazo estimado de resolução: " + c.getPrazoResolucao().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : null;
+        notificacoes.emitir(tecnico, usuarioId, c, "ATRIBUICAO", "Chamado atribuído", detalheAtribuicao, autor.getNome(), prazo);
         return toResponse(c);
     }
 
@@ -329,6 +331,12 @@ public class ChamadoService {
 
         registrarHistorico(chamado, usuario, anterior != null ? anterior.name() : null, nova.name());
         chamadoRepository.save(chamado);
+        String alteracaoPrioridade = "Alteração: " + (anterior != null ? anterior.descricaoFormatada() : "Não definida") + " -> " + nova.descricaoFormatada();
+        String prazoPrio = chamado.getPrazoResolucao() != null ? "Novo prazo estimado: " + chamado.getPrazoResolucao().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : null;
+        notificacoes.emitir(chamado.getSolicitante(), usuarioId, chamado, "PRIORIDADE", "Prioridade atualizada", alteracaoPrioridade, usuario.getNome(), prazoPrio);
+        if (chamado.getResponsavel() != null) {
+            notificacoes.emitir(chamado.getResponsavel(), usuarioId, chamado, "PRIORIDADE", "Prioridade atualizada", alteracaoPrioridade, usuario.getNome(), prazoPrio);
+        }
         return toResponse(chamado);
     }
 
@@ -392,7 +400,7 @@ public class ChamadoService {
 
         chamado.setProtocolo(String.format("LAB-%d-%05d", Year.now().getValue(), chamado.getId()));
         registrarHistorico(chamado, solicitante, null, chamado.getStatus().name());
-        notificacoes.emitir(solicitante, null, chamado, "ABERTURA", "Chamado registrado", chamado.getProtocolo() + " · " + chamado.getTitulo());
+        notificacoes.emitir(solicitante, null, chamado, "ABERTURA", "Chamado registrado", chamado.getDescricao(), solicitante.getNome(), null);
         return chamado.getId();
     }
 
@@ -469,7 +477,9 @@ public class ChamadoService {
                         log.error("Falha ao registrar histórico de atribuição automática: {}", e.getMessage());
                     }
                     try {
-                        notificacoes.emitir(suporte, null, chamado, "ATRIBUICAO", "Chamado atribuído automaticamente", chamado.getProtocolo());
+                        String detalheAuto = "Chamado distribuído automaticamente para atendimento";
+                        String prazoAuto = chamado.getPrazoResolucao() != null ? "Prazo estimado de resolução: " + chamado.getPrazoResolucao().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : null;
+                        notificacoes.emitir(suporte, null, chamado, "ATRIBUICAO", "Chamado atribuído automaticamente", detalheAuto, "Sistema LabWare", prazoAuto);
                     } catch (Exception e) {
                         log.error("Falha ao emitir notificação de atribuição automática: {}", e.getMessage());
                     }
@@ -495,10 +505,16 @@ public class ChamadoService {
         }
         historicoRepository.save(HistoricoChamado.builder().chamado(chamado).usuario(usuario)
                 .valorAnterior(anterior.codigo()).valorNovo(novo.codigo()).observacao(observacao).build());
-        notificacoes.emitir(chamado.getSolicitante(),usuario.getId(),chamado,"STATUS","Status atualizado",chamado.getProtocolo()+" · "+novo.name());
-        if(chamado.getResponsavel()!=null)
-            notificacoes.emitir(chamado.getResponsavel(),usuario.getId(),chamado,"STATUS","Status atualizado",chamado.getProtocolo()+" · "+novo.name());
-        else notificacoes.emitirParaSuportes(usuario.getId(),chamado,"STATUS","Status atualizado",chamado.getProtocolo()+" · "+novo.name());
+        String alteracao = "Alteração: " + anterior.descricaoFormatada() + " -> " + novo.descricaoFormatada();
+        String prazo = chamado.getPrazoResolucao() != null ? "Prazo estimado de resolução: " + chamado.getPrazoResolucao().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : null;
+        String autorNome = usuario != null ? usuario.getNome() : "Sistema LabWare";
+        Long autorId = usuario != null ? usuario.getId() : null;
+
+        notificacoes.emitir(chamado.getSolicitante(), autorId, chamado, "STATUS", "Status atualizado", alteracao, autorNome, prazo);
+        if (chamado.getResponsavel() != null)
+            notificacoes.emitir(chamado.getResponsavel(), autorId, chamado, "STATUS", "Status atualizado", alteracao, autorNome, prazo);
+        else
+            notificacoes.emitirParaSuportes(autorId, chamado, "STATUS", "Status atualizado", alteracao, autorNome, prazo);
     }
 
     private Chamado buscarEntidade(Long id) {
