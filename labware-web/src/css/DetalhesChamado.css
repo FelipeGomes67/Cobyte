@@ -965,3 +965,8 @@
 @media (max-width: 600px) {
   .detalhes-chamado-page .ia-resumo-destaques { grid-template-columns: minmax(0, 1fr); }
 }
+
+.detalhes-chamado-page .cancellation-reason { display: grid; gap: 6px; width: 100%; color: #475569; font-size: 12px; }
+.detalhes-chamado-page .cancellation-reason textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; resize: vertical; font: inherit; }
+.detalhes-chamado-page .cancellation-report { padding: 12px; margin-block: 12px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; }
+.detalhes-chamado-page .cancellation-report p { white-space: pre-wrap; overflow-wrap: anywhere; }
