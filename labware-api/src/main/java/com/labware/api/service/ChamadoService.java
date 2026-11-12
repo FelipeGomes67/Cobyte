@@ -48,6 +48,7 @@ public class ChamadoService {
     private final NotificacaoService notificacoes;
     private final LeituraChamadoService leituras;
     private final AnexoService anexos;
+    private final SlaChamadoService sla;
 
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<ChamadoResponse> filtrar(Long usuarioId, String busca,
@@ -321,7 +322,7 @@ public class ChamadoService {
 
         chamado.setPrioridade(nova);
         if (nova.minutosResolucao() != null && chamado.getAbertoEm() != null) {
-            chamado.setPrazoResolucao(chamado.getAbertoEm().plusMinutes(nova.minutosResolucao()));
+            chamado.setPrazoResolucao(chamado.getAbertoEm().plusMinutes(nova.minutosResolucao()).plus(chamado.duracaoPausasEncerradas()));
         } else {
             chamado.setPrazoResolucao(null);
         }
@@ -448,10 +449,7 @@ public class ChamadoService {
         } catch (Exception e) {
             log.error("Falha ao registrar histórico do chamado {}: {}", chamado.getProtocolo(), e.getMessage());
         }
-        if (chamado.getStatus() == StatusChamado.ABERTO) {
-            chamado.setStatus(StatusChamado.EM_ANALISE);
-            registrarHistorico(chamado, null, StatusChamado.ABERTO.name(), StatusChamado.EM_ANALISE.name());
-        }
+        // A triagem classifica; o chamado permanece aberto ate o suporte assumir.
         return toResponse(chamado);
     }
 
@@ -486,6 +484,7 @@ public class ChamadoService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Transição de status não permitida");
         }
         StatusChamado anterior = chamado.getStatus();
+        sla.aoAlterarStatus(chamado, usuario, novo);
         chamado.setStatus(novo);
 
         if (novo == StatusChamado.RESOLVIDO) {

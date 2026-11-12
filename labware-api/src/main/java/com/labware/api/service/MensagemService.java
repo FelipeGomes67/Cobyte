@@ -36,6 +36,7 @@ public class MensagemService {
     private final AcessoChamadoService acesso;
     private final AnexoRepository anexoRepository;
     private final NotificacaoService notificacoes;
+    private final SlaChamadoService sla;
 
     @Transactional
     public MensagemResponse enviar(Long chamadoId, Long usuarioId, CriarMensagemRequest req) {
@@ -89,7 +90,7 @@ public class MensagemService {
 
         // Primeira resposta do suporte ao cliente: alimenta o SLA
         if (ehSuporte && visivel && chamado.getPrimeiraRespostaEm() == null) {
-            chamado.setPrimeiraRespostaEm(LocalDateTime.now());
+            sla.registrarPrimeiraResposta(chamado, LocalDateTime.now());
             registrarHistorico(chamado, autor, null,
                     chamado.getPrimeiraRespostaEm().toString());
         }
@@ -97,7 +98,8 @@ public class MensagemService {
         // Cliente respondeu enquanto o suporte aguardava: o chamado volta para atendimento
         if (!ehSuporte && chamado.getStatus() == StatusChamado.AGUARDANDO_CLIENTE) {
             registrarHistorico(chamado, autor,
-                    StatusChamado.AGUARDANDO_CLIENTE.name(), StatusChamado.EM_ATENDIMENTO.name());
+                    StatusChamado.AGUARDANDO_CLIENTE.codigo(), StatusChamado.EM_ATENDIMENTO.codigo());
+            sla.aoAlterarStatus(chamado, autor, StatusChamado.EM_ATENDIMENTO);
             chamado.setStatus(StatusChamado.EM_ATENDIMENTO);
             if(chamado.getResponsavel()!=null)
                 notificacoes.emitir(chamado.getResponsavel(),usuarioId,chamado,"STATUS","Status atualizado",chamado.getProtocolo()+" · EM_ATENDIMENTO");

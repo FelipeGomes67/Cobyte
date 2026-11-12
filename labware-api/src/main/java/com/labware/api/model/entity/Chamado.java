@@ -91,6 +91,12 @@ public class Chamado {
     @OrderBy("inicio ASC, id ASC")
     private List<PausaSla> pausasSla = new ArrayList<>();
 
+    public java.time.Duration duracaoPausasEncerradas() {
+        return pausasSla.stream().filter(p -> p.getFim() != null)
+                .map(p -> java.time.Duration.between(p.getInicio(), p.getFim()))
+                .reduce(java.time.Duration.ZERO, java.time.Duration::plus);
+    }
+
     @PrePersist
     void aoCriar() {
         if (this.abertoEm == null) {
