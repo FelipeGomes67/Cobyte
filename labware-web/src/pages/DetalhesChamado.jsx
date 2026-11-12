@@ -835,6 +835,15 @@ export default function DetalhesChamado() {
         historicoMensagens: novoHistorico,
       };
     });
+    // A resposta do cliente pode retomar o status e o prazo no servidor.
+    obterChamadoPorId(codigo)
+      .then(atualizado => setChamado(anterior => anterior ? {
+        ...anterior,
+        ...atualizado,
+        historico: anterior.historico,
+        historicoMensagens: anterior.historicoMensagens,
+      } : atualizado))
+      .catch(() => setError('Mensagem enviada. Atualize a tela para consultar o status e o SLA.'));
   };
 
   const handleReabrir = async () => {
