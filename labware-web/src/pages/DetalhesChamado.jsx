@@ -1,3 +1,5 @@
+import AvaliacaoAtendimento from '../components/ticket/AvaliacaoAtendimento';
+import AvatarUsuario from '../components/layout/AvatarUsuario';
 import ChamadoBadge from '../components/ticket/ChamadoBadge';
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -294,9 +296,10 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
       </div>
 
       <div className={`history-message-row ${descricaoPropria ? "message-sent" : "message-received"}`}>
-        <div className="avatar small-avatar">
-          {(chamado.solicitanteNome || 'C').charAt(0).toUpperCase()}
-        </div>
+        <AvatarUsuario user={descricaoPropria ? usuario : {
+          nome: chamado.solicitanteNome || 'Solicitante',
+          fotoPerfil: chamado.solicitanteId ? '/api/usuarios/' + chamado.solicitanteId + '/foto' : null,
+        }} />
         <div className="history-message-card customer-message">
           <header className="message-header">
             <strong>{descricaoPropria ? 'Você' : chamado.solicitanteNome || 'Solicitante'} <span>· Cliente</span></strong>
@@ -315,7 +318,10 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
         const data = msg.criadoEm || msg.enviadoEm;
         return (
           <div key={msg.id ?? index} className={`history-message-row ${propria ? 'message-sent' : 'message-received'}`}>
-            <div className="avatar small-avatar">{nome.charAt(0).toUpperCase()}</div>
+            <AvatarUsuario user={propria ? usuario : {
+              nome,
+              fotoPerfil: autorId ? '/api/usuarios/' + autorId + '/foto' : null,
+            }} />
             <div className="history-message-card">
               <header className="message-header">
                 <strong>{propria ? 'Você' : nome} <span>· {perfil}</span></strong>
@@ -693,19 +699,11 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
             />
             <SecaoAnexos anexos={chamado.anexos} />
 
-            {chamado.notaAvaliacao && (
-              <div className="history-rating">
-                <h4>Avaliação do cliente</h4>
-                <div className="stars" aria-label={`Avaliação ${chamado.notaAvaliacao} de 5`}>
-                  {'★'.repeat(chamado.notaAvaliacao)}{'☆'.repeat(5 - chamado.notaAvaliacao)}
-                </div>
-                {chamado.comentarioAvaliacao && <p>{chamado.comentarioAvaliacao}</p>}
-                <small>{formatarData(chamado.avaliadoEm || chamado.resolvidoEm)}</small>
-              </div>
-            )}
+
           </section>
 
           <aside className="history-sidebar">
+            <AvaliacaoAtendimento chamado={chamado} onAtualizado={onChamadoAtualizado} />
             <div className="history-summary-card">
               <div className="summary-header">
                 <span className="summary-label">LABWARE</span>
@@ -728,7 +726,7 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
 
             <div className="history-info-card">
               <h4>Atendimento</h4>
-              <p>{resolvido ? 'Solução aplicada. O solicitante pode confirmar o encerramento ou reabrir o atendimento.' : 'Este chamado atingiu um estado final.'}</p>
+              <p>{resolvido ? 'Solução aplicada. O solicitante pode confirmar o encerramento ou reabrir o atendimento.' : (statusExibido === 'Cancelado' ? 'Este chamado foi cancelado. Confira o motivo abaixo.' : 'Atendimento concluído. Obrigado por contar com nossa equipe!')}</p>
               {chamado.motivoCancelamento && <section className="cancellation-report">
                 <h4>Relatório de cancelamento</h4>
                 <p>{chamado.motivoCancelamento}</p>

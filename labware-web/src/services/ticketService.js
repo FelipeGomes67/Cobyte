@@ -202,6 +202,9 @@ export function mapearChamadoApi(c) {
   return {
     id: c.id,
     chamadoId: c.id,
+    notaAvaliacao: c.notaAvaliacao ?? null,
+    comentarioAvaliacao: c.comentarioAvaliacao ?? null,
+    avaliadoEm: c.avaliadoEm ?? null,
     motivoCancelamento: c.motivoCancelamento || null,
     canceladoEm: c.canceladoEm || null,
     canceladoPorNome: c.canceladoPorNome || null,
@@ -230,7 +233,7 @@ export function mapearChamadoApi(c) {
     responsavelId: c.responsavelId ?? c.responsavel?.id ?? null,
     origem: c.origemFrontend || c.origem || null,
     slaTempoRestanteFormatado: c.slaTempoRestanteFormatado || null,
-    temNovaMensagem: Boolean(c.temNovaMensagem),
+    temNovaMensagem: Boolean(c.temNovaMensagem) && !['Resolvido', 'Fechado', 'Cancelado'].includes(statusFormatado),
     responsavel: c.responsavel,
     empresa: c.empresa,
   };
@@ -519,4 +522,8 @@ export function createTicket({ title, category, description, priority, ownerId }
   };
   persist([ticket, ...tickets]);
   return ticket;
+}
+export async function avaliarAtendimento(id, notaAvaliacao, comentarioAvaliacao) {
+  const { data } = await api.post('/chamados/' + id + '/avaliacao', { notaAvaliacao, comentarioAvaliacao });
+  return mapearDetalheChamadoApi(data);
 }

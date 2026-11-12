@@ -84,7 +84,7 @@ export default function TabelaChamados({ tickets = [], query, onSearch, titulo =
       <thead><tr><th>Código</th><th>Chamado</th><th>Empresa</th><th>Prioridade</th><th>Origem</th><th>{historico ? 'Finalizado em' : 'Abertura'}</th><th>SLA</th><th>Status</th><th>Ação</th></tr></thead>
       <tbody>{filtrados.map(t => <tr key={t.id}>
         <td><Link to={rotaBase + '/' + encodeURIComponent(t.id)}>{t.protocolo || t.id}</Link></td>
-        <td><span className="chamado-titulo-resumido" title={t.titulo || t.title}>{resumirTitulo(t.titulo || t.title)}</span>{t.temNovaMensagem && <small className="chamado-nova-mensagem">Nova mensagem</small>}</td>
+        <td><span className="chamado-titulo-resumido" title={t.titulo || t.title}>{resumirTitulo(t.titulo || t.title)}</span>{!historico && !['Resolvido', 'Fechado', 'Cancelado'].includes(t.status) && t.temNovaMensagem && <small className="chamado-nova-mensagem">Nova mensagem</small>}</td>
         <td>{texto(t.empresa)}</td><td><ChamadoBadge tipo="prioridade" valor={t.prioridade || t.priority} /></td>
         <td>{origem(t)}</td><td>{data(historico ? t.canceladoEm || t.resolvidoEm || t.resolvedAt : t.abertoEm || t.createdAt)}</td>
         <td>{t.slaTempoRestanteFormatado || '—'}</td><td><ChamadoBadge valor={t.status} /></td>

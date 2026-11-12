@@ -14,10 +14,17 @@ public class LeituraChamadoService {
     private final AcessoChamadoService acesso;
     public boolean temNova(Long chamadoId,Usuario usuario) {
         return Boolean.TRUE.equals(jdbc.queryForObject("""
-            SELECT EXISTS(SELECT 1 FROM mensagens m WHERE m.chamado_id=? AND m.usuario_id<>?
-              AND (? OR NOT m.visivel_apenas_suporte)
-              AND m.id>COALESCE((SELECT ultima_mensagem_id FROM leitura_chamado WHERE chamado_id=? AND usuario_id=?),0))
-            """,Boolean.class,chamadoId,usuario.getId(),acesso.ehSuporte(usuario),chamadoId,usuario.getId()));
+            SELECT EXISTS(
+              SELECT 1 FROM mensagens m
+              JOIN chamado c ON c.id=m.chamado_id
+              JOIN usuario autor ON autor.id=m.usuario_id
+              WHERE m.chamado_id=? AND m.usuario_id<>?
+                AND c.status IN ('ABERTO','EM_ANALISE','EM_ATENDIMENTO','AGUARDANDO_CLIENTE')
+                AND NOT m.visivel_apenas_suporte
+                AND ((? AND autor.perfil='CLIENTE')
+                     OR (NOT ? AND autor.perfil IN ('SUPORTE','ADMIN')))
+                AND m.id>COALESCE((SELECT ultima_mensagem_id FROM leitura_chamado WHERE chamado_id=? AND usuario_id=?),0))
+            """,Boolean.class,chamadoId,usuario.getId(),acesso.ehSuporte(usuario),acesso.ehSuporte(usuario),chamadoId,usuario.getId()));
     }
     @Transactional
     public void marcar(Long chamadoId,Long usuarioId) {
