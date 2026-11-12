@@ -1,3 +1,4 @@
+import ChamadoBadge from './ChamadoBadge';
 import '../../css/DetalhesCliente.css';
 
 export default function DetalhesCliente({ status = 'ABERTO' }) {
@@ -6,7 +7,7 @@ export default function DetalhesCliente({ status = 'ABERTO' }) {
       <div className="card-detalhes">
         <div className="card-header">
           <h2>Chamado #3142</h2>
-          <span className={`status-badge ${status.toLowerCase()}`}>{status}</span>
+          <ChamadoBadge valor={status} />
         </div>
         <div className="card-body">
           <p><strong>Assunto:</strong> Sistema ERP não está carregando relatórios financeiros.</p>

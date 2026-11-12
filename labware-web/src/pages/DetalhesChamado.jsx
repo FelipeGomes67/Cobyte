@@ -1,3 +1,4 @@
+import ChamadoBadge from '../components/ticket/ChamadoBadge';
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -68,14 +69,6 @@ function formatarDataHoraMensagem(valor) {
   const data = new Date(valor);
   if (Number.isNaN(data.getTime())) return 'Data não informada';
   return `${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
-}
-
-function obterClassePrioridade(prioridade) {
-  const p = String(prioridade || '').toUpperCase();
-  if (p.includes('CRITIC') || p.includes('CRÍTICA')) return 'priority-critica';
-  if (p.includes('ALT')) return 'priority-alta';
-  if (p.includes('MED') || p.includes('MÉDIA')) return 'priority-media';
-  return 'priority-baixa';
 }
 
 function calcularTempoRestanteSla(prazoResolucao, slaViolado, slaTempoRestanteFormatado) {
@@ -391,9 +384,6 @@ function DetalhesEmAtendimento({
 }) {
   const codigoAtual = (chamado?.statusRaw || codigosStatus[chamado?.status] || chamado?.status)?.replace('AGUARDANDO_CLIENTE', 'AGUARDANDO_SOLICITANTE');
   const statusExibido = nomesStatus[codigoAtual] || chamado?.status;
-  const classeStatus = statusExibido === 'Resolvido' || statusExibido === 'Fechado'
-    ? 'done' : statusExibido === 'Aberto' ? 'open' : 'progress';
-  const classePrioridade = obterClassePrioridade(chamado?.prioridade || chamado?.priority);
   const infoSla = calcularTempoRestanteSla(chamado?.prazoResolucao, chamado?.slaViolado || chamado?.slaExcedido, chamado?.slaTempoRestanteFormatado);
 
   const statusAtivo = ['ABERTO', 'EM_ANALISE', 'EM_ATENDIMENTO', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
@@ -473,12 +463,8 @@ function DetalhesEmAtendimento({
             <div className="history-header-row">
               <span className="history-ticket-code">{chamado.protocolo || `#${chamado.id}`}</span>
               <div className="header-tags">
-                <span className={`status-tag priority ${classePrioridade}`}>
-                  {chamado.prioridade || chamado.priority}
-                </span>
-                <span className={`status-tag ${classeStatus}`}>
-                  <i aria-hidden="true" />{statusExibido}
-                </span>
+                <ChamadoBadge tipo="prioridade" valor={chamado.prioridade || chamado.priority} />
+                <ChamadoBadge valor={statusExibido} />
               </div>
             </div>
 
@@ -512,7 +498,7 @@ function DetalhesEmAtendimento({
             <div className="history-summary-card">
               <div className="summary-header">
                 <span className="summary-label">LABWARE</span>
-                <span className={`status-tag ${classeStatus}`}><i aria-hidden="true" />{statusExibido}</span>
+                <ChamadoBadge valor={statusExibido} />
               </div>
 
               <div className="summary-grid">
@@ -665,7 +651,6 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
   const descricao = chamado.descricao || chamado.description || 'Chamado encerrado com sucesso.';
   const dataResolucao = formatarData(chamado.canceladoEm || chamado.resolvidoEm || chamado.resolvedAt || chamado.dataCriacao || chamado.abertoEm);
   const statusExibido = nomesStatus[codigosStatus[chamado.status] || chamado.status] || chamado.status;
-  const classePrioridade = obterClassePrioridade(chamado?.prioridade || chamado?.priority);
 
   return (
     <div className="history-page-shell">
@@ -678,10 +663,8 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
             <div className="history-header-row">
               <span className="history-ticket-code">{chamado.protocolo || `#${chamado.id}`}</span>
               <div className="header-tags">
-                <span className={`status-tag priority ${classePrioridade}`}>
-                  {chamado.prioridade || chamado.priority}
-                </span>
-                <span className={`status-tag ${statusExibido === "Cancelado" ? "cancelled" : "done"}`}><i aria-hidden="true" />{statusExibido}</span>
+                <ChamadoBadge tipo="prioridade" valor={chamado.prioridade || chamado.priority} />
+                <ChamadoBadge valor={statusExibido} />
               </div>
             </div>
 
