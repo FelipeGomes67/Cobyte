@@ -47,7 +47,7 @@ public class PerfilController {
 
     @GetMapping("/api/empresas")
     @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('CLIENTE','SUPORTE','ADMIN')")
-    @Operation(summary = "Listar empresas ativas", description = "CLIENTE, SUPORTE ou ADMIN. Retorna id, nome e CNPJ das empresas ativas, ordenadas por nome, para seleção no perfil.")
+    @Operation(summary = "Listar empresas ativas", description = "Retorna as empresas ativas, ordenadas por nome. A vinculação de clientes é realizada pelo suporte.")
     public java.util.List<com.labware.api.dto.response.EmpresaResumoResponse> empresas() {
         return service.listarEmpresas();
     }
@@ -71,7 +71,7 @@ public class PerfilController {
     })
     @GetMapping("/api/usuarios/me")
     public PerfilResponse me(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) { return service.buscar(UsuarioLogado.id(jwt)); }
-    @Operation(summary = "Atualizar perfil", description = "Atualiza os dados do próprio usuário em uma única requisição. Somente CLIENTE pode informar empresaId para escolher ou trocar uma empresa existente e ativa. EmpresaId ausente ou nulo preserva o vínculo atual. Não permite alterar o perfil de acesso.")
+    @Operation(summary = "Atualizar perfil", description = "Atualiza nome, e-mail, cargo e telefone. A empresa é vinculada exclusivamente pelo suporte.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),

@@ -60,6 +60,7 @@ public class ChamadoService {
                                                                          StatusChamado status, Prioridade prioridade, com.labware.api.model.enums.OrigemChamado origem,
                                                                          Long responsavelId, boolean apenasMeus, Long solicitanteId, int page, int size) {
         Usuario u=buscarUsuario(usuarioId);
+        acesso.exigirEmpresaVinculada(u);
         org.springframework.data.jpa.domain.Specification<Chamado> spec=(root,q,cb)->{
             var p=new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
             if(!acesso.ehSuporte(u)) p.add(cb.equal(root.get("solicitante").get("id"),usuarioId));
@@ -102,6 +103,7 @@ public class ChamadoService {
     @Transactional
     public ChamadoResponse reabrir(Long id,Long usuarioId) {
         Usuario u=buscarUsuario(usuarioId);
+        acesso.exigirEmpresaVinculada(u);
         Chamado c=chamadoRepository.findParaAvaliacao(id).orElseThrow(()->new com.labware.api.exception.ResourceNotFoundException("Chamado não encontrado"));
         acesso.exigir(c,u);
         if(c.getStatus()!=StatusChamado.RESOLVIDO && c.getStatus()!=StatusChamado.FECHADO)
@@ -150,6 +152,7 @@ public class ChamadoService {
     public ChamadoResponse abrir(Long solicitanteId, AbrirChamadoRequest req,
                                  List<org.springframework.web.multipart.MultipartFile> arquivos,
                                  org.springframework.web.multipart.MultipartFile audio) {
+        acesso.exigirEmpresaVinculada(buscarUsuario(solicitanteId));
         if(req.origem()==com.labware.api.model.enums.OrigemChamado.VOZ && (audio==null || audio.isEmpty()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Envie o áudio original junto ao chamado por voz");
         if(audio!=null) {
@@ -239,6 +242,7 @@ public class ChamadoService {
     @Transactional(readOnly = true)
     public List<ChamadoResponse> listar(Long usuarioId, Long solicitanteIdFiltro) {
         Usuario usuario = buscarUsuario(usuarioId);
+        acesso.exigirEmpresaVinculada(usuario);
 
         List<Chamado> chamados;
         if (acesso.ehSuporte(usuario)) {
@@ -514,6 +518,7 @@ public class ChamadoService {
 
     private Usuario buscarUsuarioDoSuporte(Long usuarioId) {
         Usuario usuario = buscarUsuario(usuarioId);
+        acesso.exigirEmpresaVinculada(usuario);
         if (!acesso.ehSuporte(usuario)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Somente SUPORTE ou ADMIN podem executar esta ação");

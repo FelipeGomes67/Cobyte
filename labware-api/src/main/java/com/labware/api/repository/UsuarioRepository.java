@@ -20,6 +20,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     @org.springframework.data.jpa.repository.Query("select u from Usuario u where u.perfil = com.labware.api.model.enums.PerfilUsuario.SUPORTE order by u.id")
     java.util.List<Usuario> buscarSuportesParaDistribuicao();
 
+    java.util.List<Usuario> findByPerfilAndEmpresaIsNullOrderByIdDesc(com.labware.api.model.enums.PerfilUsuario perfil);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select u from Usuario u where u.id = :id")
+    Optional<Usuario> buscarParaAprovacao(@org.springframework.data.repository.query.Param("id") Long id);
+
     Optional<Usuario> findByEmail(String email);
     Optional<Usuario> findByEmailIgnoreCase(String email);
     boolean existsByEmail(String email);

@@ -5,6 +5,8 @@ import Sidebar from './Sidebar';
 import ProfileMenu from './ProfileMenu';
 import NotificationDropdown from './NotificationDropdown';
 import ConfirmDialog from '../common/ConfirmDialog';
+import AvisoEmpresaPendente from '../common/AvisoEmpresaPendente';
+import { empresaPendente } from '../../utils/acessoUsuario';
 import { useAutenticacao } from '../../hooks/useAuth';
 
 const pageNames = {
@@ -14,6 +16,7 @@ const pageNames = {
   '/historico': 'Histórico de Chamados',
   '/relatorios': 'Relatórios',
   '/configuracoes': 'Configurações',
+  '/usuarios-pendentes': 'Usuários pendentes',
   '/perfil': 'Meu perfil',
   '/chamados/novo': 'Novo chamado',
   '/novo-chamado': 'Novo chamado',
@@ -109,7 +112,8 @@ export default function AppLayout() {
         </header>
 
         <div className={`content-area ${isReportsPage ? 'content-area--reports' : ''} ${isNotificacoesPage ? 'content-area--notificacoes' : ''}`}>
-          <Outlet />
+          {empresaPendente(user) && <AvisoEmpresaPendente />}
+          {empresaPendente(user) && !['/dashboard', '/perfil', '/configuracoes'].includes(location.pathname) ? null : <Outlet />}
         </div>
       </main>
       <ConfirmDialog open={logoutOpen} title="Sair da conta?" message="Sua sessão será encerrada neste dispositivo." confirmLabel="Sair da conta" onCancel={() => setLogoutOpen(false)} onConfirm={leaveAccount} />

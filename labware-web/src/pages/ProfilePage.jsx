@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
 import { useAutenticacao } from '../hooks/useAuth';
-import { listarEmpresas, obterPerfil, atualizarPerfil } from '../services/perfilService';
+import { obterPerfil, atualizarPerfil } from '../services/perfilService';
 
 export default function ProfilePage() {
   const { usuario: user, atualizarUsuario } = useAutenticacao();
@@ -17,30 +16,19 @@ export default function ProfilePage() {
 
   const [form, setForm] = useState(initialData);
   const [savedData, setSavedData] = useState(initialData);
-  const [empresas, setEmpresas] = useState([]);
-  const [carregandoEmpresas, setCarregandoEmpresas] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [feedback, setFeedback] = useState({ tipo: '', mensagem: '' });
 
-  // Carrega a lista de empresas ativas e os dados completos do perfil
+  // Carrega os dados completos do perfil.
   useEffect(() => {
     let ativo = true;
 
     async function carregarDados() {
       try {
-        const [listaEmpresasRes, perfilRes] = await Promise.allSettled([
-          listarEmpresas(),
-          obterPerfil(),
-        ]);
-
+        const perfil = await obterPerfil();
         if (!ativo) return;
-
-        if (listaEmpresasRes.status === 'fulfilled') {
-          setEmpresas(listaEmpresasRes.value || []);
-        }
-
-        if (perfilRes.status === 'fulfilled' && perfilRes.value) {
-          const p = perfilRes.value;
+        if (perfil) {
+          const p = perfil;
           const dadosMapeados = {
             name: p.nome || user?.name || user?.nome || '',
             email: p.email || user?.email || '',
@@ -55,11 +43,7 @@ export default function ProfilePage() {
           }
         }
       } catch (err) {
-        console.error('Erro ao inicializar perfil/empresas:', err);
-      } finally {
-        if (ativo) {
-          setCarregandoEmpresas(false);
-        }
+        console.error('Erro ao carregar perfil:', err);
       }
     }
 
@@ -97,16 +81,11 @@ export default function ProfilePage() {
 
     setSalvando(true);
     try {
-      const ehCliente = user?.perfil === 'CLIENTE' || user?.role === 'client';
-      const empresaSelecionada = empresas.find(emp => String(emp.id) === String(form.empresaId));
-
       const payload = {
         nome: form.name.trim(),
         email: form.email.trim(),
         cargo: form.cargo.trim() || null,
         telefone: form.tel.trim() || null,
-        ...(ehCliente && form.empresaId ? { empresaId: Number(form.empresaId) } : {}),
-        ...(ehCliente && empresaSelecionada ? { empresa: empresaSelecionada.nome } : {}),
       };
 
       const perfilAtualizado = await atualizarPerfil(payload);
@@ -156,6 +135,13 @@ export default function ProfilePage() {
     .slice(0, 2)
     .join('')
     .toUpperCase() || 'US';
+
+  const temEmpresaVinculada = Boolean(user?.empresaId || user?.empresaNome || user?.empresa);
+  const empresaTexto = temEmpresaVinculada
+    ? (user?.empresaNome || user?.empresa)
+    : (user?.empresaInformada
+        ? `Aguardando vinculação (Informada: ${user.empresaInformada})`
+        : 'Aguardando vinculação (Não informada)');
 
   return (
     <>
@@ -232,30 +218,19 @@ export default function ProfilePage() {
                 disabled={salvando}
               />
 
-              <div className="select-wrapper">
-                <select
-                  name="empresaId"
-                  value={form.empresaId}
-                  onChange={handleChange}
-                  className="profile-select"
-                  disabled={carregandoEmpresas || salvando}
-                >
-                  <option value="" disabled>
-                    {carregandoEmpresas ? 'Carregando empresas...' : 'Selecione uma empresa...'}
-                  </option>
-                  {empresas.map(emp => (
-                    <option key={emp.id} value={String(emp.id)}>
-                      {emp.nome}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="select-icon" size={18} />
-              </div>
+              {user?.perfil === 'CLIENTE' && <div
+                className={`profile-company ${!temEmpresaVinculada ? 'is-empty' : ''}`}
+                aria-label="Empresa"
+                title={empresaTexto}
+              >
+                {empresaTexto}
+              </div>}
 
               {/* Linha 3: Telefone e Alinhamento à direita dos botões Salvar e Cancelar */}
               <input
                 type="tel"
                 name="tel"
+                maxLength={20}
                 value={form.tel}
                 onChange={handleChange}
                 placeholder="Telefone"

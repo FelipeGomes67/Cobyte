@@ -36,11 +36,12 @@ export async function entrar(email, senha) {
   return { ...usuario, token: dados.token };
 }
 
-export async function cadastrarUsuario({ nome, email, senha }) {
+export async function cadastrarUsuario({ nome, email, senha, empresaInformada }) {
   const payload = {
     nome: String(nome || '').trim(),
     email: String(email || '').trim(),
     senha,
+    empresaInformada: String(empresaInformada || "").trim(),
   };
 
   await api.post('/api/auth/cadastrar', payload, { autenticada: false });

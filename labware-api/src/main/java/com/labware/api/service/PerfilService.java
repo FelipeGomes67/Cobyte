@@ -82,7 +82,7 @@ public class PerfilService {
         verificarEmail(email, null);
         validarSenha(r.senha());
         return PerfilResponse.from(usuarios.saveAndFlush(Usuario.builder().nome(r.nome().trim())
-                .email(email).senhaHash(encoder.encode(r.senha())).perfil(PerfilUsuario.CLIENTE).build()));
+                .email(email).senhaHash(encoder.encode(r.senha())).perfil(PerfilUsuario.CLIENTE).empresa(null).empresaInformada(r.empresaInformada().trim()).build()));
     }
 
     @Transactional(readOnly = true)
@@ -98,32 +98,13 @@ public class PerfilService {
         var u = usuario(id);
         String email = normalizar(r.email());
         verificarEmail(email, id);
-        var empresaSelecionada = u.getEmpresa();
-        if (r.empresaId() != null) {
-            if (u.getPerfil() != PerfilUsuario.CLIENTE) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente CLIENTE pode escolher a própria empresa");
-            }
-            empresaSelecionada = empresas.findById(r.empresaId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Empresa não encontrada"));
-            if (!empresaSelecionada.isAtiva()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empresa inativa");
-            }
-        }
-        u.setEmpresa(empresaSelecionada);
-        if (r.empresaId() != null && r.empresa() == null) {
-            u.setEmpresaInformada(null);
+        if (r.empresaId() != null || r.empresa() != null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o suporte pode vincular sua empresa");
         }
         u.setNome(r.nome().trim());
         u.setEmail(email);
         u.setCargo(r.cargo() != null ? r.cargo().trim() : null);
         u.setTelefone(r.telefone() != null ? r.telefone().trim() : null);
-
-        // Atualização condicional por perfil
-        if (u.getPerfil() == PerfilUsuario.CLIENTE) {
-            if (r.empresa() != null) {
-                u.setEmpresaInformada(r.empresa().trim());
-            }
-        }
 
         return PerfilResponse.from(usuarios.saveAndFlush(u));
     }

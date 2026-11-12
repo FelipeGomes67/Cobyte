@@ -14,7 +14,7 @@ public record PerfilResponse(
         String email,
         @Schema(description = "Cargo informado no perfil; opcional.", example = "Analista")
         String cargo,
-        @Schema(description = "Nome informado pelo cliente ou, quando ausente, nome da empresa vinculada.", example = "Laboratório Exemplo")
+        @Schema(description = "Nome oficial da empresa vinculada; nulo enquanto o vínculo está pendente.", example = "Laboratório Exemplo")
         String empresa,
         @Schema(description = "Identificador do vínculo cadastral com a empresa.", example = "1")
         Long empresaId,
@@ -23,10 +23,12 @@ public record PerfilResponse(
         @Schema(description = "Telefone para contato; opcional.", example = "(11) 98765-4321")
         String telefone,
         @Schema(description = "Foto ou avatar de perfil; opcional.")
-        String fotoPerfil
+        String fotoPerfil,
+        String empresaNome,
+        String empresaInformada
 ) {
     public PerfilResponse(Long id, String nome, String email, String cargo, String empresa, Long empresaId, PerfilUsuario perfil) {
-        this(id, nome, email, cargo, empresa, empresaId, perfil, null, null);
+        this(id, nome, email, cargo, empresa, empresaId, perfil, null, null, empresa, null);
     }
 
     public static PerfilResponse from(Usuario u) {
@@ -35,12 +37,13 @@ public record PerfilResponse(
                 u.getNome(),
                 u.getEmail(),
                 u.getCargo(),
-                u.getEmpresaInformada() != null ? u.getEmpresaInformada()
-                        : u.getEmpresa() != null ? u.getEmpresa().getNome() : null,
+                u.getEmpresa() != null ? u.getEmpresa().getNome() : null,
                 u.getEmpresa() != null ? u.getEmpresa().getId() : null,
                 u.getPerfil(),
                 u.getTelefone(),
-                u.getFotoPerfil()
+                u.getFotoPerfil(),
+                u.getEmpresa() != null ? u.getEmpresa().getNome() : null,
+                u.getEmpresaInformada()
         );
     }
 }

@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
+import UsuariosPendentes from './pages/UsuariosPendentes';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import ReportsPage from './pages/ReportsPage';
@@ -101,6 +102,7 @@ export default function RotasAplicacao() {
           }
         />
         <Route element={<ProtectedRoute />}>
+          <Route path="/usuarios-pendentes" element={<ExigirSuporte><UsuariosPendentes /></ExigirSuporte>} />
           <Route path="/notificacoes" element={<Notificacoes />} />
           <Route path="/chamado/:id" element={<DetalhesChamado />} />
           <Route path="/chamados/:id" element={<DetalhesChamado />} />

@@ -1,0 +1,6 @@
+.pending-users-table { overflow-x: auto; }
+.pending-users-table td { white-space: normal; min-width: 150px; }
+.pending-users-table select { width: 100%; min-height: 38px; border: 1px solid var(--border); border-radius: 6px; padding: 8px; background: white; color: var(--text); }
+.pending-company-notice { margin-bottom: 20px; padding: 20px; border-left: 4px solid #185df1; background: #eff5ff; }
+.pending-company-notice h2 { margin: 0 0 8px; font-size: 18px; }
+.pending-company-notice p { margin: 0; }

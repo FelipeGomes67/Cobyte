@@ -41,7 +41,8 @@ export default function LoginPage({ modo = 'login' }) {
       await cadastrar({
         nome: formulario.get('nome'),
         email: formulario.get('email'),
-        senha: formulario.get('senha')
+        senha: formulario.get('senha'),
+        empresaInformada: formulario.get('empresaInformada')
       });
 
       navegar('/dashboard', { replace: true });
@@ -77,12 +78,20 @@ export default function LoginPage({ modo = 'login' }) {
               <h2>{ehCadastro ? 'Crie sua conta' : 'Acesse sua plataforma'}</h2>
               <p>
                 {ehCadastro
-                  ? 'Cadastre-se para acompanhar seus chamados e interagir com a equipe de suporte.'
+                  ? 'Informe sua empresa. O suporte fará a vinculação para liberar seus chamados.'
                   : 'Entre com suas credenciais para continuar.'}
               </p>
             </div>
 
             <div className="campos-autenticacao">
+              {ehCadastro && <div className="campo-autenticacao">
+                <label htmlFor="empresaInformada">Empresa</label>
+                <div className="envoltorio-campo">
+                  <User size={18} className="icone-campo" />
+                  <input id="empresaInformada" name="empresaInformada" type="text" required maxLength={255}
+                    autoComplete="organization" placeholder="Nome da empresa onde trabalha" />
+                </div>
+              </div>}
               {ehCadastro && (
                 <div className="campo-autenticacao">
                   <label htmlFor="nome">Nome completo</label>

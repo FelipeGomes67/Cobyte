@@ -15,7 +15,15 @@ public class AcessoChamadoService {
     }
 
     /** SUPORTE e ADMIN acessam qualquer chamado; CLIENTE somente os que abriu. */
+    public void exigirEmpresaVinculada(Usuario usuario) {
+        if (usuario != null && usuario.getPerfil() == PerfilUsuario.CLIENTE && usuario.getEmpresa() == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Vinculação de empresa pendente. Aguarde a aprovação pelo suporte.");
+        }
+    }
+
     public void exigir(Chamado chamado, Usuario usuario) {
+        exigirEmpresaVinculada(usuario);
         if (ehSuporte(usuario)) return;
 
         if (usuario != null && usuario.getPerfil() == PerfilUsuario.CLIENTE

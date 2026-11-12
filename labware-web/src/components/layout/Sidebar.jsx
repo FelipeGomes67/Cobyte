@@ -6,7 +6,9 @@ import {
   History,
   ClipboardCheck,
   PlusCircle,
+  Users,
 } from 'lucide-react';
+import { empresaPendente } from '../../utils/acessoUsuario';
 import ProfileMenu from './ProfileMenu';
 import { useAutenticacao } from '../../hooks/useAuth';
 
@@ -25,7 +27,22 @@ export default function Sidebar({ open, onNavigate, user: userProp, onRequestLog
     user?.perfil === 'ADMIN';
 
   // Itens dinâmicos de acordo com o perfil do usuário
-  const navItems = ehSuporte
+  const navItems = empresaPendente(user)
+    ? [
+        {
+          label: 'DashBoard',
+          to: '/dashboard',
+          Icon: LayoutGrid,
+          active: currentPath === '/dashboard',
+        },
+        {
+          label: 'Meu perfil',
+          to: '/perfil',
+          Icon: Users,
+          active: currentPath === '/perfil',
+        },
+      ]
+    : ehSuporte
     ? [
         {
           label: 'DashBoard',
@@ -60,41 +77,47 @@ export default function Sidebar({ open, onNavigate, user: userProp, onRequestLog
           Icon: ClipboardCheck,
           active: currentPath === '/relatorios',
         },
+        {
+          label: 'Usuários pendentes',
+          to: '/usuarios-pendentes',
+          Icon: Users,
+          active: currentPath === '/usuarios-pendentes',
+        },
       ]
     : [
-        {
-          label: 'DashBoard',
-          to: '/dashboard',
-          Icon: LayoutGrid,
-          active: currentPath === '/dashboard',
-        },
-        ...(ehCliente
-          ? [
-              {
-                label: 'Fazer Chamado',
-                to: '/chamados/novo',
-                Icon: PlusCircle,
-                active:
-                  currentPath === '/chamados/novo' || currentPath === '/novo-chamado',
-              },
-            ]
-          : []),
-        {
-          label: 'Meus Chamados',
-          to: '/chamados',
-          Icon: FileText,
-          active:
-            currentPath === '/chamados' &&
-            currentPath !== '/chamados/novo' &&
-            currentPath !== '/novo-chamado',
-        },
-        {
-          label: 'Histórico',
-          to: '/historico',
-          Icon: History,
-          active: currentPath === '/historico',
-        },
-      ];
+      {
+        label: 'DashBoard',
+        to: '/dashboard',
+        Icon: LayoutGrid,
+        active: currentPath === '/dashboard',
+      },
+      ...(ehCliente
+        ? [
+          {
+            label: 'Fazer Chamado',
+            to: '/chamados/novo',
+            Icon: PlusCircle,
+            active:
+              currentPath === '/chamados/novo' || currentPath === '/novo-chamado',
+          },
+        ]
+        : []),
+      {
+        label: 'Meus Chamados',
+        to: '/chamados',
+        Icon: FileText,
+        active:
+          currentPath === '/chamados' &&
+          currentPath !== '/chamados/novo' &&
+          currentPath !== '/novo-chamado',
+      },
+      {
+        label: 'Histórico',
+        to: '/historico',
+        Icon: History,
+        active: currentPath === '/historico',
+      },
+    ];
 
   return (
     <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
