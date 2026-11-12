@@ -51,20 +51,14 @@ export function TicketsPage({ mode }) {
     };
   }, []);
 
-  const userTickets = ehSuporte
-    ? chamadosApi
-    : (chamadosApi || []).filter(ticket => !ticket.ownerId || ticket.ownerId === user?.id || ticket.solicitante === user?.nome);
-  let tickets = userTickets;
-  let title = 'Todos os chamados';
-  if (mode === 'mine') {
-    title = 'Meus chamados';
-    tickets = (chamadosApi || []).filter(ticket => !ticket.ownerId || ticket.ownerId === user?.id || ticket.solicitante === user?.nome);
-  } else if (mode === 'history') {
-    title = 'Histórico de chamados';
-    tickets = (tickets || []).filter(ticket => ticket.status === 'Resolvido' || ticket.status === 'Fechado' || ticket.status === 'Cancelado');
-  } else if (!ehSuporte) {
-    title = 'Meus chamados';
-  }
+  const meus = chamadosApi.filter(ticket => {
+    const id = ehSuporte ? ticket.responsavelId : ticket.solicitanteId;
+    return id != null && user?.id != null && String(id) === String(user.id);
+  });
+  let tickets = (mode === 'mine' || !ehSuporte) ? meus : chamadosApi;
+  const finalizados = ['Resolvido', 'Fechado', 'Cancelado'];
+  tickets = tickets.filter(ticket => mode === 'history' ? finalizados.includes(ticket.status) : !finalizados.includes(ticket.status));
+  const title = mode === 'history' ? 'Histórico de chamados' : mode === 'mine' || !ehSuporte ? 'Meus chamados' : 'Todos os chamados';
 
   const createButton = ehCliente ? (
     <button className="primary-button btn-novo-chamado" onClick={() => navigate('/chamados/novo')}>
@@ -75,7 +69,7 @@ export function TicketsPage({ mode }) {
     <Heading title={title} description="Acompanhe solicitações e atualizações da equipe de suporte." action={createButton}/>
     {loading && <div className="panel loading-state" role="status">Carregando chamados…</div>}
     {error && <div className="data-warning" role="status">{error}</div>}
-    {!loading && <TabelaChamados historico={mode === 'history'} titulo={mode === 'history' ? 'Histórico de chamados' : 'Solicitações'} tickets={tickets} query={query} onSearch={setQuery} rotaBase="/chamados"/>}
+    {!loading && <TabelaChamados porPrioridade={mode === 'mine'} historico={mode === 'history'} titulo={mode === 'history' ? 'Histórico de chamados' : 'Solicitações'} tickets={tickets} query={query} onSearch={setQuery} rotaBase="/chamados"/>}
     <div className="list-note"><Headset size={17}/> Precisa de ajuda? <a href="mailto:suporte@labware.com.br">Fale com o suporte LabWare</a></div>
   </>;
 }
