@@ -726,7 +726,7 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
 
             <div className="history-info-card">
               <h4>Atendimento</h4>
-              <p>{resolvido ? 'Solução aplicada. O solicitante pode confirmar o encerramento ou reabrir o atendimento.' : (statusExibido === 'Cancelado' ? 'Este chamado foi cancelado. Confira o motivo abaixo.' : 'Atendimento concluído. Obrigado por contar com nossa equipe!')}</p>
+              <p style={{ marginBottom: '16px' }}>{resolvido ? 'Solução aplicada. O solicitante pode confirmar o encerramento ou reabrir o atendimento.' : (statusExibido === 'Cancelado' ? 'Este chamado foi cancelado. Confira o motivo abaixo.' : 'Atendimento concluído. Obrigado por contar com nossa equipe!')}</p>
               {chamado.motivoCancelamento && <section className="cancellation-report">
                 <h4>Relatório de cancelamento</h4>
                 <p>{chamado.motivoCancelamento}</p>
