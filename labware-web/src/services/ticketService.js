@@ -227,6 +227,10 @@ export function mapearChamadoApi(c) {
     solicitanteId: c.solicitanteId ?? (c.solicitante && typeof c.solicitante === 'object' ? c.solicitante.id : null),
     ownerId: c.solicitanteId ?? (c.solicitante && typeof c.solicitante === 'object' ? c.solicitante.id : c.solicitante) ?? c.ownerId,
     solicitante: c.solicitante,
+    responsavelId: c.responsavelId ?? c.responsavel?.id ?? null,
+    origem: c.origemFrontend || c.origem || null,
+    slaTempoRestanteFormatado: c.slaTempoRestanteFormatado || null,
+    temNovaMensagem: Boolean(c.temNovaMensagem),
     responsavel: c.responsavel,
     empresa: c.empresa,
   };
