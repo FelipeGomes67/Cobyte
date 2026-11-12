@@ -33,3 +33,18 @@ export default {
   atualizarPerfil,
 };
 
+
+export async function alterarSenha(senhaAtual, novaSenha) {
+  await api.post('/usuarios/alterar-senha', { senhaAtual, novaSenha });
+}
+export async function enviarFoto(foto) {
+  const dados = new FormData();
+  dados.append('foto', foto, 'perfil.png');
+  const { data } = await api.post('/usuarios/me/foto', dados, { headers: { 'Content-Type': 'multipart/form-data' } });
+  return data;
+}
+
+export async function obterResumoAvaliacoes() {
+  const { data } = await api.get('/usuarios/me/avaliacoes');
+  return data;
+}

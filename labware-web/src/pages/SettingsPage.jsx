@@ -1,3 +1,4 @@
+import { alterarSenha } from '../services/perfilService';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Bell, BellOff, Eye, EyeOff, Save } from 'lucide-react';
@@ -74,16 +75,30 @@ export default function SettingsPage() {
 
   const permissionLabel = permission === 'granted' ? 'Permissão concedida' : permission === 'denied' ? 'Bloqueadas no navegador' : permission === 'unsupported' ? 'Não suportadas neste navegador' : 'Aguardando autorização';
 
-  function changePassword(event) {
+  async function changePassword(event) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const elemento = event.currentTarget;
+    const form = new FormData(elemento);
     if (String(form.get('newPassword') || '').length < 8) {
       setMessage('A nova senha deve ter pelo menos 8 caracteres.');
       setMessageType('error');
       return;
     }
-    setMessage('A troca de senha depende do serviço de autenticação do backend. Nenhuma alteração foi feita.');
-    setMessageType('info');
+    if (form.get('newPassword') !== form.get('confirmPassword')) {
+      setMessage('A confirmação não coincide com a nova senha.'); setMessageType('error'); return;
+    }
+    setWorking(true);
+    try {
+      await alterarSenha(String(form.get('currentPassword')), String(form.get('newPassword')));
+      elemento.reset();
+      setShowPassword(false);
+      setMessage('Senha alterada com sucesso. Utilize a nova senha no próximo login.');
+      setMessageType('success');
+    } catch (erro) {
+      setMessage(erro.response?.data?.message || erro.response?.data?.detail || 'Não foi possível alterar a senha.');
+      setMessageType('error');
+    } finally { setWorking(false); }
+
   }
 
   return <>
@@ -97,11 +112,12 @@ export default function SettingsPage() {
       <section className={`panel settings-panel settings-reference-card ${tab === 'security' ? 'security-card' : 'notification-card'}`}>
         {tab === 'security' ? <>
           <div className="settings-panel-heading"><h2>Segurança da conta</h2></div>
-          <p className="settings-limitation">A troca de senha fica indisponível enquanto este protótipo não estiver conectado ao backend de autenticação.</p>
+          <p className="settings-limitation">Confirme sua senha atual e escolha uma nova senha de 8 a 72 caracteres.</p>
           <form onSubmit={changePassword}>
             <label className="form-label">Senha Atual<div className="password-wrap"><input name="currentPassword" type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="••••••" required /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label>
-            <label className="form-label">Nova Senha<div className="password-wrap"><input name="newPassword" type={showPassword ? 'text' : 'password'} minLength="8" autoComplete="new-password" placeholder="••••••" required /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label>
-            <div className="settings-footer">{message && <span className={`settings-message ${messageType}`} role="status">{message}</span>}<button className="primary-button" type="submit"><Save size={16} /> Atualizar senha</button></div>
+            <label className="form-label">Nova Senha<div className="password-wrap"><input name="newPassword" maxLength="72" type={showPassword ? 'text' : 'password'} minLength="8" autoComplete="new-password" placeholder="••••••" required /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></label>
+            <label className="form-label">Confirmar nova senha<input name="confirmPassword" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength="8" maxLength="72" required /></label>
+            <div className="settings-footer">{message && <span className={`settings-message ${messageType}`} role="status">{message}</span>}<button className="primary-button" type="submit" disabled={working}><Save size={16} /> {working ? 'Atualizando...' : 'Atualizar senha'}</button></div>
           </form>
         </> : <>
           <div className="settings-panel-heading"><h2>Preferências de notificação</h2></div>

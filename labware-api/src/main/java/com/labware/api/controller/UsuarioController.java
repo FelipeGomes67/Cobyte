@@ -15,6 +15,14 @@ import java.util.List;
 @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
 public class UsuarioController {
     private final UsuarioService service;
+    private final com.labware.api.repository.ChamadoRepository chamados;
+
+    @GetMapping("/me/avaliacoes")
+    public com.labware.api.dto.response.ResumoAvaliacoesResponse minhasAvaliacoes(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt) {
+        return chamados.resumirAvaliacoes(com.labware.api.config.UsuarioLogado.id(jwt));
+    }
+
 
     @GetMapping("/pendentes")
     public List<UsuarioResponse> pendentes() { return service.pendentes(); }

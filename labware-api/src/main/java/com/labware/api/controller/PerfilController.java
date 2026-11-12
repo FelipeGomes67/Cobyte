@@ -99,6 +99,12 @@ public class PerfilController {
         service.senha(UsuarioLogado.id(jwt),r);
     }
 
+    @PostMapping("/api/usuarios/alterar-senha")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void alterarSenha(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody AlterarSenhaRequest request) {
+        service.senha(UsuarioLogado.id(jwt), request);
+    }
+
     @Operation(summary = "Enviar foto de perfil", description = "Upload de JPEG, PNG ou GIF, até 10 MB e 20 megapixels. Conteúdo validado e convertido para PNG.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Foto de perfil atualizada"),

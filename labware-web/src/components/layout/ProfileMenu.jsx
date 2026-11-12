@@ -1,11 +1,7 @@
+import Avatar from './AvatarUsuario';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, Ellipsis, LogOut, Settings, UserRound } from 'lucide-react';
-
-function Avatar({ user }) {
-  const initials = user.name.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
-  return <span className="avatar" aria-hidden="true">{initials || <UserRound size={17}/>}</span>;
-}
 
 export default function ProfileMenu({ user, onRequestLogout, onNavigate, variant = 'sidebar' }) {
   const [open, setOpen] = useState(false);

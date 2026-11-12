@@ -15,7 +15,7 @@ export function normalizarUsuario(usuario) {
 
 export async function obterUsuarioDaSessao() {
   if (!obterToken()) return null;
-  const { data: usuario } = await api.get('/api/auth/me');
+  const { data: usuario } = await api.get('/api/usuarios/me');
   return normalizarUsuario(usuario);
 }
 
@@ -32,7 +32,8 @@ export async function entrar(email, senha) {
   }
 
   salvarToken(dados.token);
-  const usuario = normalizarUsuario(dados.usuario);
+  const { data: perfil } = await api.get('/api/usuarios/me');
+  const usuario = normalizarUsuario(perfil);
   return { ...usuario, token: dados.token };
 }
 

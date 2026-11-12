@@ -1,10 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import EditorFoto from '../components/layout/EditorFoto';
+import { useEffect, useState } from 'react';
 import { useAutenticacao } from '../hooks/useAuth';
-import { obterPerfil, atualizarPerfil } from '../services/perfilService';
+import { obterPerfil, atualizarPerfil, enviarFoto, obterResumoAvaliacoes } from '../services/perfilService';
 
 export default function ProfilePage() {
   const { usuario: user, atualizarUsuario } = useAutenticacao();
-  const nameInputRef = useRef(null);
+  const [foto, setFoto] = useState(null);
+  const suporte = user?.perfil === 'SUPORTE' || user?.perfil === 'ADMIN';
+  const [avaliacoes, setAvaliacoes] = useState(null);
+  const [erroAvaliacoes, setErroAvaliacoes] = useState('');
+  useEffect(() => {
+    if (!suporte) return;
+    let ativo = true;
+    obterResumoAvaliacoes().then(dados => { if (ativo) setAvaliacoes(dados); })
+      .catch(() => { if (ativo) setErroAvaliacoes('Não foi possível carregar as avaliações.'); });
+    return () => { ativo = false; };
+  }, [suporte, user?.id]);
 
   const initialData = {
     name: user?.name || user?.nome || '',
@@ -15,7 +27,6 @@ export default function ProfilePage() {
   };
 
   const [form, setForm] = useState(initialData);
-  const [savedData, setSavedData] = useState(initialData);
   const [salvando, setSalvando] = useState(false);
   const [feedback, setFeedback] = useState({ tipo: '', mensagem: '' });
 
@@ -37,7 +48,6 @@ export default function ProfilePage() {
             empresaId: p.empresaId ? String(p.empresaId) : '',
           };
           setForm(dadosMapeados);
-          setSavedData(dadosMapeados);
           if (atualizarUsuario) {
             atualizarUsuario(p);
           }
@@ -88,7 +98,9 @@ export default function ProfilePage() {
         telefone: form.tel.trim() || null,
       };
 
-      const perfilAtualizado = await atualizarPerfil(payload);
+      let perfilAtualizado = await atualizarPerfil(payload);
+      atualizarUsuario(perfilAtualizado);
+      if (foto) { perfilAtualizado = await enviarFoto(foto); setFoto(null); }
 
       const dadosMapeados = {
         name: perfilAtualizado.nome || form.name,
@@ -99,7 +111,6 @@ export default function ProfilePage() {
       };
 
       setForm(dadosMapeados);
-      setSavedData(dadosMapeados);
       if (atualizarUsuario) {
         atualizarUsuario(perfilAtualizado);
       }
@@ -116,25 +127,6 @@ export default function ProfilePage() {
       setSalvando(false);
     }
   };
-
-  const handleCancel = () => {
-    setForm({ ...savedData });
-    setFeedback({ tipo: '', mensagem: '' });
-  };
-
-  const handleEditarClick = () => {
-    if (nameInputRef.current) {
-      nameInputRef.current.focus();
-    }
-  };
-
-  const initials = (form.name || '')
-    .split(' ')
-    .filter(Boolean)
-    .map(part => part[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase() || 'US';
 
   const temEmpresaVinculada = Boolean(user?.empresaId || user?.empresaNome || user?.empresa);
   const empresaTexto = temEmpresaVinculada
@@ -155,20 +147,14 @@ export default function ProfilePage() {
       <section className="panel profile-panel">
         {/* Cabeçalho do perfil */}
         <div className="profile-top">
-          <span className="avatar avatar-large">{initials}</span>
+          <EditorFoto user={user} onPreparar={setFoto} />
 
           <div className="profile-header">
             <h2>{form.name || 'Usuário'}</h2>
             <p>{form.email || 'usuario@labware.com.br'}</p>
           </div>
 
-          <button
-            type="button"
-            className="btn-cancel"
-            onClick={handleEditarClick}
-          >
-            Editar
-          </button>
+
         </div>
 
         {/* Informações abaixo do cabeçalho */}
@@ -190,7 +176,6 @@ export default function ProfilePage() {
             <div className="profile-info">
               {/* Linha 1: Nome Completo e Email */}
               <input
-                ref={nameInputRef}
                 name="name"
                 value={form.name}
                 onChange={handleChange}
@@ -246,18 +231,21 @@ export default function ProfilePage() {
                   {salvando ? 'Salvando...' : 'Salvar'}
                 </button>
 
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={handleCancel}
-                  disabled={salvando}
-                >
-                  Cancelar
-                </button>
+
               </div>
             </div>
           </form>
         </div>
+      </section>
+      <section className="panel profile-avaliacoes profile-avaliacoes-compacto">
+        <div>
+          <h2>{suporte ? 'Minhas avaliações' : 'Avaliações dos atendimentos'}</h2>
+          {suporte ? <p aria-live="polite">{erroAvaliacoes || (!avaliacoes ? 'Carregando avaliações...' : avaliacoes.quantidade > 0
+            ? <><strong className="profile-nota">★ {Number(avaliacoes.media).toLocaleString('pt-BR', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} <small>/ 5</small></strong><span> · {avaliacoes.quantidade} {avaliacoes.quantidade === 1 ? 'avaliação recebida' : 'avaliações recebidas'}</span></>
+            : 'Você ainda não recebeu avaliações.')}</p>
+            : <p>Avalie seus atendimentos resolvidos de 1 a 5 estrelas.</p>}
+        </div>
+        <Link className="secondary-button" to="/historico">Ver avaliações</Link>
       </section>
     </>
   );
