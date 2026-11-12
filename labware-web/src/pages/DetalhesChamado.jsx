@@ -120,11 +120,11 @@ function calcularTempoRestanteSla(prazoResolucao, slaViolado, slaTempoRestanteFo
 
 function PainelIa({ chamado }) {
   const classificacao = chamado?.classificacaoIa || {};
-  const tituloSugerido = chamado?.tituloGeradoIa || classificacao.tituloGeradoIa;
+  const tituloSugerido = chamado?.tituloGeradoIa?.trim() || classificacao.tituloGeradoIa?.trim();
   const justificativa = chamado?.justificativaIa || classificacao.justificativa;
   const resumo = chamado?.resumoTecnicoIa || classificacao.resumoTecnicoIa || {};
-  const sintoma = resumo.sintomaObservado || chamado?.sintomaObservadoIa || 'Não identificado especificamente';
-  const impacto = resumo.impactoOperacional || chamado?.impactoOperacionalIa || 'Impacto operacional padrão do setor';
+  const sintoma = resumo.sintomaObservado?.trim() || chamado?.sintomaObservadoIa?.trim() || 'Sintoma técnico não disponível. Consulte o relato original.';
+  const impacto = resumo.impactoOperacional?.trim() || chamado?.impactoOperacionalIa?.trim() || 'Impacto ainda não confirmado pelo solicitante.';
 
   const temDadosIa = Boolean(tituloSugerido || justificativa || resumo.sintomaObservado || resumo.impactoOperacional);
 
@@ -135,7 +135,7 @@ function PainelIa({ chamado }) {
           <Sparkles size={14} />
           <strong>Triagem por IA</strong>
         </div>
-        <p className="ia-justificativa">Classificação padrão aplicada pelo sistema.</p>
+        <p className="ia-justificativa">Resumo técnico não disponível para este chamado. Consulte a descrição original para avaliar o sintoma e confirmar o impacto.</p>
       </div>
     );
   }
@@ -144,7 +144,7 @@ function PainelIa({ chamado }) {
     <div className="history-ia-card">
       <div className="history-ia-header">
         <Sparkles size={15} />
-        <strong>Triagem por Inteligência Artificial</strong>
+        <strong>Resumo técnico da triagem</strong>
       </div>
 
       {tituloSugerido && (
@@ -422,7 +422,7 @@ function DetalhesEmAtendimento({
     );
   }
 
-  const tituloExibicao = chamado.tituloGeradoIa || chamado.classificacaoIa?.tituloGeradoIa || chamado.titulo || chamado.title;
+  const tituloExibicao = chamado.tituloGeradoIa?.trim() || chamado.classificacaoIa?.tituloGeradoIa?.trim() || chamado.titulo || chamado.title;
   const descricao = chamado.descricao || chamado.description || 'Sem descrição informada.';
 
   const handleConfirmarStatus = async () => {
@@ -630,7 +630,7 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
     return <div className="panel empty-state">Nenhum chamado resolvido para exibir.</div>;
   }
 
-  const tituloExibicao = chamado.tituloGeradoIa || chamado.classificacaoIa?.tituloGeradoIa || chamado.titulo || chamado.title;
+  const tituloExibicao = chamado.tituloGeradoIa?.trim() || chamado.classificacaoIa?.tituloGeradoIa?.trim() || chamado.titulo || chamado.title;
   const descricao = chamado.descricao || chamado.description || 'Chamado encerrado com sucesso.';
   const dataResolucao = formatarData(chamado.resolvidoEm || chamado.resolvedAt || chamado.dataCriacao || chamado.abertoEm);
   const statusExibido = nomesStatus[codigosStatus[chamado.status] || chamado.status] || chamado.status;

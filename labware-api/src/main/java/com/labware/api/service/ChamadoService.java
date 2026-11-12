@@ -16,7 +16,6 @@ import com.labware.api.model.enums.PerfilUsuario;
 import com.labware.api.model.enums.Prioridade;
 import com.labware.api.model.enums.StatusChamado;
 import com.labware.api.repository.*;
-import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,11 +31,6 @@ import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 @Service
 @RequiredArgsConstructor
@@ -82,9 +76,10 @@ public class ChamadoService {
             }
             return cb.and(p.toArray(jakarta.persistence.criteria.Predicate[]::new));
         };
-        return chamadoRepository.findAll(spec,org.springframework.data.domain.PageRequest.of(page,size,
-                Sort.by(Sort.Direction.DESC,"abertoEm","id"))).map(c->ChamadoResponse.from(c,
-                classificacaoIaRepository.findByChamadoId(c.getId()).isPresent(),leituras.temNova(c.getId(),u)));
+        var pagina = chamadoRepository.findAll(spec, org.springframework.data.domain.PageRequest.of(page, size,
+                Sort.by(Sort.Direction.DESC, "abertoEm", "id")));
+        var classificacoes = buscarClassificacoes(pagina.getContent());
+        return pagina.map(c -> ChamadoResponse.from(c, classificacoes.get(c.getId()), leituras.temNova(c.getId(), u)));
     }
 
     @Transactional
@@ -114,26 +109,6 @@ public class ChamadoService {
 
     @Value("${spring.ai.ollama.chat.options.model}")
     private String modeloIa;
-
-    /** Tempo máximo (ms) de espera síncrona pela triagem da IA; configurável em labware.ia.timeout-ms. */
-    @Value("${labware.ia.timeout-ms:4000}")
-    private long timeoutIaMs;
-
-    /**
-     * Pool próprio e limitado para a triagem: chamadas bloqueantes ao Ollama não devem ocupar o
-     * ForkJoinPool.commonPool, e Future.cancel(true) de um ExecutorService realmente interrompe a thread
-     * (CompletableFuture.cancel ignora o parâmetro mayInterruptIfRunning).
-     */
-    private final ExecutorService executorIa = Executors.newFixedThreadPool(4, r -> {
-        Thread t = new Thread(r, "triagem-ia");
-        t.setDaemon(true);
-        return t;
-    });
-
-    @PreDestroy
-    void encerrarExecutorIa() {
-        executorIa.shutdownNow();
-    }
 
     // ---------------------------------------------------------------
     // Abertura
@@ -206,24 +181,7 @@ public class ChamadoService {
 
     /** Executa a triagem fora de transação, respeitando labware.ia.timeout-ms; nunca lança, sempre devolve um resultado. */
     private Optional<ClassificacaoIaResultadoReponse> triarComIa(AbrirChamadoRequest req) {
-        Future<Optional<ClassificacaoIaResultadoReponse>> future =
-                executorIa.submit(() -> classificador.classificar(req.titulo(), req.descricao()));
-        try {
-            Optional<ClassificacaoIaResultadoReponse> resultado = future.get(timeoutIaMs, TimeUnit.MILLISECONDS);
-            if (resultado != null && resultado.isPresent()) return resultado;
-            log.warn("Triagem por IA sem resultado. Aplicando triagem padrão.");
-        } catch (TimeoutException e) {
-            future.cancel(true);
-            log.warn("Tempo limite de classificação por IA excedido ({} ms). Aplicando triagem padrão.", timeoutIaMs);
-        } catch (InterruptedException e) {
-            future.cancel(true);
-            Thread.currentThread().interrupt();
-            log.warn("Triagem por IA interrompida. Aplicando triagem padrão.");
-        } catch (Exception e) {
-            future.cancel(true);
-            log.warn("Falha na chamada da IA: {}. Aplicando triagem padrão.", e.getMessage());
-        }
-        return Optional.of(respostaPadraoIa());
+        return classificador.classificar(req.titulo(), req.descricao());
     }
 
     private ClassificacaoIaResultadoReponse respostaPadraoIa() {
@@ -252,7 +210,8 @@ public class ChamadoService {
         } else {
             chamados = chamadoRepository.findBySolicitanteIdOrderByAbertoEmDesc(usuario.getId());
         }
-        return chamados.stream().map(this::toResponse).toList();
+        var classificacoes = buscarClassificacoes(chamados);
+        return chamados.stream().map(c -> ChamadoResponse.from(c, classificacoes.get(c.getId()), false)).toList();
     }
 
     @Transactional(readOnly = true)
@@ -469,7 +428,7 @@ public class ChamadoService {
         } catch (Exception e) {
             log.error("Falha ao registrar histórico do chamado {}: {}", chamado.getProtocolo(), e.getMessage());
         }
-        return ChamadoResponse.from(chamado, ia.isPresent());
+        return toResponse(chamado);
     }
 
     private void atribuirAutomaticamente(Chamado chamado) {
@@ -530,9 +489,15 @@ public class ChamadoService {
         return usuario;
     }
 
+    private java.util.Map<Long, ClassificacaoIa> buscarClassificacoes(List<Chamado> chamados) {
+        if (chamados.isEmpty()) return java.util.Map.of();
+        return classificacaoIaRepository.findByChamadoIdIn(chamados.stream().map(Chamado::getId).toList())
+                .stream().collect(java.util.stream.Collectors.toMap(ia -> ia.getChamado().getId(), ia -> ia));
+    }
+
     private ChamadoResponse toResponse(Chamado chamado) {
         return ChamadoResponse.from(chamado,
-                classificacaoIaRepository.findByChamadoId(chamado.getId()).isPresent());
+                classificacaoIaRepository.findByChamadoId(chamado.getId()).orElse(null), false);
     }
 
     private void registrarHistorico(Chamado chamado, Usuario usuario, String anterior, String novo) {

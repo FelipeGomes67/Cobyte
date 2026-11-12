@@ -24,7 +24,7 @@ public class OllamaClientConfig {
     public RestClientCustomizer ollamaRestClientCustomizer(
             @Value("${spring.ai.ollama.base-url:http://localhost:11434}") String ollamaBaseUrl,
             @Value("${labware.ia.http-connect-timeout-ms:2000}") long connectTimeoutMs,
-            @Value("${labware.ia.http-read-timeout-ms:6000}") long readTimeoutMs) {
+            @Value("${labware.ia.http-read-timeout-ms:25000}") long readTimeoutMs) {
 
         URI base = URI.create(ollamaBaseUrl);
 

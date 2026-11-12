@@ -30,9 +30,10 @@ labware:
   cors:
     origens: http://localhost:5173
   ia:
-    timeout-ms: ${IA_TIMEOUT_MS:10000}
+    timeout-ms: ${IA_TIMEOUT_MS:30000}
+    max-tokens: ${IA_MAX_TOKENS:768}
     http-connect-timeout-ms: ${IA_HTTP_CONNECT_TIMEOUT_MS:2000}
-    http-read-timeout-ms: ${IA_HTTP_READ_TIMEOUT_MS:12000}
+    http-read-timeout-ms: ${IA_HTTP_READ_TIMEOUT_MS:25000}
 
 spring:
   mail:

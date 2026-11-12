@@ -143,6 +143,12 @@ public record ChamadoResponse(
         );
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("sintomaObservado")
+    public String sintomaObservado() { return sintomaObservadoIa; }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("impactoOperacional")
+    public String impactoOperacional() { return impactoOperacionalIa; }
+
     @com.fasterxml.jackson.annotation.JsonProperty("slaMetaMinutos")
     public Long slaMetaMinutos() {
         if (prioridade == Prioridade.MELHORIA || prazoResolucao == null || abertoEm == null) return null;

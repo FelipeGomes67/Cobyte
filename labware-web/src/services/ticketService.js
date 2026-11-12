@@ -113,6 +113,7 @@ export async function criarChamadoApi({
   }
 
   const { data } = await api.post('/chamados', formData, {
+    timeout: 45000,
     headers: {
       'Content-Type': 'multipart/form-data',
     },
@@ -185,7 +186,13 @@ export function formatarNomeCategoria(categoria) {
   }
 }
 
+function primeiroTexto(...valores) {
+  return valores.find(valor => typeof valor === 'string' && valor.trim())?.trim() || null;
+}
+
 export function mapearChamadoApi(c) {
+  const tituloOriginal = primeiroTexto(c.titulo, c.title) || 'Chamado sem título';
+  const tituloIa = primeiroTexto(c.tituloGeradoIa, c.classificacaoIa?.tituloGeradoIa);
   const statusFormatado = formatarNomeStatus(c.status);
   const prioridadeFormatada = formatarNomePrioridade(c.prioridade || c.priority);
   const categoriaFormatada = formatarNomeCategoria(c.categoria || c.category);
@@ -195,8 +202,10 @@ export function mapearChamadoApi(c) {
     id: c.id,
     chamadoId: c.id,
     protocolo: c.protocolo || `#${c.id}`,
-    titulo: c.titulo || c.title || 'Chamado sem título',
-    title: c.titulo || c.title || 'Chamado sem título',
+    tituloOriginal,
+    tituloGeradoIa: tituloIa,
+    titulo: tituloIa || tituloOriginal,
+    title: tituloIa || tituloOriginal,
     descricao: c.descricao || c.description || '',
     description: c.descricao || c.description || '',
     status: statusFormatado,
@@ -296,9 +305,11 @@ export function mapearDetalheChamadoApi(c) {
     || (typeof clienteBruto === 'object' ? clienteBruto?.email : '')
     || '';
 
-  const resumoTecnico = c.resumoTecnicoIa || classificacao.resumoTecnicoIa || {
-    sintomaObservado: c.sintomaObservadoIa || classificacao.sintomaObservadoIa || null,
-    impactoOperacional: c.impactoOperacionalIa || classificacao.impactoOperacionalIa || null,
+  const resumoTecnico = {
+    sintomaObservado: primeiroTexto(c.resumoTecnicoIa?.sintomaObservado, classificacao.resumoTecnicoIa?.sintomaObservado,
+      c.sintomaObservadoIa, c.sintomaObservado, classificacao.sintomaObservadoIa),
+    impactoOperacional: primeiroTexto(c.resumoTecnicoIa?.impactoOperacional, classificacao.resumoTecnicoIa?.impactoOperacional,
+      c.impactoOperacionalIa, c.impactoOperacional, classificacao.impactoOperacionalIa),
   };
 
   const anexosMapeados = (Array.isArray(c.anexos) ? c.anexos : []).map(mapearAnexoApi);
@@ -319,7 +330,7 @@ export function mapearDetalheChamadoApi(c) {
     slaTempoRestanteFormatado: c.slaTempoRestanteFormatado || null,
     classificadoPorIa: Boolean(c.classificadoPorIa || c.justificativaIa || classificacao.justificativa),
     justificativaIa: c.justificativaIa ?? c.justificativa ?? classificacao.justificativa ?? null,
-    tituloGeradoIa: c.tituloGeradoIa ?? classificacao.tituloGeradoIa ?? null,
+    tituloGeradoIa: primeiroTexto(c.tituloGeradoIa, classificacao.tituloGeradoIa),
     resumoTecnicoIa: resumoTecnico,
     solicitante: {
       id: c.solicitanteId ?? (typeof clienteBruto === 'object' ? clienteBruto?.id : null),

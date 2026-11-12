@@ -16,7 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @RestController @RequiredArgsConstructor @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
 public class TriagemController {
     private final TriagemService service;
-    @Operation(summary = "Executar novamente a triagem", description = "SUPORTE/ADMIN, chamado ativo. Atualiza sugestões sem substituir decisão final ou prazos. Falha da IA retorna 503 e preserva classificação anterior. Técnico sugerido permanece null por ausência de dados de competências/disponibilidade.")
+    @Operation(summary = "Executar novamente a triagem", description = "SUPORTE/ADMIN, chamado ativo. Executa triagem enriquecida, parcial ou por regras locais dentro do prazo configurado. Atualiza sugestões e recalcula SLA quando a classificação anterior era fallback. Técnico sugerido permanece null.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),

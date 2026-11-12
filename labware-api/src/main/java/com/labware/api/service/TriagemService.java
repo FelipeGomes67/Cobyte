@@ -30,17 +30,18 @@ public class TriagemService {
         return tx.execute(s->{
             var c=chamados.findParaAvaliacao(id).orElseThrow(()->new ResourceNotFoundException("Chamado não encontrado")); validar(c);
             var ia=classificacoes.findByChamadoId(id).orElseGet(()->ClassificacaoIa.builder().chamado(c).build());
-            ia.setTituloGeradoIa(r.tituloGeradoIa()); ia.setCategoriaSugerida(r.categoria()); ia.setPrioridadeSugerida(r.prioridade());
-            ia.setSintomaObservadoIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().sintomaObservado());
-            ia.setImpactoOperacionalIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().impactoOperacional());
-            ia.setJustificativa(r.justificativa()); ia.setModelo(modelo); ia.setClassificadaEm(LocalDateTime.now());
             // Atualiza a classificação do chamado se não possuía categoria ou se usava triagem de fallback inicial
             boolean eraFallback = ia.getJustificativa() != null && (
                     ia.getJustificativa().contains("Triagem padrão aplicada") ||
+                    ia.getJustificativa().contains("[Emergência]") || ia.getJustificativa().contains("[Padrão]") ||
                     ia.getJustificativa().contains("triagem de emergência") ||
                     ia.getJustificativa().contains("indisponibilidade/falha")
             );
 
+            ia.setTituloGeradoIa(r.tituloGeradoIa()); ia.setCategoriaSugerida(r.categoria()); ia.setPrioridadeSugerida(r.prioridade());
+            ia.setSintomaObservadoIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().sintomaObservado());
+            ia.setImpactoOperacionalIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().impactoOperacional());
+            ia.setJustificativa(r.justificativa()); ia.setModelo(modelo); ia.setClassificadaEm(LocalDateTime.now());
             if (c.getCategoria() == null || eraFallback) {
                 c.setCategoria(r.categoria());
                 c.setPrioridade(r.prioridade());
