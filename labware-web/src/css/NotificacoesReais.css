@@ -1,0 +1,145 @@
+.notificacoes-reais {
+    font-size: 15px;
+    color: #334155
+}
+
+.notificacoes-painel {
+    padding: 24px
+}
+
+.notificacoes-reais article {
+    padding: 20px 18px;
+    margin-bottom: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px
+}
+
+.notificacoes-reais article.aviso-nao-lido {
+    background: #eff6ff;
+    border-left: 3px solid #2563eb
+}
+
+.notificacoes-reais article strong {
+    font-size: 16px;
+    color: #172235
+}
+
+.notificacoes-reais article p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 7px 0;
+    overflow-wrap: anywhere
+}
+
+.notificacoes-reais small {
+    font-size: 12px;
+    color: #64748b
+}
+
+.aviso-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px
+}
+
+.aviso-acoes button,
+.aviso-acoes a {
+    font: inherit;
+    font-size: 13px;
+    color: #1d4ed8;
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 10px 14px;
+    text-decoration: none;
+    cursor: pointer
+}
+
+.aviso-acoes button:disabled {
+    opacity: .5;
+    cursor: default
+}
+
+.notification-dropdown-card.notificacoes-reais {
+    width: min(430px, calc(100vw - 32px));
+    padding: 18px;
+    box-sizing: border-box
+}
+
+.notificacoes-reais .notification-dropdown-list {
+    max-height: 420px;
+    overflow-y: auto
+}
+
+.notificacoes-reais h3 {
+    font-size: 18px
+}
+
+.preferencias-reais h2 {
+    font-size: 22px
+}
+
+.preferencias-reais p {
+    font-size: 15px;
+    line-height: 1.6
+}
+
+.preferencia-linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid #e2e8f0
+}
+
+.preferencia-linha strong {
+    font-size: 16px
+}
+
+.preferencia-linha small {
+    display: block;
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 6px
+}
+
+.preferencia-linha input {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    accent-color: #2563eb
+}
+
+.preferencias-reais form>button {
+    margin-top: 22px
+}
+
+.settings-layout .notification-card {
+    max-width: none;
+    padding: 28px;
+    width: 100%;
+    box-sizing: border-box
+}
+
+.settings-layout .settings-tabs button {
+    font-size: 14px;
+    min-height: 44px
+}
+
+.notificacoes-painel>.secondary-button {
+    margin-bottom: 20px
+}
+
+.notificacoes-reais .notification-dropdown-list {
+    padding-top: 12px;
+    padding-right: 4px
+}
+
+.notification-dropdown-card.notificacoes-reais>.aviso-acoes {
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 8px
+}

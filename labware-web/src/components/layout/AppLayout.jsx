@@ -1,3 +1,5 @@
+import { useNotificacoes } from '../../hooks/useNotificacoes';
+import '../../css/NotificacoesReais.css';
 import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Bell, Menu, X } from 'lucide-react';
@@ -24,6 +26,7 @@ const pageNames = {
 };
 
 export default function AppLayout() {
+  const notificacoes = useNotificacoes(0, 6);
   const { usuario: user, desconectar: logout } = useAutenticacao();
   const navigate = useNavigate();
   const location = useLocation();
@@ -92,14 +95,14 @@ export default function AppLayout() {
                 type="button"
                 className="topbar-bell-button"
                 onClick={() => setNotificationsOpen(prev => !prev)}
-                aria-label="3 notificações não lidas"
+                aria-label={notificacoes.naoLidas + ' notificações não lidas'}
                 aria-expanded={notificationsOpen}
               >
                 <Bell size={26} strokeWidth={1.8} className="topbar-bell-svg" />
-                <span className="topbar-badge">3</span>
+                {notificacoes.naoLidas > 0 && <span className="topbar-badge">{notificacoes.naoLidas > 99 ? '99+' : notificacoes.naoLidas}</span>}
               </button>
               {notificationsOpen && (
-                <NotificationDropdown
+                <NotificationDropdown dados={notificacoes}
                   onClose={() => setNotificationsOpen(false)}
                   onViewAll={openNotifications}
                 />

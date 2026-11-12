@@ -1,76 +1,27 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare } from 'lucide-react';
-
-const notificacoesRecentes = [
-  {
-    id: 1,
-    chamadoId: '102',
-    titulo: 'Nova mensagem em Chamado #102',
-    tempo: 'Há 2 min',
-  },
-  {
-    id: 2,
-    chamadoId: '104',
-    titulo: 'SLA Excedido em Chamado #104',
-    tempo: 'Há 10 min',
-  },
-  {
-    id: 3,
-    chamadoId: '108',
-    titulo: 'Nova mensagem do Suporte no chamado #108',
-    tempo: 'Hoje às 09:20',
-  },
-];
-
-export default function NotificationDropdown({ onClose, onViewAll }) {
+import { marcarNotificacao } from '../../services/notificacaoService';
+export default function NotificationDropdown({ onClose, onViewAll, dados }) {
   const navigate = useNavigate();
-
-  const handleItemClick = (chamadoId) => {
-    if (onClose) onClose();
-    if (chamadoId) {
-      navigate(`/chamados/${chamadoId}`);
-    } else {
-      navigate('/notificacoes');
-    }
-  };
-
-  return (
-    <section className="notification-dropdown-card" aria-label="Notificações recentes">
-      <div className="notification-dropdown-header">
-        <h3>Notificações</h3>
-      </div>
-
-      <div className="notification-dropdown-list">
-        {notificacoesRecentes.map((item) => (
-          <div
-            key={item.id}
-            className="notification-dropdown-item"
-            onClick={() => handleItemClick(item.chamadoId)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && handleItemClick(item.chamadoId)}
-          >
-            <div className="notification-dropdown-icon">
-              <MessageSquare size={16} strokeWidth={2.2} />
-            </div>
-            <div className="notification-dropdown-copy">
-              <strong>{item.titulo}</strong>
-              <small>{item.tempo}</small>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="notification-dropdown-footer">
-        <button
-          type="button"
-          className="btn-ver-todas-notificacoes"
-          onClick={onViewAll}
-        >
-          Ver todas as notificações
-        </button>
-      </div>
-    </section>
-  );
+  const [erro, setErro] = useState('');
+  const [ocupado, setOcupado] = useState(false);
+  async function marcar(id, abrir) {
+    setOcupado(true); setErro('');
+    try {
+      await marcarNotificacao(id);
+      if (abrir) { onClose(); navigate('/chamados/' + abrir); }
+    } catch { setErro('Não foi possível marcar como lida.'); }
+    finally { setOcupado(false); }
+  }
+  return <section className="notification-dropdown-card notificacoes-reais" aria-label="Notificações recentes">
+    <h3>Notificações {dados.naoLidas > 0 && '(' + dados.naoLidas + ')'}</h3>
+    {(erro || dados.erro) && <p role="alert">{erro || dados.erro}</p>}
+    {dados.carregando ? <p>Carregando...</p> : !dados.content.length && <p>Nenhuma notificação por enquanto.</p>}
+    <div className="notification-dropdown-list">{dados.content.map(item => <article key={item.id} className={item.lida ? 'aviso-lido' : 'aviso-nao-lido'}>
+      <strong>{item.titulo}</strong><p>{item.mensagem}</p><small>{new Date(item.criadoEm).toLocaleString('pt-BR')}</small>
+      <div className="aviso-acoes">{item.chamadoId && <button disabled={ocupado} onClick={() => marcar(item.id, item.chamadoId)}>Ver chamado</button>}
+      {!item.lida && <button disabled={ocupado} onClick={() => marcar(item.id)}>Marcar como lida</button>}</div>
+    </article>)}</div>
+    <div className="aviso-acoes"><button disabled={ocupado || !dados.naoLidas} onClick={() => marcar(null)}>Marcar todas como lidas</button><button onClick={onViewAll}>Ver todas</button></div>
+  </section>;
 }
-
