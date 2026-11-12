@@ -61,7 +61,7 @@ export function TicketsPage({ mode }) {
     tickets = (chamadosApi || []).filter(ticket => !ticket.ownerId || ticket.ownerId === user?.id || ticket.solicitante === user?.nome);
   } else if (mode === 'history') {
     title = 'Histórico de chamados';
-    tickets = (tickets || []).filter(ticket => ticket.status === 'Resolvido' || ticket.status === 'Fechado');
+    tickets = (tickets || []).filter(ticket => ticket.status === 'Resolvido' || ticket.status === 'Fechado' || ticket.status === 'Cancelado');
   } else if (!ehSuporte) {
     title = 'Meus chamados';
   }

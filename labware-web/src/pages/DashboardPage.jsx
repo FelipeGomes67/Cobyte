@@ -33,7 +33,7 @@ function Indicadores({ dados }) {
         <strong className="dash-value">{dados.ativos}</strong>
         <ul className="dash-status-summary">
           {dados.status
-            .filter((item) => !["RESOLVIDO", "FECHADO"].includes(item.chave))
+            .filter((item) => !["RESOLVIDO", "FECHADO", "CANCELADO"].includes(item.chave))
             .map((item) => (
               <li key={item.chave}>
                 <i style={{ "--cor": item.cor }} aria-hidden="true" />

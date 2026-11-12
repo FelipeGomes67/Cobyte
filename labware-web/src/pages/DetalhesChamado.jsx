@@ -28,7 +28,9 @@ const codigosStatus = {
   'Em análise': 'EM_ANALISE',
   'Em andamento': 'EM_ATENDIMENTO',
   'Em atendimento': 'EM_ATENDIMENTO',
-  'Aguardando cliente': 'AGUARDANDO_CLIENTE',
+  'Aguardando cliente': 'AGUARDANDO_SOLICITANTE',
+  'Aguardando solicitante': 'AGUARDANDO_SOLICITANTE',
+  Cancelado: 'CANCELADO',
   Resolvido: 'RESOLVIDO',
   Fechado: 'FECHADO',
 };
@@ -37,7 +39,9 @@ const nomesStatus = {
   ABERTO: 'Aberto',
   EM_ANALISE: 'Em análise',
   EM_ATENDIMENTO: 'Em atendimento',
-  AGUARDANDO_CLIENTE: 'Aguardando cliente',
+  AGUARDANDO_SOLICITANTE: 'Aguardando solicitante',
+  AGUARDANDO_CLIENTE: 'Aguardando solicitante',
+  CANCELADO: 'Cancelado',
   RESOLVIDO: 'Resolvido',
   FECHADO: 'Fechado',
 };
@@ -242,8 +246,8 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
   const [erroEnvio, setErroEnvio] = useState('');
   const fimConversaRef = useRef(null);
 
-  const chamadoEncerrado = chamado?.status === 'Resolvido' || chamado?.status === 'Fechado'
-    || chamado?.statusRaw === 'RESOLVIDO' || chamado?.statusRaw === 'FECHADO';
+  const chamadoEncerrado = chamado?.status === 'Resolvido' || chamado?.status === 'Fechado' || chamado?.status === 'Cancelado'
+    || chamado?.statusRaw === 'RESOLVIDO' || chamado?.statusRaw === 'FECHADO' || chamado?.statusRaw === 'CANCELADO';
 
   const dataAbertura = formatarData(chamado.dataCriacao || chamado.abertoEm);
 
@@ -359,7 +363,7 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
       ) : (
         <div className="history-message-composer-encerrado">
           <p>Este chamado está encerrado e não aceita novas mensagens.</p>
-          {onReabrir && (
+          {onReabrir && (chamado.statusRaw === 'RESOLVIDO' || chamado.status === 'Resolvido') && (
             <button
               type="button"
               className="secondary-button small-button btn-reabrir"
@@ -385,19 +389,20 @@ function DetalhesEmAtendimento({
   reabrindo,
   onChamadoAtualizado,
 }) {
-  const codigoAtual = chamado?.statusRaw || codigosStatus[chamado?.status] || chamado?.status;
+  const codigoAtual = (chamado?.statusRaw || codigosStatus[chamado?.status] || chamado?.status)?.replace('AGUARDANDO_CLIENTE', 'AGUARDANDO_SOLICITANTE');
   const statusExibido = nomesStatus[codigoAtual] || chamado?.status;
   const classeStatus = statusExibido === 'Resolvido' || statusExibido === 'Fechado'
     ? 'done' : statusExibido === 'Aberto' ? 'open' : 'progress';
   const classePrioridade = obterClassePrioridade(chamado?.prioridade || chamado?.priority);
   const infoSla = calcularTempoRestanteSla(chamado?.prazoResolucao, chamado?.slaViolado || chamado?.slaExcedido, chamado?.slaTempoRestanteFormatado);
 
-  const statusAtivo = ['ABERTO', 'EM_ANALISE', 'EM_ATENDIMENTO', 'AGUARDANDO_CLIENTE'].includes(codigoAtual);
+  const statusAtivo = ['ABERTO', 'EM_ANALISE', 'EM_ATENDIMENTO', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
   const podeEditar = ehSuporte && statusAtivo;
-  const podeAlterarStatus = podeEditar;
-  const podeAlterarPrioridade = podeEditar;
+  const podeAlterarStatus = podeEditar || (!ehSuporte && ['ABERTO', 'EM_ANALISE', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual));
+  const podeAlterarPrioridade = ehSuporte && codigoAtual === 'EM_ANALISE';
 
   const [statusSelecionado, setStatusSelecionado] = useState('');
+  const [motivoCancelamento, setMotivoCancelamento] = useState('');
   const [salvandoStatus, setSalvandoStatus] = useState(false);
 
   const prioridadeNormalizada = String(chamado?.prioridade || chamado?.priority || 'MEDIA').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
@@ -410,7 +415,7 @@ function DetalhesEmAtendimento({
     return <div className="panel empty-state">Nenhum chamado para exibir.</div>;
   }
 
-  if (['RESOLVIDO', 'FECHADO'].includes(codigoAtual)) {
+  if (['RESOLVIDO', 'FECHADO', 'CANCELADO'].includes(codigoAtual)) {
     return (
       <DetalhesEncerrados
         chamado={chamado}
@@ -418,6 +423,7 @@ function DetalhesEmAtendimento({
         onNovaMensagem={onNovaMensagem}
         onReabrir={onReabrir}
         reabrindo={reabrindo}
+        onChamadoAtualizado={onChamadoAtualizado}
       />
     );
   }
@@ -430,7 +436,7 @@ function DetalhesEmAtendimento({
     setSalvandoStatus(true);
     setFeedbackAtendimento(null);
     try {
-      const atualizado = await alterarStatus(chamado.id, statusSelecionado);
+      const atualizado = await alterarStatus(chamado.id, statusSelecionado, motivoCancelamento);
       setStatusSelecionado('');
       setFeedbackAtendimento({ tipo: 'sucesso', texto: 'Status alterado com sucesso!' });
       if (onChamadoAtualizado) onChamadoAtualizado(atualizado);
@@ -550,7 +556,7 @@ function DetalhesEmAtendimento({
 
             <div className="history-info-card">
               <h4>Atendimento</h4>
-              {ehSuporte ? (
+              {ehSuporte || podeAlterarStatus ? (
                 <>
                   <p>
                     Status atual: <strong>{statusExibido}</strong>.
@@ -569,13 +575,22 @@ function DetalhesEmAtendimento({
                           statusAtual={codigoAtual}
                           valor={statusSelecionado}
                           aoAlterar={setStatusSelecionado}
+                          somenteCancelamento={!ehSuporte}
                           desabilitado={salvandoStatus}
                         />
+                        {statusSelecionado === 'CANCELADO' && <label className="cancellation-reason">
+                          Relatório de cancelamento
+                          <textarea required minLength={10} maxLength={4000} rows={4}
+                            value={motivoCancelamento} onChange={evento => setMotivoCancelamento(evento.target.value)}
+                            placeholder="Explique por que este chamado deve ser cancelado."
+                            disabled={salvandoStatus} />
+                          <small>Informe entre 10 e 4000 caracteres. O motivo ficará registrado com seu nome e a data.</small>
+                        </label>}
                         <button
                           type="button"
                           className="primary-button small-button btn-confirmar-status"
                           onClick={handleConfirmarStatus}
-                          disabled={salvandoStatus || !statusSelecionado || statusSelecionado === codigoAtual}
+                          disabled={salvandoStatus || !statusSelecionado || statusSelecionado === codigoAtual || (statusSelecionado === 'CANCELADO' && motivoCancelamento.trim().length < 10)}
                         >
                           {salvandoStatus ? 'Salvando...' : 'Confirmar Status'}
                         </button>
@@ -625,14 +640,30 @@ function DetalhesEmAtendimento({
   );
 }
 
-function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reabrindo }) {
+function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reabrindo, onChamadoAtualizado }) {
+  const { usuario } = useAutenticacao();
+  const [fechando, setFechando] = useState(false);
+  const [erroFechamento, setErroFechamento] = useState('');
+  const resolvido = chamado?.statusRaw === 'RESOLVIDO' || chamado?.status === 'Resolvido';
+  async function confirmarResolucao() {
+    setFechando(true);
+    setErroFechamento('');
+    try {
+      const atualizado = await alterarStatus(chamado.id, 'FECHADO');
+      onChamadoAtualizado?.(atualizado);
+    } catch (erro) {
+      setErroFechamento(erro.message);
+    } finally {
+      setFechando(false);
+    }
+  }
   if (!chamado) {
     return <div className="panel empty-state">Nenhum chamado resolvido para exibir.</div>;
   }
 
   const tituloExibicao = chamado.tituloGeradoIa?.trim() || chamado.classificacaoIa?.tituloGeradoIa?.trim() || chamado.titulo || chamado.title;
   const descricao = chamado.descricao || chamado.description || 'Chamado encerrado com sucesso.';
-  const dataResolucao = formatarData(chamado.resolvidoEm || chamado.resolvedAt || chamado.dataCriacao || chamado.abertoEm);
+  const dataResolucao = formatarData(chamado.canceladoEm || chamado.resolvidoEm || chamado.resolvedAt || chamado.dataCriacao || chamado.abertoEm);
   const statusExibido = nomesStatus[codigosStatus[chamado.status] || chamado.status] || chamado.status;
   const classePrioridade = obterClassePrioridade(chamado?.prioridade || chamado?.priority);
 
@@ -650,7 +681,7 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
                 <span className={`status-tag priority ${classePrioridade}`}>
                   {chamado.prioridade || chamado.priority}
                 </span>
-                <span className="status-tag done"><i aria-hidden="true" />{statusExibido}</span>
+                <span className={`status-tag ${statusExibido === "Cancelado" ? "cancelled" : "done"}`}><i aria-hidden="true" />{statusExibido}</span>
               </div>
             </div>
 
@@ -695,7 +726,7 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
             <div className="history-summary-card">
               <div className="summary-header">
                 <span className="summary-label">LABWARE</span>
-                <span className="summary-progress">Cumprido</span>
+                <span className="summary-progress">{statusExibido === "Cancelado" ? "Cancelado" : "Encerrado"}</span>
               </div>
 
               <div className="summary-grid">
@@ -714,8 +745,18 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
 
             <div className="history-info-card">
               <h4>Atendimento</h4>
-              <p>Chamado encerrado. Reabra o atendimento caso necessite de novas atualizações.</p>
-              {onReabrir && (
+              <p>{resolvido ? 'Solução aplicada. O solicitante pode confirmar o encerramento ou reabrir o atendimento.' : 'Este chamado atingiu um estado final.'}</p>
+              {chamado.motivoCancelamento && <section className="cancellation-report">
+                <h4>Relatório de cancelamento</h4>
+                <p>{chamado.motivoCancelamento}</p>
+                <small>{chamado.canceladoPorNome} · {formatarDataHoraMensagem(chamado.canceladoEm)}</small>
+              </section>}
+              {erroFechamento && <p role="alert">{erroFechamento}</p>}
+              {resolvido && usuario?.perfil === 'CLIENTE' && <button type="button"
+                className="primary-button wide-button" disabled={fechando} onClick={confirmarResolucao}>
+                {fechando ? 'Fechando…' : 'Confirmar resolução e fechar'}
+              </button>}
+              {onReabrir && resolvido && (
                 <button
                   type="button"
                   className="primary-button wide-button"

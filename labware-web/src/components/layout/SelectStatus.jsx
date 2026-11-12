@@ -3,25 +3,29 @@ const codigosStatus = {
   'Em análise': 'EM_ANALISE',
   'Em andamento': 'EM_ATENDIMENTO',
   'Em atendimento': 'EM_ATENDIMENTO',
-  'Aguardando cliente': 'AGUARDANDO_CLIENTE',
+  'Aguardando cliente': 'AGUARDANDO_SOLICITANTE',
+  'Aguardando solicitante': 'AGUARDANDO_SOLICITANTE',
+  Cancelado: 'CANCELADO',
   Resolvido: 'RESOLVIDO',
   Fechado: 'FECHADO',
 };
 
 const transicoes = {
-  ABERTO: ['EM_ANALISE', 'EM_ATENDIMENTO'],
-  EM_ANALISE: ['EM_ATENDIMENTO', 'AGUARDANDO_CLIENTE', 'RESOLVIDO'],
-  EM_ATENDIMENTO: ['EM_ANALISE', 'AGUARDANDO_CLIENTE', 'RESOLVIDO'],
-  AGUARDANDO_CLIENTE: ['EM_ATENDIMENTO', 'EM_ANALISE', 'RESOLVIDO'],
+  ABERTO: ['EM_ANALISE', 'CANCELADO'],
+  EM_ANALISE: ['EM_ATENDIMENTO', 'AGUARDANDO_SOLICITANTE', 'CANCELADO'],
+  EM_ATENDIMENTO: ['RESOLVIDO', 'AGUARDANDO_SOLICITANTE', 'EM_ANALISE'],
+  AGUARDANDO_SOLICITANTE: ['EM_ATENDIMENTO', 'CANCELADO'],
   RESOLVIDO: ['FECHADO', 'EM_ATENDIMENTO'],
   FECHADO: [],
+  CANCELADO: [],
 };
 
 const nomesStatus = {
   ABERTO: 'Aberto',
   EM_ANALISE: 'Em análise',
   EM_ATENDIMENTO: 'Em atendimento',
-  AGUARDANDO_CLIENTE: 'Aguardando cliente',
+  AGUARDANDO_SOLICITANTE: 'Aguardando solicitante',
+  CANCELADO: 'Cancelado',
   RESOLVIDO: 'Resolvido',
   FECHADO: 'Fechado',
 };
@@ -31,9 +35,10 @@ export default function SelectStatus({
   valor,
   aoAlterar,
   desabilitado = false,
+  somenteCancelamento = false,
 }) {
-  const chave = codigosStatus[statusAtual] || String(statusAtual || '').toUpperCase();
-  const opcoes = transicoes[chave] || [];
+  const chave = codigosStatus[statusAtual] || String(statusAtual || '').toUpperCase().replace('AGUARDANDO_CLIENTE', 'AGUARDANDO_SOLICITANTE');
+  const opcoes = (transicoes[chave] || []).filter(status => !somenteCancelamento || status === 'CANCELADO');
   const labelAtual = nomesStatus[chave] || nomesStatus[statusAtual] || statusAtual || 'Selecione um status';
 
   return (
