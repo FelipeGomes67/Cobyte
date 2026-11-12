@@ -134,7 +134,8 @@ export function formatarNomeStatus(status) {
     case 'EM_ANDAMENTO':
       return 'Em atendimento';
     case 'AGUARDANDO_CLIENTE':
-      return 'Aguardando cliente';
+    case 'AGUARDANDO_SOLICITANTE':
+      return 'Aguardando solicitante';
     case 'RESOLVIDO':
       return 'Resolvido';
     case 'FECHADO':
@@ -201,6 +202,10 @@ export function mapearChamadoApi(c) {
   return {
     id: c.id,
     chamadoId: c.id,
+    motivoCancelamento: c.motivoCancelamento || null,
+    canceladoEm: c.canceladoEm || null,
+    canceladoPorNome: c.canceladoPorNome || null,
+    canceladoPorId: c.canceladoPorId || null,
     protocolo: c.protocolo || `#${c.id}`,
     tituloOriginal,
     tituloGeradoIa: tituloIa,
@@ -448,11 +453,12 @@ export async function obterChamadoPorId(id) {
 
 export const criarChamado = criarChamadoApi;
 
-export async function alterarStatus(id, novoStatus) {
+export async function alterarStatus(id, novoStatus, motivoCancelamento) {
   try {
     const statusUpper = String(novoStatus || '').toUpperCase();
     const { data } = await api.patch(`/chamados/${id}/status`, {
       novoStatus: statusUpper,
+      ...(statusUpper === 'CANCELADO' ? { motivoCancelamento: motivoCancelamento?.trim() } : {}),
     });
     return mapearDetalheChamadoApi(data);
   } catch (error) {

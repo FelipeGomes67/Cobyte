@@ -2,9 +2,10 @@ export const STATUS_DASHBOARD = [
   { chave: 'ABERTO', nome: 'Aberto', cor: '#3b82f6' },
   { chave: 'EM_ANALISE', nome: 'Em análise', cor: '#6366f1' },
   { chave: 'EM_ATENDIMENTO', nome: 'Em atendimento', cor: '#0284c7' },
-  { chave: 'AGUARDANDO_CLIENTE', nome: 'Aguardando cliente', cor: '#f59e0b' },
+  { chave: 'AGUARDANDO_SOLICITANTE', nome: 'Aguardando solicitante', cor: '#f59e0b' },
   { chave: 'RESOLVIDO', nome: 'Resolvido', cor: '#10b981' },
   { chave: 'FECHADO', nome: 'Fechado', cor: '#64748b' },
+  { chave: 'CANCELADO', nome: 'Cancelado', cor: '#94a3b8' },
 ];
 
 function normalizar(valor = '') {
@@ -12,7 +13,7 @@ function normalizar(valor = '') {
 }
 
 export function obterStatus(chamado) {
-  const chave = normalizar(chamado.status);
+  const chave = normalizar(chamado.status).replace('AGUARDANDO_CLIENTE', 'AGUARDANDO_SOLICITANTE');
   const equivalente = chave === 'EM_ANDAMENTO' ? 'EM_ATENDIMENTO' : chave;
   return STATUS_DASHBOARD.find(status => status.chave === equivalente)
     || { chave: equivalente, nome: chamado.status || 'Não informado', cor: '#94a3b8' };
@@ -58,7 +59,7 @@ function chaveDia(data) {
 
 export function calcularDashboard(chamados, agora) {
   const finalizado = chamado => ['RESOLVIDO', 'FECHADO'].includes(obterStatus(chamado).chave);
-  const ativos = chamados.filter(chamado => !finalizado(chamado));
+  const ativos = chamados.filter(chamado => !finalizado(chamado) && obterStatus(chamado).chave !== 'CANCELADO');
   const resolvidos = chamados.filter(finalizado);
   const emRisco = ativos.filter(chamado => {
     const restante = obterRestanteSla(chamado, agora);
