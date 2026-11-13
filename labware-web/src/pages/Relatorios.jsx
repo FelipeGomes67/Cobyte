@@ -23,7 +23,6 @@ function HorizontalBars({ items, variant = 'category' }) {
     <div className={`axis ${variant === 'priority' ? 'priority-axis' : ''}`} aria-hidden="true">{ticks.map(tick => <span key={tick} style={{ left: `${(tick / axisMax) * 100}%` }}>{tick.toLocaleString('pt-BR')}</span>)}</div>
   </>;
 }
-
 function CategoryChart({ categories }) {
   return <section className="panel chart-panel category-panel">
     <h2>Chamados por Categoria</h2>
