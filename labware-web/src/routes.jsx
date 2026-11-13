@@ -1,12 +1,12 @@
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import UsuariosPendentes from './pages/UsuariosPendentes';
-import LoginPage from './pages/LoginPage';
-import ProfilePage from './pages/ProfilePage';
-import ReportsPage from './pages/ReportsPage';
-import SettingsPage from './pages/SettingsPage';
-import DashboardPage from './pages/DashboardPage';
-import { TicketsPage } from './pages/TicketsPage';
+import LoginPage from './pages/Login';
+import ProfilePage from './pages/Perfil';
+import ReportsPage from './pages/Relatorios';
+import SettingsPage from './pages/Configuracoes';
+import DashboardPage from './pages/Dashboard';
+import { TicketsPage } from './pages/Chamados';
 import MeusChamados from './pages/MeusChamados';
 import NovoChamado from './pages/NovoChamado';
 import Notificacoes from './pages/Notificacoes';
