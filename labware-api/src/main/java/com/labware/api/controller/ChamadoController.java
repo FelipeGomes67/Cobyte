@@ -125,6 +125,14 @@ public class ChamadoController {
         return chamadoService.buscar(id, UsuarioLogado.id(jwt));
     }
 
+    @GetMapping("/empresa/{empresaId}")
+    @PreAuthorize("hasRole('CLIENTE')")
+    @Operation(summary = "Chamados da empresa", description = "Somente CLIENTE. O ID deve corresponder à empresa vinculada ao usuário autenticado. Inclui chamados de outros solicitantes da mesma empresa.")
+    public List<ChamadoResponse> listarDaEmpresa(@PathVariable Long empresaId,
+            @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+        return chamadoService.listarDaEmpresa(UsuarioLogado.id(jwt), empresaId);
+    }
+
     @Operation(summary = "Assumir chamado", description = "SUPORTE/ADMIN. Adiciona o usuário logado à equipe sem remover outros técnicos. Não duplica vínculos. Chamado ABERTO passa para EM_ANALISE. Não aceita chamado encerrado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),

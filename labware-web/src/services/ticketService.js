@@ -206,6 +206,16 @@ export async function obterMeusChamados() {
   }
 }
 
+export async function obterChamadosDaEmpresa(empresaId) {
+  if (empresaId == null || empresaId === '') throw new Error('Vincule uma empresa ao seu perfil para consultar os chamados.');
+  try {
+    const { data } = await api.get(`/chamados/empresa/${encodeURIComponent(empresaId)}`);
+    return data.map(mapearChamadoApi);
+  } catch (erro) {
+    throw new Error(erro?.response?.data?.message || erro?.message || 'Não foi possível carregar os chamados da empresa.', { cause: erro });
+  }
+}
+
 /** Converte string | { nome, name, ... } em texto exibível (evita renderizar objetos no JSX). */
 function textoDe(valor) {
   if (valor === null || valor === undefined) return '';

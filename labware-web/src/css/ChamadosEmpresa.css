@@ -1,0 +1,6 @@
+.chamados-empresa-page { min-width: 0; }
+.chamados-empresa-page .empresa-situacao { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.chamados-empresa-page .empresa-situacao button { padding: 10px 16px; border: 1px solid #dce3ed; border-radius: 8px; background: white; color: #536074; font-size: 13px; }
+.chamados-empresa-page .empresa-situacao button[aria-pressed="true"] { color: #185df1; background: #edf3ff; border-color: #b7cdf8; font-weight: 600; }
+.chamados-empresa-page .empresa-erro { padding: 20px; }
+.chamados-empresa-page .empresa-erro p { color: #b42318; }

@@ -94,6 +94,12 @@ export default function Sidebar({ open, onNavigate, user: userProp, onRequestLog
       ...(ehCliente
         ? [
           {
+            label: 'Chamados da empresa',
+            to: '/chamados-empresa',
+            Icon: Ticket,
+            active: currentPath.startsWith('/chamados-empresa'),
+          },
+          {
             label: 'Fazer Chamado',
             to: '/chamados/novo',
             Icon: PlusCircle,

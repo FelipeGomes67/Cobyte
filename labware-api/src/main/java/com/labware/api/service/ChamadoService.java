@@ -107,6 +107,18 @@ public class ChamadoService {
         return toResponse(c);
     }
 
+    @Transactional(readOnly = true)
+    public List<ChamadoResponse> listarDaEmpresa(Long usuarioId, Long empresaId) {
+        Usuario usuario = buscarUsuario(usuarioId);
+        if (usuario.getPerfil() != PerfilUsuario.CLIENTE || usuario.getEmpresa() == null
+                || !usuario.getEmpresa().getId().equals(empresaId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você só pode consultar chamados da sua empresa.");
+        }
+        var chamados = chamadoRepository.findByEmpresaIdOrderByAbertoEmDesc(empresaId);
+        var classificacoes = buscarClassificacoes(chamados);
+        return chamados.stream().map(c -> ChamadoResponse.from(c, classificacoes.get(c.getId()), false)).toList();
+    }
+
     @Transactional
     public ChamadoResponse reabrir(Long id,Long usuarioId) {
         Usuario u=buscarUsuario(usuarioId);

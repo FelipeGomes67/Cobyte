@@ -15,6 +15,7 @@ const pageNames = {
   '/dashboard': 'Dashboard',
   '/chamados': 'Todos Chamados',
   '/meus-chamados': 'Meus Chamados',
+  '/chamados-empresa': 'Chamados da empresa',
   '/historico': 'Histórico de Chamados',
   '/relatorios': 'Relatórios',
   '/configuracoes': 'Configurações',

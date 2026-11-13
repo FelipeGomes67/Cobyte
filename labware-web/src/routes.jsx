@@ -8,6 +8,7 @@ import SettingsPage from './pages/Configuracoes';
 import DashboardPage from './pages/Dashboard';
 import { TicketsPage } from './pages/Chamados';
 import MeusChamados from './pages/MeusChamados';
+import ChamadosEmpresa from './pages/ChamadosEmpresa';
 import NovoChamado from './pages/NovoChamado';
 import Notificacoes from './pages/Notificacoes';
 import DetalhesChamado from './pages/DetalhesChamado';
@@ -129,6 +130,7 @@ export default function RotasAplicacao() {
           <Route path="/chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/todos-chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/meus-chamados" element={<MeusChamados />} />
+          <Route path="/chamados-empresa" element={<ExigirCliente><ChamadosEmpresa /></ExigirCliente>} />
           <Route path="/meus-chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/historico" element={<TicketsPage mode="history" />} />
           <Route path="/historico/:ticketId" element={<DetalhesChamado />} />
