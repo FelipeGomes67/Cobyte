@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import { useNotificacoes } from "../hooks/useNotificacoes";
 import { marcarNotificacao } from "../services/notificacaoService";
 import "../css/NotificacoesReais.css";
+
 export default function Notificacoes() {
   const [page, setPage] = useState(0);
   const dados = useNotificacoes(page);
   const [erro, setErro] = useState("");
   const [ocupado, setOcupado] = useState(false);
+
   async function marcar(id) {
     setOcupado(true);
     setErro("");
@@ -19,6 +21,13 @@ export default function Notificacoes() {
       setOcupado(false);
     }
   }
+
+  function handleVerChamado(item) {
+    if (!item.lida) {
+      marcar(item.id);
+    }
+  }
+
   return (
     <div className="notificacoes-reais">
       <div className="page-heading">
@@ -57,7 +66,12 @@ export default function Notificacoes() {
             </small>
             <div className="aviso-acoes">
               {item.chamadoId && (
-                <Link to={"/chamados/" + item.chamadoId}>Ver chamado</Link>
+                <Link
+                  to={"/chamados/" + item.chamadoId}
+                  onClick={() => handleVerChamado(item)}
+                >
+                  Ver chamado
+                </Link>
               )}
               {!item.lida && (
                 <button disabled={ocupado} onClick={() => marcar(item.id)}>
