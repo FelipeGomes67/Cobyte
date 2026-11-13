@@ -82,26 +82,18 @@ export default function AppLayout() {
 
   const isReportsPage = location.pathname === '/relatorios';
   const ehDashboard = location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/');
-  const isNotificacoesPage = location.pathname === '/notificacoes';
 
   return (
-    <div className={`app-shell ${isReportsPage ? 'app-shell--reports' : ''} ${ehDashboard ? 'app-shell--dashboard' : ''} ${isNotificacoesPage ? 'app-shell--notificacoes' : ''}`}>
+    <div className={`app-shell ${isReportsPage ? 'app-shell--reports' : ''} ${ehDashboard ? 'app-shell--dashboard' : ''}`}>
       <Sidebar open={menuOpen} onNavigate={() => setMenuOpen(false)} user={user} onRequestLogout={() => setLogoutOpen(true)} />
       {menuOpen && <button className="mobile-scrim" onClick={() => setMenuOpen(false)} aria-label="Fechar menu" />}
-      <main className={`main-area ${isReportsPage ? 'main-area--reports' : ''} ${isNotificacoesPage ? 'main-area--notificacoes' : ''}`}>
+      <main className={`main-area ${isReportsPage ? 'main-area--reports' : ''}`}>
         <header className="topbar">
           <button className="icon-button mobile-menu" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}>
             {menuOpen ? <X /> : <Menu />}
           </button>
 
-          {isNotificacoesPage ? (
-            <div className="topbar-breadcrumb">
-              <span className="topbar-breadcrumb-sub">Suporte Labware</span>
-              <span className="topbar-breadcrumb-main">Notificações</span>
-            </div>
-          ) : (
-            <div className="breadcrumb"><span>Central de Suporte</span><strong>{title}</strong></div>
-          )}
+          <div className="breadcrumb"><span>Central de Suporte</span><strong>{title}</strong></div>
 
           <div className="top-actions">
             <div className="notification-center" ref={notificationRef}>
@@ -122,13 +114,11 @@ export default function AppLayout() {
                 />
               )}
             </div>
-            {!isNotificacoesPage && (
-              <ProfileMenu user={user} variant="header" onRequestLogout={() => setLogoutOpen(true)} />
-            )}
+            <ProfileMenu user={user} variant="header" onRequestLogout={() => setLogoutOpen(true)} />
           </div>
         </header>
 
-        <div className={`content-area ${isReportsPage ? 'content-area--reports' : ''} ${isNotificacoesPage ? 'content-area--notificacoes' : ''}`}>
+        <div className={`content-area ${isReportsPage ? 'content-area--reports' : ''}`}>
           {empresaPendente(user) && <AvisoEmpresaPendente />}
           {empresaPendente(user) && !['/dashboard', '/perfil', '/configuracoes'].includes(location.pathname) ? null : <Outlet />}
         </div>

@@ -577,28 +577,6 @@
   color: #c2cad5;
 }
 
-.topbar-breadcrumb {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  justify-content: center;
-}
-
-.topbar-breadcrumb-sub {
-  color: #185df1;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.topbar-breadcrumb-main {
-  color: #185df1;
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
-
 .top-actions {
   display: flex;
   align-items: center;
