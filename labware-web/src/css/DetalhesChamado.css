@@ -385,8 +385,8 @@
 .detalhes-chamado-page .evidence-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 16px;
+  margin-top: 12px;
 }
 
 .detalhes-chamado-page .evidence-item {
@@ -394,7 +394,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 12px;
+  padding: 12px 14px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #f8fafc;
