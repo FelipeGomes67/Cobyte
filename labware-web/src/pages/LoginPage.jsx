@@ -22,10 +22,10 @@ export default function LoginPage({ modo = 'login' }) {
     const formulario = new FormData(evento.currentTarget);
 
     try {
-      const usuario = await autenticar(formulario.get('email'), formulario.get('senha'));
+      await autenticar(formulario.get('email'), formulario.get('senha'));
       const destino = localizacao.state?.from;
 
-      navegar(usuario.role === 'support' && destino ? destino : '/dashboard', { replace: true });
+      navegar(typeof destino === 'string' && destino.startsWith('/') && !destino.startsWith('//') ? destino : '/dashboard', { replace: true });
     } catch (erro) {
       definirErroLogin(erro.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');
     }

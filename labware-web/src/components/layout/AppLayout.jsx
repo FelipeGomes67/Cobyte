@@ -39,6 +39,20 @@ export default function AppLayout() {
     && location.pathname.replace(/\/$/, '') !== '/novo-chamado';
   const title = ehDetalheChamado ? 'Detalhes' : pageNames[location.pathname] || 'Central de Suporte';
 
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    function abrirChamado(evento) {
+      if (evento.data?.tipo !== 'LABWARE_ABRIR_CHAMADO') return;
+      const caminho = evento.data.caminho;
+      if (!/^\/chamados\/\d+$/.test(caminho) && caminho !== '/notificacoes') return;
+      setNotificationsOpen(false);
+      navigate(caminho);
+      evento.ports?.[0]?.postMessage('navegado');
+    }
+    navigator.serviceWorker.addEventListener('message', abrirChamado);
+    return () => navigator.serviceWorker.removeEventListener('message', abrirChamado);
+  }, [navigate]);
+
   function leaveAccount() {
     logout();
     setLogoutOpen(false);

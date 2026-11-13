@@ -1,3 +1,4 @@
+import AtivarWebPush from './AtivarWebPush';
 import { useEffect, useState } from 'react';
 import { consultarPreferencias, salvarPreferencias } from '../../services/notificacaoService';
 export default function PreferenciasNotificacao() {
@@ -19,7 +20,7 @@ export default function PreferenciasNotificacao() {
     finally { setSalvando(false); }
   }
   return <div className="preferencias-reais"><h2>Preferências de notificação</h2>
-    <p>Escolha quais avisos deseja receber no sistema e por e-mail.</p>
+    <p>Escolha quais avisos deseja receber no sistema, por e-mail e nos dispositivos ativados.</p><AtivarWebPush />
     {erro && <p role="alert">{erro}</p>}{sucesso && <p role="status">{sucesso}</p>}
     {!preferencias ? <><p>Carregando preferências...</p>{erro && <button onClick={() => setTentativa(t => t + 1)}>Tentar novamente</button>}</> :
     <form onSubmit={salvar}>

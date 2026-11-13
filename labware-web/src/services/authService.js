@@ -1,3 +1,4 @@
+import { desativarPush } from './webPushService';
 import api, { obterToken, salvarToken, removerToken } from './api.js';
 
 export function normalizarUsuario(usuario) {
@@ -16,6 +17,9 @@ export function normalizarUsuario(usuario) {
 export async function obterUsuarioDaSessao() {
   if (!obterToken()) return null;
   const { data: usuario } = await api.get('/api/usuarios/me');
+  if (localStorage.getItem('labware-push-usuario') && localStorage.getItem('labware-push-usuario') !== String(usuario.id)) {
+    try { await desativarPush(); } catch { /* A inscrição é cancelada localmente mesmo sem acesso ao cadastro anterior. */ }
+  }
   return normalizarUsuario(usuario);
 }
 
@@ -33,6 +37,9 @@ export async function entrar(email, senha) {
 
   salvarToken(dados.token);
   const { data: perfil } = await api.get('/api/usuarios/me');
+  if (localStorage.getItem('labware-push-usuario') && localStorage.getItem('labware-push-usuario') !== String(perfil.id)) {
+    try { await desativarPush(); } catch { /* Cancelamento local protege a troca de conta. */ }
+  }
   const usuario = normalizarUsuario(perfil);
   return { ...usuario, token: dados.token };
 }

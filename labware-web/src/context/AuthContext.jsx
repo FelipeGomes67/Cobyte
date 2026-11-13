@@ -1,3 +1,4 @@
+import { desativarPush } from '../services/webPushService';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { obterUsuarioDaSessao, cadastrarUsuario, entrar, sair, normalizarUsuario } from '../services/authService';
 import { EVENTO_SESSAO_EXPIRADA } from '../services/api';
@@ -11,6 +12,12 @@ export function ProvedorAutenticacao({ children: conteudo }) {
 
   useEffect(() => {
     let ativo = true;
+    if ('serviceWorker' in navigator && window.isSecureContext) {
+      navigator.serviceWorker.getRegistration('/').then(registro => {
+        if (registro) return registro.update();
+      }).catch(() => { /* A versão instalada continua disponível offline. */ });
+    }
+
     const encerrarSessao = () => definirUsuario(null);
     window.addEventListener(EVENTO_SESSAO_EXPIRADA, encerrarSessao);
 
@@ -57,7 +64,8 @@ export function ProvedorAutenticacao({ children: conteudo }) {
     }
   }, []);
 
-  const desconectar = useCallback(() => {
+  const desconectar = useCallback(async () => {
+    try { await desativarPush(); } catch { /* Logout continua mesmo se o servidor estiver offline. */ }
     sair();
     definirUsuario(null);
   }, []);
