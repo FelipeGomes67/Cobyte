@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../css/Notificacoes.css';
 
 const iconErro = '/icons/alert-triangle.svg';
@@ -6,11 +7,13 @@ const iconInfo = '/icons/message-circle.svg';
 const iconAlerta = '/icons/check-circle.svg';
 
 export default function Notificacoes() {
+    const navegar = useNavigate();
     const [abaAtiva, setAbaAtiva] = useState('nao-lidas');
 
     const [listaNotificacoes, setListaNotificacoes] = useState([
         {
             id: 1,
+            chamadoId: 104,
             tipo: 'erro',
             titulo: 'SLA Excedido: Chamado #104 (Scanner não lê código de barras) ultrapassou o tempo limite.',
             data: 'Há 10 min',
@@ -18,6 +21,7 @@ export default function Notificacoes() {
         },
         {
             id: 2,
+            chamadoId: 108,
             tipo: 'info',
             titulo: 'Nova mensagem do Suporte no chamado #108 (Falha na emissão de laudos).',
             data: 'Hoje às 09:20',
@@ -25,6 +29,7 @@ export default function Notificacoes() {
         },
         {
             id: 3,
+            chamadoId: 103,
             tipo: 'alerta',
             titulo: 'Chamado #103 mudou para Em Atendimento.',
             data: 'Ontem às 16:30',
@@ -32,11 +37,23 @@ export default function Notificacoes() {
         },
     ]);
 
-    const marcarTodasComoLidas = () => {
-        setListaNotificacoes(
-            listaNotificacoes.map((item) => ({ ...item, lida: true }))
+    function abrirChamado(item) {
+        setListaNotificacoes((atuais) =>
+            atuais.map((notificacao) =>
+                notificacao.id === item.id
+                    ? { ...notificacao, lida: true }
+                    : notificacao
+            )
         );
-    };
+
+        navegar(`/chamados/${item.chamadoId}`);
+    }
+
+    function marcarTodasComoLidas() {
+        setListaNotificacoes((atuais) =>
+            atuais.map((item) => ({ ...item, lida: true }))
+        );
+    }
 
     const notificacoesFiltradas = listaNotificacoes.filter((item) => {
         if (abaAtiva === 'nao-lidas') return !item.lida;
@@ -45,18 +62,18 @@ export default function Notificacoes() {
         return true;
     });
 
-    const renderIcon = (tipo) => {
+    function renderIcon(tipo) {
         switch (tipo) {
             case 'erro':
                 return <img src={iconErro} alt="Erro" />;
             case 'info':
-                return <img src={iconInfo} alt="Info" />;
+                return <img src={iconInfo} alt="Informação" />;
             case 'alerta':
                 return <img src={iconAlerta} alt="Alerta" />;
             default:
                 return null;
         }
-    };
+    }
 
     return (
         <div className="notificacoes-container">
@@ -75,18 +92,21 @@ export default function Notificacoes() {
                         >
                             Todas
                         </button>
+
                         <button
                             className={`tab-btn-n ${abaAtiva === 'nao-lidas' ? 'ativa' : ''}`}
                             onClick={() => setAbaAtiva('nao-lidas')}
                         >
                             Não lidas
                         </button>
+
                         <button
                             className={`tab-btn-n ${abaAtiva === 'mensagens' ? 'ativa' : ''}`}
                             onClick={() => setAbaAtiva('mensagens')}
                         >
                             Mensagens
                         </button>
+
                         <button
                             className={`tab-btn-n ${abaAtiva === 'sla' ? 'ativa' : ''}`}
                             onClick={() => setAbaAtiva('sla')}
@@ -105,7 +125,9 @@ export default function Notificacoes() {
 
                 <div className="lista-notificacoes-itens">
                     {notificacoesFiltradas.length === 0 ? (
-                        <p className="texto-vazio">Nenhuma notificação encontrada.</p>
+                        <p className="texto-vazio">
+                            Nenhuma notificação encontrada.
+                        </p>
                     ) : (
                         notificacoesFiltradas.map((item) => (
                             <div key={item.id} className="item-notificacao">
@@ -118,7 +140,12 @@ export default function Notificacoes() {
                                     <small className="item-data">{item.data}</small>
                                 </div>
 
-                                <button className="btn-acao-ver-chamado">Ver chamado</button>
+                                <button
+                                    className="btn-acao-ver-chamado"
+                                    onClick={() => abrirChamado(item)}
+                                >
+                                    Ver chamado
+                                </button>
                             </div>
                         ))
                     )}
