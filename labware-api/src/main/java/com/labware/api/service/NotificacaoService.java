@@ -125,6 +125,7 @@ public class NotificacaoService {
         String tituloChamado = chamado != null ? chamado.getTitulo() : null;
         Long chamadoId = chamado != null ? chamado.getId() : null;
 
+        if (chamado != null) eventos.publishEvent(new WebPushService.Evento(destinatario.getId(), chamado.getId()));
         eventos.publishEvent(new EmailService.EmailNotificacao(
                 destinatario.getEmail(),
                 destinatario.getNome(),
