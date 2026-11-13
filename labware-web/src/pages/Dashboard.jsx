@@ -536,7 +536,7 @@ export default function DashboardPage() {
       )}
       {carregando ? (
         <div className="dash-card dash-empty" role="status">
-          Carregando indicadores…
+          Carregando indicadores...
         </div>
       ) : (
         <>

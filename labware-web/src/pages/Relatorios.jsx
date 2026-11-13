@@ -42,7 +42,7 @@ export default function ReportsPage() {
   const { tickets, loading, error } = useTickets();
   const years = getReportYears();
   const [selectedYear, setSelectedYear] = useState(() => years[0]);
-  if (loading) return <div className="panel loading-state" role="status">Carregando relatórios…</div>;
+  if (loading) return <div className="panel loading-state" role="status">Carregando relatórios...</div>;
   const summary = getReportSummary(tickets);
   const trend = getMonthlyTrend(tickets, new Date(), selectedYear);
   const rating = summary.rating === null ? null : summary.rating.toLocaleString('pt-BR', { maximumFractionDigits: 1 });

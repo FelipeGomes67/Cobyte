@@ -43,7 +43,7 @@ export default function UsuariosPendentes() {
       <p>Confira a empresa informada e selecione o cadastro oficial para liberar o cliente.</p></div></div>
     {erro && <p role="alert" className="form-error">{erro}</p>}
     {mensagem && <p role="status">{mensagem}</p>}
-    {carregando ? <p role="status">Carregando usuários e empresas…</p> : <section className="panel">
+    {carregando ? <p role="status">Carregando usuários e empresas...</p> : <section className="panel">
       {usuarios.length === 0 ? <p className="empty-state">Nenhum usuário aguardando vinculação.</p> :
         <div className="pending-users-table"><table>
           <thead><tr><th>Nome</th><th>E-mail</th><th>Empresa informada pelo cliente</th><th>Empresa oficial</th><th>Ação</th></tr></thead>

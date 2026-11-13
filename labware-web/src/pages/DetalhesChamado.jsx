@@ -860,7 +860,7 @@ export default function DetalhesChamado() {
     <div className="detalhes-chamado-page">
       {error && <p className="detalhes-aviso" role="alert">{error}</p>}
       {loading ? (
-        <p className="panel empty-state" role="status">Carregando chamado…</p>
+        <p className="panel empty-state" role="status">Carregando chamado...</p>
       ) : chamadoVisivel ? (
         <DetalhesEmAtendimento
           key={`${chamadoVisivel.id}-${chamadoVisivel.status}-${chamadoVisivel.prioridade}`}
