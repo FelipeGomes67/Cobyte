@@ -61,9 +61,17 @@ public class ChamadoService {
             if(!acesso.ehSuporte(u)) p.add(cb.equal(root.get("solicitante").get("id"),usuarioId));
             else {
                 if(solicitanteId!=null) p.add(cb.equal(root.get("solicitante").get("id"),solicitanteId));
-                if(apenasMeus) p.add(cb.equal(root.get("responsavel").get("id"),usuarioId));
+                if(apenasMeus) {
+                    q.distinct(true);
+                    p.add(cb.or(cb.equal(root.get("responsavel").get("id"),usuarioId),
+                            cb.equal(root.join("tecnicos", jakarta.persistence.criteria.JoinType.LEFT).get("id"),usuarioId)));
+                }
             }
-            if(responsavelId!=null) p.add(cb.equal(root.get("responsavel").get("id"),responsavelId));
+            if(responsavelId!=null) {
+                q.distinct(true);
+                p.add(cb.or(cb.equal(root.get("responsavel").get("id"),responsavelId),
+                        cb.equal(root.join("tecnicos", jakarta.persistence.criteria.JoinType.LEFT).get("id"),responsavelId)));
+            }
             if(status!=null) p.add(cb.equal(root.get("status"),status));
             if(prioridade!=null) p.add(cb.equal(root.get("prioridade"),prioridade));
             if(origem!=null) p.add(cb.equal(root.get("origem"),origem));
@@ -91,6 +99,7 @@ public class ChamadoService {
         if(c.getStatus()==StatusChamado.RESOLVIDO || c.getStatus().finalizado())
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Chamado já encerrado");
         registrarHistorico(c,autor,c.getResponsavel()==null?null:c.getResponsavel().getId().toString(),tecnicoId.toString());
+        c.adicionarTecnico(tecnico);
         c.setResponsavel(tecnico);
         String detalheAtribuicao = "Chamado atribuído para o responsável " + tecnico.getNome();
         String prazo = c.getPrazoResolucao() != null ? "Prazo estimado de resolução: " + c.getPrazoResolucao().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : null;
@@ -240,16 +249,11 @@ public class ChamadoService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Chamado já encerrado");
         }
 
-        Usuario atual = chamado.getResponsavel();
-        if (atual != null && !atual.getId().equals(usuario.getId())
-                && usuario.getPerfil() != PerfilUsuario.ADMIN) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Chamado já está com " + atual.getNome());
+        if (!chamado.possuiTecnico(usuario.getId())) {
+            String anterior = chamado.getResponsavel() != null ? chamado.getResponsavel().getNome() : null;
+            chamado.adicionarTecnico(usuario);
+            registrarHistorico(chamado, usuario, anterior, "Técnico adicionado: " + usuario.getNome());
         }
-
-        String anterior = atual != null ? atual.getNome() : null;
-        chamado.setResponsavel(usuario);
-        registrarHistorico(chamado, usuario, anterior, usuario.getNome());
 
         if (chamado.getStatus() == StatusChamado.ABERTO) {
             mudarStatus(chamado, usuario, StatusChamado.EM_ANALISE);
@@ -283,11 +287,11 @@ public class ChamadoService {
         if (atual == novo) return toResponse(chamado);
         if (!cliente) {
             Usuario responsavel = chamado.getResponsavel();
-            if (responsavel != null && !responsavel.getId().equals(usuario.getId()) && usuario.getPerfil() != PerfilUsuario.ADMIN) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente o responsável ou ADMIN pode alterar o status");
+            if (responsavel != null && !chamado.possuiTecnico(usuario.getId()) && usuario.getPerfil() != PerfilUsuario.ADMIN) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente os técnicos do chamado ou ADMIN podem alterar o status");
             }
             if (responsavel == null) {
-                chamado.setResponsavel(usuario);
+                chamado.adicionarTecnico(usuario);
                 registrarHistorico(chamado, usuario, null, usuario.getNome());
             }
         }

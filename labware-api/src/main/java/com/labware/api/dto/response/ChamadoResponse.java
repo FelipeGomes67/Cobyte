@@ -87,8 +87,22 @@ public record ChamadoResponse(
         LocalDateTime canceladoEm,
         Long canceladoPorId,
         String canceladoPorNome,
-        long slaPausaTotalSegundos
+        long slaPausaTotalSegundos,
+        java.util.List<TecnicoResponse> tecnicos
 ) {
+
+    public record TecnicoResponse(Long id, String nome) { }
+
+    private static java.util.List<TecnicoResponse> tecnicosDoChamado(Chamado chamado) {
+        var equipe = new java.util.LinkedHashMap<Long, TecnicoResponse>();
+        if (chamado.getResponsavel() != null) {
+            var u = chamado.getResponsavel();
+            equipe.put(u.getId(), new TecnicoResponse(u.getId(), u.getNome()));
+        }
+        chamado.getTecnicos().stream().sorted(java.util.Comparator.comparing(com.labware.api.model.entity.Usuario::getId))
+                .forEach(u -> equipe.put(u.getId(), new TecnicoResponse(u.getId(), u.getNome())));
+        return java.util.List.copyOf(equipe.values());
+    }
 
     public static ChamadoResponse from(Chamado c, boolean classificadoPorIa) {
         return from(c, classificadoPorIa, false);
@@ -151,7 +165,7 @@ public record ChamadoResponse(
                 (c.getStatus() == StatusChamado.AGUARDANDO_CLIENTE ? "Pausado · " : "") + formatar(c,referencia), resolucao, temNovaMensagem,
                 c.getMotivoCancelamento(), c.getCanceladoEm(),
                 c.getCanceladoPor() == null ? null : c.getCanceladoPor().getId(),
-                c.getCanceladoPor() == null ? null : c.getCanceladoPor().getNome(), pausaSegundos
+                c.getCanceladoPor() == null ? null : c.getCanceladoPor().getNome(), pausaSegundos, tecnicosDoChamado(c)
         );
     }
 

@@ -55,7 +55,9 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long>, org.spr
             """)
     List<PrioridadeContagemRepository> contarPorPrioridade(@Param("solicitanteId") Long solicitanteId);
 
-    long countByResponsavelIdAndStatusNotIn(Long responsavelId, java.util.Collection<StatusChamado> encerrados);
+    @Query("select count(distinct c) from Chamado c left join c.tecnicos t where (c.responsavel.id = :responsavelId or t.id = :responsavelId) and c.status not in :encerrados")
+    long countByResponsavelIdAndStatusNotIn(@Param("responsavelId") Long responsavelId,
+                                          @Param("encerrados") java.util.Collection<StatusChamado> encerrados);
 
     Optional<Chamado> findByProtocolo(String protocolo);
     List<Chamado> findBySolicitanteIdOrderByAbertoEmDesc(Long solicitanteId);

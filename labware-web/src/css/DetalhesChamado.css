@@ -1,4 +1,8 @@
 /* Estilos da tela de detalhes do chamado com hierarquia tipográfica refatorada */
+.detalhes-chamado-page .assumir-chamado { display: grid; gap: 8px; margin: 12px 0; }
+.detalhes-chamado-page .assumir-chamado button { width: 100%; min-height: 42px; white-space: normal; }
+.detalhes-chamado-page .assumir-chamado button:disabled { cursor: default; }
+.detalhes-chamado-page .assumir-chamado p { color: #64748b; font-size: 12px; }
 .detalhes-chamado-page {
   min-width: 0;
 }

@@ -62,6 +62,28 @@ public class Chamado {
     @JoinColumn(name = "responsavel_id")
     private Usuario responsavel;
 
+    @Builder.Default
+    @ManyToMany
+    @JoinTable(name = "chamado_tecnico",
+            joinColumns = @JoinColumn(name = "chamado_id"),
+            inverseJoinColumns = @JoinColumn(name = "usuario_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"chamado_id", "usuario_id"}))
+    private java.util.Set<Usuario> tecnicos = new java.util.LinkedHashSet<>();
+
+    public boolean possuiTecnico(Long usuarioId) {
+        return (responsavel != null && responsavel.getId().equals(usuarioId))
+                || tecnicos.stream().anyMatch(u -> u.getId().equals(usuarioId));
+    }
+
+    public void adicionarTecnico(Usuario usuario) {
+        // Inclui o responsável legado sem exigir migração dos chamados existentes.
+        if (responsavel != null && tecnicos.stream().noneMatch(u -> u.getId().equals(responsavel.getId()))) {
+            tecnicos.add(responsavel);
+        }
+        if (tecnicos.stream().noneMatch(u -> u.getId().equals(usuario.getId()))) tecnicos.add(usuario);
+        if (responsavel == null) responsavel = usuario;
+    }
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime abertoEm;
 

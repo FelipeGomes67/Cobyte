@@ -125,7 +125,7 @@ public class ChamadoController {
         return chamadoService.buscar(id, UsuarioLogado.id(jwt));
     }
 
-    @Operation(summary = "Assumir chamado", description = "SUPORTE/ADMIN. Atribui ao usuário logado e muda para EM_ATENDIMENTO. Outro responsável gera conflito, exceto para ADMIN. PATCH é alias legado.")
+    @Operation(summary = "Assumir chamado", description = "SUPORTE/ADMIN. Adiciona o usuário logado à equipe sem remover outros técnicos. Não duplica vínculos. Chamado ABERTO passa para EM_ANALISE. Não aceita chamado encerrado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),

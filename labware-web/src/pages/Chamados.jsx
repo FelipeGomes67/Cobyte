@@ -51,6 +51,7 @@ export function TicketsPage({ mode }) {
   }, []);
 
   const meus = chamadosApi.filter(ticket => {
+    if (ehSuporte && user?.id != null && ticket.tecnicos?.some(tecnico => String(tecnico.id) === String(user.id))) return true;
     const id = ehSuporte ? ticket.responsavelId : ticket.solicitanteId;
     return id != null && user?.id != null && String(id) === String(user.id);
   });

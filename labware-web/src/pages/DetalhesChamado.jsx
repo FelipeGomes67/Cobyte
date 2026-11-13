@@ -22,6 +22,7 @@ import {
   reabrirChamado,
   alterarStatus,
   alterarPrioridade,
+  assumirChamado,
 } from '../services/ticketService';
 import SelectStatus from '../components/layout/SelectStatus';
 import '../css/DetalhesChamado.css';
@@ -388,6 +389,9 @@ function DetalhesEmAtendimento({
   reabrindo,
   onChamadoAtualizado,
 }) {
+  const { usuario } = useAutenticacao();
+  const [assumindo, definirAssumindo] = useState(false);
+  const jaParticipa = (chamado?.tecnicos || []).some(tecnico => String(tecnico.id) === String(usuario?.id));
   const codigoAtual = (chamado?.statusRaw || codigosStatus[chamado?.status] || chamado?.status)?.replace('AGUARDANDO_CLIENTE', 'AGUARDANDO_SOLICITANTE');
   const statusExibido = nomesStatus[codigoAtual] || chamado?.status;
   const infoSla = calcularTempoRestanteSla(chamado?.prazoResolucao, chamado?.slaViolado || chamado?.slaExcedido, chamado?.slaTempoRestanteFormatado);
@@ -458,6 +462,21 @@ function DetalhesEmAtendimento({
     }
   };
 
+  async function assumirAtendimento() {
+    if (assumindo || (jaParticipa && codigoAtual !== 'ABERTO')) return;
+    definirAssumindo(true);
+    setFeedbackAtendimento(null);
+    try {
+      const atualizado = await assumirChamado(chamado.id);
+      onChamadoAtualizado?.(atualizado);
+      setFeedbackAtendimento({ tipo: 'sucesso', texto: 'Você está na equipe deste chamado.' });
+    } catch (erro) {
+      setFeedbackAtendimento({ tipo: 'erro', texto: erro.message || 'Não foi possível assumir o chamado.' });
+    } finally {
+      definirAssumindo(false);
+    }
+  }
+
   return (
     <div className="history-page-shell">
       <button type="button" className="ticket-back-link" onClick={aoVoltar}>
@@ -486,7 +505,7 @@ function DetalhesEmAtendimento({
                 {chamado.solicitanteEmail && <small>{chamado.solicitanteEmail}</small>}
               </div>
               <div className="history-person-box">
-                <span className="history-person-label">Técnico Responsável</span>
+                <span className="history-person-label">Técnicos do chamado</span>
                 <strong>{chamado.responsavelNome || 'Não atribuído'}</strong>
               </div>
             </div>
@@ -524,7 +543,7 @@ function DetalhesEmAtendimento({
                   <strong>{chamado.prioridade || chamado.priority}</strong>
                 </div>
                 <div className="summary-item">
-                  <span>Responsável</span>
+                  <span>Técnicos do chamado</span>
                   <strong>{chamado.responsavelNome || 'Não atribuído'}</strong>
                 </div>
                 <div className="summary-item">
@@ -548,6 +567,13 @@ function DetalhesEmAtendimento({
 
             <div className="history-info-card">
               <h4>Atendimento</h4>
+              {podeEditar && <div className="assumir-chamado">
+                <button type="button" className="primary-button" onClick={assumirAtendimento}
+                  disabled={assumindo || salvandoStatus || salvandoPrioridade || (jaParticipa && codigoAtual !== 'ABERTO')}>
+                  {assumindo ? 'Assumindo…' : jaParticipa && codigoAtual !== 'ABERTO' ? 'Você já está neste chamado' : 'Assumir chamado'}
+                </button>
+                <p>Mais de um técnico pode participar deste atendimento.</p>
+              </div>}
               {ehSuporte || podeAlterarStatus ? (
                 <>
                   <p>
@@ -686,7 +712,7 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
                 {chamado.solicitanteEmail && <small>{chamado.solicitanteEmail}</small>}
               </div>
               <div className="history-person-box">
-                <span className="history-person-label">Técnico Responsável</span>
+                <span className="history-person-label">Técnicos do chamado</span>
                 <strong>{chamado.responsavelNome || 'Não atribuído'}</strong>
               </div>
             </div>
@@ -712,7 +738,7 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
 
               <div className="summary-grid">
                 <div className="summary-item"><span>Prioridade</span><strong>{chamado.prioridade || chamado.priority}</strong></div>
-                <div className="summary-item"><span>Responsável</span><strong>{chamado.responsavelNome || 'Não atribuído'}</strong></div>
+                <div className="summary-item"><span>Técnicos do chamado</span><strong>{chamado.responsavelNome || 'Não atribuído'}</strong></div>
                 <div className="summary-item"><span>Categoria</span><strong>{chamado.categoria || chamado.category}</strong></div>
                 <div className="summary-item"><span>Origem</span><strong>{chamado.origem || 'PORTAL_TEXTO'}</strong></div>
                 <div className="summary-item"><span>Concluído em</span><strong>{dataResolucao}</strong></div>
@@ -873,6 +899,7 @@ export default function DetalhesChamado() {
           onChamadoAtualizado={atualizado => setChamado(anterior => ({
             ...anterior,
             ...atualizado,
+            anexos: anterior?.anexos || [],
             historico: anterior?.historico || [],
             historicoMensagens: anterior?.historicoMensagens || [],
           }))}

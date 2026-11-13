@@ -184,6 +184,7 @@ export function mapearChamadoApi(c) {
     ownerId: c.solicitanteId ?? (c.solicitante && typeof c.solicitante === 'object' ? c.solicitante.id : c.solicitante) ?? c.ownerId,
     solicitante: c.solicitante,
     responsavelId: c.responsavelId ?? c.responsavel?.id ?? null,
+    tecnicos: Array.isArray(c.tecnicos) ? c.tecnicos : [],
     origem: c.origemFrontend || c.origem || null,
     slaTempoRestanteFormatado: c.slaTempoRestanteFormatado || null,
     temNovaMensagem: Boolean(c.temNovaMensagem) && !['Resolvido', 'Fechado', 'Cancelado'].includes(statusFormatado),
@@ -307,7 +308,10 @@ export function mapearDetalheChamadoApi(c) {
       id: c.responsavelId ?? null,
       nome: textoDe(c.responsavel) || 'Não atribuído',
     },
-    responsavelNome: textoDe(c.responsavel) || 'Não atribuído',
+    tecnicos: Array.isArray(c.tecnicos) ? c.tecnicos : (c.responsavelId != null ? [{ id: c.responsavelId, nome: textoDe(c.responsavel) }] : []),
+    responsavelNome: Array.isArray(c.tecnicos) && c.tecnicos.length
+      ? c.tecnicos.map(tecnico => tecnico.nome).join(', ')
+      : textoDe(c.responsavel) || 'Não atribuído',
     empresa: textoDe(c.empresa ?? (typeof clienteBruto === 'object' ? clienteBruto?.empresa : '')),
     anexos: anexosMapeados,
     historico: historicoMapeado,
@@ -439,6 +443,15 @@ export async function alterarPrioridade(id, novaPrioridade) {
       error?.message || 'Falha ao alterar prioridade do chamado.',
       { cause: error }
     );
+  }
+}
+
+export async function assumirChamado(id) {
+  try {
+    const { data } = await api.patch(`/chamados/${encodeURIComponent(id)}/assumir`);
+    return mapearDetalheChamadoApi(data);
+  } catch (erro) {
+    throw new Error(erro?.response?.data?.message || erro?.message || 'Não foi possível assumir o chamado.', { cause: erro });
   }
 }
 
