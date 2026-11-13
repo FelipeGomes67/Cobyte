@@ -471,8 +471,7 @@
 .metric-card {
   border: 1px solid #e7ebf2;
   border-radius: 11px;
-  background: #fff;
-  box-shadow: 0 3px 12px #23324a08;
+  box-shadow: 0 3px 6px #17223530;
 }
 
 .metric-grid {
@@ -501,7 +500,8 @@
   height: 44px;
   border-radius: 10px;
   color: #3478f6;
-  background: #edf4ff;
+  background: #fff;
+  box-shadow: 0 2px 4px #17223535;
 }
 
 .metric-card strong {
@@ -511,18 +511,30 @@
 }
 
 .metric-blue .metric-icon {
-  color: #3478f6;
-  background: #edf4ff;
+  color: #287cff;
 }
 
 .metric-green .metric-icon {
-  color: #17a673;
-  background: #e8f8f1;
+  color: #00d619;
 }
 
 .metric-yellow .metric-icon {
-  color: #e9a315;
-  background: #fff6df;
+  color: #f3d500;
+}
+
+.metric-blue {
+  border-color: #a9d8ee;
+  background: linear-gradient(135deg, #b9e2f5, #7bd4f5);
+}
+
+.metric-green {
+  border-color: #a6ee61;
+  background: linear-gradient(135deg, #a2ff91, #a7ff3f);
+}
+
+.metric-yellow {
+  border-color: #f7d879;
+  background: linear-gradient(135deg, #ffe7a6, #ffd15d);
 }
 
 .charts-grid {
