@@ -18,7 +18,7 @@
     radial-gradient(circle at 10% 20%, #0d3880 0%, #03102d 60%),
     radial-gradient(circle at 90% 80%, #0d4ed8 0%, #03102d 50%);
   background-blend-mode: screen;
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family: var(--font-body);
 }
 
 .conteudo-autenticacao {
@@ -93,7 +93,7 @@
   max-width: 480px;
   min-width: 0;
   justify-self: end;
-  font-family: "Inter", "Manrope", sans-serif;
+  font-family: var(--font-body);
 }
 
 .cartao-autenticacao {

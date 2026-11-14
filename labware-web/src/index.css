@@ -13,11 +13,11 @@
   --text-primary: #0a0e17;
 
   /* Tipografia */
-  --font-body: "42dot Sans", sans-serif;
-  --font-heading: "Big Shoulders Text", cursive, sans-serif;
+  --font-body: "42dot Sans", "Segoe UI", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+  --font-heading: "Big Shoulders Text", var(--font-body);
 
   color-scheme: light;
-  font-family: "42dot Sans", Arial, sans-serif;
+  font-family: var(--font-body);
   color: #172235;
   background: #f5f5f6;
   font-synthesis: none;

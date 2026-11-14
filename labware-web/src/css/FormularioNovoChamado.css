@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400;500;600;700&family=Big+Shoulders+Text:wght@600;700;800&display=swap');
 
 @scope (.novo-chamado-container) {
   :scope {
@@ -16,12 +15,12 @@
 
   :scope {
     background: #F4F7FB;
-    font-family: '42dot Sans', sans-serif;
+    font-family: var(--font-body);
     color: var(--text-main);
   }
 
   button, input, textarea {
-    font-family: '42dot Sans', sans-serif;
+    font-family: var(--font-body);
   }
 
   :scope {
@@ -52,7 +51,7 @@
   }
 
   h3, .titulo-anexos, form h3, section h3 {
-    font-family: '42dot Sans', sans-serif;
+    font-family: var(--font-body);
     font-size: 18px;
     font-weight: 600;
     color: #555555;

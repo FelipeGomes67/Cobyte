@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=42dot+Sans:wght@300;400;500;600;700&family=Big+Shoulders+Text:wght@600;700;800&display=swap');
 
 /* Notificações - Design System Padronizado */
 
@@ -18,12 +17,12 @@
   font-size: 13px;
   font-weight: 600;
   margin-bottom: 4px;
-  font-family: '42dot Sans', sans-serif;
+  font-family: var(--font-body);
   letter-spacing: normal;
 }
 
 .notificacoes-header .notificacoes-main-title {
-  font-family: 'Big Shoulders Text', '42dot Sans', sans-serif;
+  font-family: 'Big Shoulders Text', var(--font-body);
   font-size: 34px;
   font-weight: 800;
   color: #0c54e0;
@@ -34,7 +33,7 @@
 
 .notificacoes-header .descricao-pagina,
 .notificacoes-main-desc {
-  font-family: '42dot Sans', sans-serif;
+  font-family: var(--font-body);
   color: #555555;
   font-size: 14px;
   margin: 0;
