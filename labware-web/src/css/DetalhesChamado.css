@@ -1008,3 +1008,7 @@
 .detalhes-chamado-page .history-sidebar{background:#fff}
 .detalhes-chamado-page .history-sidebar .history-summary-card,
 .detalhes-chamado-page .history-sidebar .history-info-card{background:#f8fafc}
+
+.detalhes-chamado-page .assumir-chamado{margin:18px 0 22px}
+.detalhes-chamado-page .assumir-chamado>.primary-button{min-height:46px;padding:12px 18px}
+.detalhes-chamado-page .assumir-chamado>p{margin-top:14px;line-height:1.6}

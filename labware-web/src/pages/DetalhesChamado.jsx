@@ -403,16 +403,17 @@ function DetalhesEmAtendimento({
 }) {
   const { usuario } = useAutenticacao();
   const [assumindo, definirAssumindo] = useState(false);
-  const jaParticipa = (chamado?.tecnicos || []).some(tecnico => String(tecnico.id) === String(usuario?.id));
+  const jaParticipa = (chamado?.tecnicos || []).some(tecnico => String(tecnico.id) === String(usuario?.id))
+    || (chamado?.responsavelId != null && String(chamado.responsavelId) === String(usuario?.id));
   const codigoAtual = (chamado?.statusRaw || codigosStatus[chamado?.status] || chamado?.status)?.replace('AGUARDANDO_CLIENTE', 'AGUARDANDO_SOLICITANTE');
   const statusExibido = nomesStatus[codigoAtual] || chamado?.status;
   const infoSla = calcularTempoRestanteSla(chamado?.prazoResolucao, chamado?.slaViolado || chamado?.slaExcedido, chamado?.slaTempoRestanteFormatado);
 
   const statusAtivo = ['ABERTO', 'EM_ANALISE', 'EM_ATENDIMENTO', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
-  const podeEditar = ehSuporte && statusAtivo;
+  const podeEditar = ehSuporte && jaParticipa && statusAtivo;
   const podeAlterarStatus = podeEditar;
-  const podeCancelar = ['ABERTO', 'EM_ANALISE', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
-  const podeAlterarPrioridade = ehSuporte && codigoAtual === 'EM_ANALISE';
+  const podeCancelar = (!ehSuporte || jaParticipa) && ['ABERTO', 'EM_ANALISE', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
+  const podeAlterarPrioridade = ehSuporte && jaParticipa && codigoAtual === 'EM_ANALISE';
 
   const [statusSelecionado, setStatusSelecionado] = useState('');
   const [cancelamentoAberto, setCancelamentoAberto] = useState(false);
@@ -486,7 +487,7 @@ function DetalhesEmAtendimento({
       onChamadoAtualizado?.(atualizado);
       setFeedbackAtendimento({ tipo: 'sucesso', texto: 'Você está na equipe deste chamado.' });
     } catch (erro) {
-      setFeedbackAtendimento({ tipo: 'erro', texto: erro.message || 'Não foi possível assumir o chamado.' });
+      setFeedbackAtendimento({ tipo: 'erro', texto: erro.message || 'Não foi possível participar do atendimento.' });
     } finally {
       definirAssumindo(false);
     }
@@ -582,10 +583,10 @@ function DetalhesEmAtendimento({
 
             <div className="history-info-card">
               <h4>Atendimento</h4>
-              {podeEditar && <div className="assumir-chamado">
+              {ehSuporte && statusAtivo && <div className="assumir-chamado">
                 <button type="button" className="primary-button" onClick={assumirAtendimento}
                   disabled={assumindo || salvandoStatus || salvandoPrioridade || (jaParticipa && codigoAtual !== 'ABERTO')}>
-                  {assumindo ? 'Assumindo...' : jaParticipa && codigoAtual !== 'ABERTO' ? 'Você já está neste chamado' : 'Assumir chamado'}
+                  {assumindo ? 'Entrando...' : jaParticipa && codigoAtual !== 'ABERTO' ? 'Você já está neste chamado' : 'Participar do atendimento'}
                 </button>
                 <p>Mais de um técnico pode participar deste atendimento.</p>
               </div>}
