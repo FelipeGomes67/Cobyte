@@ -107,14 +107,24 @@ export default function ProfileMenu({ user, onRequestLogout, onNavigate, variant
   };
 
   return <div className={`profile-menu-anchor profile-menu-anchor--${variant}`} ref={rootRef} onBlur={handleBlur}>
-    {variant === 'sidebar' ? <div className="sidebar-profile-trigger-row">
-      <button className="sidebar-user" {...triggerProps}>
-        <Avatar user={user}/><span className="sidebar-user-label"><strong>{user?.name || user?.nome || 'Fidalgo'}</strong><small>{roleLabel}</small></span>
+    {variant === 'sidebar' ? (
+      <button className="sidebar-user" {...triggerProps} aria-label={`Menu de ${user?.name || user?.nome || 'usuário'}`}>
+        <Avatar user={user} />
+        <span className="sidebar-user-label">
+          <strong>{user?.name || user?.nome || 'Fidalgo'}</strong>
+          <small>{roleLabel}</small>
+        </span>
+        <span className="profile-more-icon" aria-hidden="true">
+          <Ellipsis size={18} />
+        </span>
       </button>
-      <button className="profile-more-button" aria-label="Abrir menu do perfil" {...triggerProps}><Ellipsis size={18}/></button>
-    </div> : <button className="user-trigger" {...triggerProps}>
-      <Avatar user={user}/><span className="user-name">{user?.name || user?.nome || 'Fidalgo'}</span><ChevronDown size={15} className="profile-chevron"/>
-    </button>}
+    ) : (
+      <button className="user-trigger" {...triggerProps}>
+        <Avatar user={user} />
+        <span className="user-name">{user?.name || user?.nome || 'Fidalgo'}</span>
+        <ChevronDown size={15} className="profile-chevron" />
+      </button>
+    )}
     {rendered && <div
       id={menuId}
       ref={menuRef}

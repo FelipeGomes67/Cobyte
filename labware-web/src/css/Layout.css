@@ -73,65 +73,6 @@
   border-top: 1px solid #edf0f4;
 }
 
-.sidebar-profile-trigger-row {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-  gap: 3px;
-}
-
-.sidebar-user {
-  display: flex;
-  flex: 1 1 auto;
-  align-items: center;
-  gap: 9px;
-  min-width: 0;
-  overflow: hidden;
-  padding: 7px 3px;
-  border: 0;
-  color: var(--text);
-  background: transparent;
-  text-align: left;
-}
-
-.sidebar-user-label {
-  display: grid;
-  flex: 1 1 auto;
-  min-width: 0;
-  gap: 1px;
-}
-
-.sidebar-user-label strong {
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 11px;
-  font-weight: 550;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sidebar-user-label small {
-  color: var(--muted);
-  font-size: 9px;
-}
-
-.profile-more-button {
-  display: grid;
-  flex: 0 0 30px;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  border-radius: 5px;
-  color: #687386;
-  background: transparent;
-}
-
-.profile-more-button:hover {
-  background: #f0f2f5;
-}
-
 .main-area {
   min-height: 100vh;
   margin-left: 224px;
@@ -464,30 +405,29 @@
   padding-top: 16px;
 }
 
-.sidebar-profile-trigger-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
 .sidebar-user {
   display: flex;
   align-items: center;
   gap: 11px;
-  flex: 1;
+  width: 100%;
   min-width: 0;
   border: 0;
-  padding: 8px 6px;
+  padding: 8px 10px;
   background: transparent;
   color: #0f172a;
   text-align: left;
   cursor: pointer;
   border-radius: 8px;
+  transition: background 0.15s ease;
 }
 
 .sidebar-user:hover {
   background: #f8fafc;
+}
+
+.sidebar-user:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
 }
 
 .sidebar-user .avatar {
@@ -505,6 +445,7 @@
 .sidebar-user-label {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -521,21 +462,19 @@
   display: none;
 }
 
-.profile-more-button {
+.profile-more-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 0;
-  background: transparent;
+  width: 24px;
+  height: 24px;
   color: #64748b;
-  cursor: pointer;
-  border-radius: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: color 0.15s ease;
 }
 
-.profile-more-button:hover {
-  background: #f1f5f9;
+.sidebar-user:hover .profile-more-icon {
   color: #0f172a;
 }
 
