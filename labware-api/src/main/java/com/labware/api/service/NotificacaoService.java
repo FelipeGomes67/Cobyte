@@ -118,7 +118,7 @@ public class NotificacaoService {
         String statusFormatado = chamado != null && chamado.getStatus() != null
                 ? chamado.getStatus().descricaoFormatada() : null;
         String prioridadeFormatada = chamado != null
-                ? (chamado.getPrioridade() != null ? chamado.getPrioridade().descricaoFormatada() : "Média") : null;
+                ? (chamado.getPrioridade() != null ? chamado.getPrioridade().descricaoFormatada() : chamado.getStatus() == com.labware.api.model.enums.StatusChamado.CANCELADO ? "Não aplicável" : "A definir") : null;
         String empresaNome = chamado != null && chamado.getEmpresa() != null
                 ? chamado.getEmpresa().getNome() : null;
         String protocolo = chamado != null ? chamado.getProtocolo() : null;

@@ -165,8 +165,14 @@ public record ChamadoResponse(
                 (c.getStatus() == StatusChamado.AGUARDANDO_CLIENTE ? "Pausado · " : "") + formatar(c,referencia), resolucao, temNovaMensagem,
                 c.getMotivoCancelamento(), c.getCanceladoEm(),
                 c.getCanceladoPor() == null ? null : c.getCanceladoPor().getId(),
-                c.getCanceladoPor() == null ? null : c.getCanceladoPor().getNome(), pausaSegundos, tecnicosDoChamado(c)
+                c.getCanceladoPor() == null ? (c.getMotivoCancelamento() != null && c.getMotivoCancelamento().startsWith("Cancelado pela IA:") ? "Triagem por IA" : null) : c.getCanceladoPor().getNome(), pausaSegundos, tecnicosDoChamado(c)
         );
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("foraDoEscopo")
+    public boolean foraDoEscopo() {
+        return status == StatusChamado.CANCELADO && motivoCancelamento != null
+                && motivoCancelamento.startsWith("Cancelado pela IA:");
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("sintomaObservado")

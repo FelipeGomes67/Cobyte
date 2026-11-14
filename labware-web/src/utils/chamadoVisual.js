@@ -27,7 +27,8 @@ export function obterVisualChamado(valor, tipo = 'status') {
   if (tipo === 'status') {
     if (chave === 'EM_ANDAMENTO') chave = 'EM_ATENDIMENTO';
     if (chave === 'AGUARDANDO_CLIENTE') chave = 'AGUARDANDO_SOLICITANTE';
-  } else if (chave === 'URGENTE') chave = 'ALTA';
+  } else if (chave === 'NAO_APLICAVEL') return { nome: 'Não aplicável', cor: '#475569', fundo: '#f1f5f9' };
+  else if (chave === 'URGENTE') chave = 'ALTA';
   const paleta = tipo === 'prioridade' ? PRIORIDADE_VISUAL : STATUS_VISUAL;
   return paleta[chave] || {
     nome: valor || (tipo === 'prioridade' ? 'Sem prioridade' : 'Não informado'),

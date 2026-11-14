@@ -42,7 +42,7 @@ export default function TabelaChamados({ tickets = [], query, onSearch, titulo =
   const periodoInvalido = filtros.inicio && filtros.fim && filtros.inicio > filtros.fim;
   const alterar = (campo, valor) => setFiltros(anterior => ({ ...anterior, [campo]: valor }));
   const status = Object.values(STATUS_VISUAL).filter(item => historico === ['Resolvido', 'Fechado', 'Cancelado'].includes(item.nome));
-  const prioridades = Object.values(PRIORIDADE_VISUAL);
+  const prioridades = [...Object.values(PRIORIDADE_VISUAL), { nome: 'Não aplicável', cor: '#475569' }];
   const cards = porPrioridade ? prioridades : status;
   const responsaveis = [...new Set(tickets.map(t => texto(t.responsavel)))].sort();
   const filtrados = tickets.filter(t =>

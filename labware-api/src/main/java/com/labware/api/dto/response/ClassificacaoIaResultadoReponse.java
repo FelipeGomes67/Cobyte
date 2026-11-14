@@ -35,8 +35,14 @@ public record ClassificacaoIaResultadoReponse(
 
         @JsonProperty("resumoTecnicoIa")
         @JsonAlias({"resumoTecnico", "resumo_tecnico_ia", "resumoIa", "resumo"})
-        ResumoTecnicoIaResponse resumoTecnicoIa
+        ResumoTecnicoIaResponse resumoTecnicoIa,
+        boolean foraDoEscopo,
+        String motivoCancelamento
 ) {
+    public ClassificacaoIaResultadoReponse(Prioridade prioridade, CategoriaChamado categoria, String justificativa,
+            String tituloGeradoIa, Long tecnicoSugeridoId, ResumoTecnicoIaResponse resumoTecnicoIa) {
+        this(prioridade, categoria, justificativa, tituloGeradoIa, tecnicoSugeridoId, resumoTecnicoIa, false, null);
+    }
     public ClassificacaoIaResultadoReponse(Prioridade prioridade, CategoriaChamado categoria, String justificativa,
             String tituloGeradoIa, Long tecnicoSugeridoId) {
         this(prioridade, categoria, justificativa, tituloGeradoIa, tecnicoSugeridoId, null);

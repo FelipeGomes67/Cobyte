@@ -148,8 +148,9 @@ export function mapearChamadoApi(c) {
   const tituloOriginal = primeiroTexto(c.titulo, c.title) || 'Chamado sem título';
   const tituloIa = primeiroTexto(c.tituloGeradoIa, c.classificacaoIa?.tituloGeradoIa);
   const statusFormatado = formatarNomeStatus(c.status);
-  const prioridadeFormatada = formatarNomePrioridade(c.prioridade || c.priority);
-  const categoriaFormatada = formatarNomeCategoria(c.categoria || c.category);
+  const foraDoEscopo = c.foraDoEscopo === true || (c.status === 'CANCELADO' && c.motivoCancelamento?.startsWith('Cancelado pela IA:'));
+  const prioridadeFormatada = foraDoEscopo ? 'Não aplicável' : formatarNomePrioridade(c.prioridade || c.priority);
+  const categoriaFormatada = foraDoEscopo ? 'Fora do escopo' : formatarNomeCategoria(c.categoria || c.category);
   const dataCriacao = c.abertoEm || c.createdAt || new Date().toISOString();
 
   return {
@@ -163,6 +164,7 @@ export function mapearChamadoApi(c) {
     canceladoPorNome: c.canceladoPorNome || null,
     canceladoPorId: c.canceladoPorId || null,
     protocolo: c.protocolo || `#${c.id}`,
+    foraDoEscopo,
     tituloOriginal,
     tituloGeradoIa: tituloIa,
     titulo: tituloIa || tituloOriginal,

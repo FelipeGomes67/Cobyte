@@ -435,6 +435,28 @@ public class ChamadoService {
         Chamado chamado = chamadoRepository.findParaAvaliacao(chamadoId).orElseThrow();
         if (chamado.getStatus().finalizado()) return toResponse(chamado);
 
+        if (chamado.getStatus() == StatusChamado.ABERTO && ia.isPresent() && ia.get().foraDoEscopo()
+                && ia.get().motivoCancelamento() != null && ia.get().motivoCancelamento().trim().length() >= 10) {
+            var resultado = ia.get();
+            String motivo = "Cancelado pela IA: " + resultado.motivoCancelamento().trim();
+            chamado.setStatus(StatusChamado.CANCELADO);
+            chamado.setPrioridade(null);
+            chamado.setCategoria(null);
+            chamado.setMotivoCancelamento(motivo);
+            chamado.setCanceladoEm(LocalDateTime.now());
+            chamado.setCanceladoPor(null);
+            chamado.setPrazoPrimeiraResposta(null);
+            chamado.setPrazoResolucao(null);
+            classificacaoIaRepository.save(ClassificacaoIa.builder().chamado(chamado)
+                    .justificativa(resultado.justificativa()).modelo(modeloIa).build());
+            historicoRepository.save(HistoricoChamado.builder().chamado(chamado).usuario(null)
+                    .valorAnterior(StatusChamado.ABERTO.codigo()).valorNovo(StatusChamado.CANCELADO.codigo())
+                    .observacao(motivo).build());
+            notificacoes.emitir(chamado.getSolicitante(), null, chamado, "STATUS",
+                    "Chamado cancelado pela triagem", motivo);
+            return toResponse(chamado);
+        }
+
         // Se a IA falhar ou não devolver prioridade/categoria, usa MEDIA e DUVIDA para o SLA e classificação
         Prioridade prioridade = ia.map(ClassificacaoIaResultadoReponse::prioridade).filter(java.util.Objects::nonNull).orElse(Prioridade.MEDIA);
         CategoriaChamado categoria = ia.map(ClassificacaoIaResultadoReponse::categoria).filter(java.util.Objects::nonNull).orElse(CategoriaChamado.DUVIDA);
