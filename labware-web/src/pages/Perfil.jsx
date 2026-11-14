@@ -1,3 +1,4 @@
+import { obterMeusChamados } from '../services/ticketService';
 import { Link } from 'react-router-dom';
 import EditorFoto from '../components/layout/EditorFoto';
 import { useEffect, useState } from 'react';
@@ -10,13 +11,36 @@ export default function ProfilePage() {
   const suporte = user?.perfil === 'SUPORTE' || user?.perfil === 'ADMIN';
   const [avaliacoes, setAvaliacoes] = useState(null);
   const [erroAvaliacoes, setErroAvaliacoes] = useState('');
+  const [mostrarAvaliacoes, setMostrarAvaliacoes] = useState(false);
+  const [listaAvaliacoes, setListaAvaliacoes] = useState([]);
+  const [carregandoLista, setCarregandoLista] = useState(false);
+  const [erroLista, setErroLista] = useState('');
   useEffect(() => {
     if (!suporte) return;
     let ativo = true;
-    obterResumoAvaliacoes().then(dados => { if (ativo) setAvaliacoes(dados); })
-      .catch(() => { if (ativo) setErroAvaliacoes('Não foi possível carregar as avaliações.'); });
-    return () => { ativo = false; };
+    async function carregar() {
+      try {
+        const dados = await obterResumoAvaliacoes();
+        if (ativo) { setAvaliacoes(dados); setErroAvaliacoes(''); }
+      } catch { if (ativo) setErroAvaliacoes('Não foi possível atualizar as avaliações.'); }
+    }
+    carregar();
+    const timer = setInterval(() => { if (!document.hidden) carregar(); }, 30000);
+    window.addEventListener('focus', carregar);
+    return () => { ativo = false; clearInterval(timer); window.removeEventListener('focus', carregar); };
   }, [suporte, user?.id]);
+  useEffect(() => {
+    if (!suporte || !mostrarAvaliacoes) return;
+    let ativo = true;
+    obterMeusChamados().then(tickets => {
+      if (ativo) setListaAvaliacoes(tickets.filter(t => t.notaAvaliacao != null &&
+        (String(t.responsavelId) === String(user.id) || t.tecnicos?.some(tecnico => String(tecnico.id) === String(user.id))))
+        .sort((a,b) => new Date(b.avaliadoEm) - new Date(a.avaliadoEm)));
+    }).catch(() => { if (ativo) setErroLista('Não foi possível carregar os comentários.'); })
+      .finally(() => { if (ativo) setCarregandoLista(false); });
+    return () => { ativo = false; };
+  }, [suporte, user?.id, mostrarAvaliacoes, avaliacoes]);
+
 
   const initialData = {
     name: user?.name || user?.nome || '',
@@ -245,8 +269,20 @@ export default function ProfilePage() {
             : 'Você ainda não recebeu avaliações.')}</p>
             : <p>Avalie seus atendimentos resolvidos de 1 a 5 estrelas.</p>}
         </div>
-        <Link className="secondary-button" to="/historico">Ver avaliações</Link>
+                {suporte ? <button type="button" className="secondary-button" aria-expanded={mostrarAvaliacoes}
+          onClick={() => { setMostrarAvaliacoes(!mostrarAvaliacoes); setCarregandoLista(true); setErroLista(''); }}>
+          {mostrarAvaliacoes ? 'Ocultar avaliações' : 'Ver avaliações'}
+        </button> : <Link className="secondary-button" to="/historico">Ver avaliações</Link>}
       </section>
+      {suporte && mostrarAvaliacoes && <section className="panel perfil-lista-avaliacoes" aria-label="Avaliações recebidas">
+        {carregandoLista ? <p role="status">Carregando avaliações...</p> : erroLista ? <p role="alert">{erroLista}</p> : listaAvaliacoes.length === 0 ? <p>Nenhuma avaliação recebida.</p> :
+          listaAvaliacoes.map(t => <article key={t.id}>
+            <Link to={'/chamados/' + t.id}>{t.protocolo} · {t.titulo}</Link>
+            <strong aria-label={t.notaAvaliacao + ' de 5 estrelas'}>{'★'.repeat(t.notaAvaliacao)}{'☆'.repeat(5-t.notaAvaliacao)}</strong>
+            <p>{t.comentarioAvaliacao || 'Sem comentário.'}</p>
+            <small>{t.avaliadoEm ? new Date(t.avaliadoEm).toLocaleString('pt-BR') : ''}</small>
+          </article>)}
+      </section>}
     </>
   );
 }

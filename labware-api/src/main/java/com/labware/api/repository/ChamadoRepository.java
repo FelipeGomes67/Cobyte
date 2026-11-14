@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ChamadoRepository extends JpaRepository<Chamado, Long>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Chamado> {
-    @Query("select new com.labware.api.dto.response.ResumoAvaliacoesResponse(avg(a.notaAvaliacao), count(a)) from Chamado c join c.avaliacao a where c.responsavel.id = :usuarioId")
+    @Query("select new com.labware.api.dto.response.ResumoAvaliacoesResponse(avg(a.notaAvaliacao), count(a)) from Chamado c join c.avaliacao a where c.responsavel.id = :usuarioId or exists (select t.id from c.tecnicos t where t.id = :usuarioId)")
     com.labware.api.dto.response.ResumoAvaliacoesResponse resumirAvaliacoes(@Param("usuarioId") Long usuarioId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

@@ -432,3 +432,10 @@
 }
 .profile-panel .avatar-editar>.avatar{display:flex;align-items:center;justify-content:center;text-align:center}
 .profile-panel .profile-info>.profile-actions{grid-column:1/-1;display:flex;justify-content:flex-end;width:100%;margin-top:6px}
+
+.perfil-lista-avaliacoes{margin-top:16px;padding:20px}
+.perfil-lista-avaliacoes article{padding:16px 0;border-bottom:1px solid #e2e8f0}
+.perfil-lista-avaliacoes article:last-child{border-bottom:0}
+.perfil-lista-avaliacoes strong{display:block;font-size:22px;color:#854d0e;margin-top:10px}
+.perfil-lista-avaliacoes p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+.perfil-lista-avaliacoes small{color:#64748b}
