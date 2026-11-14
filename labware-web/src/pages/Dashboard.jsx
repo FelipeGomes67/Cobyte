@@ -279,7 +279,7 @@ function GraficoVolume({ dias }) {
           </span>
           <span>
             <i />
-            Fechados
+            Resolvidos
           </span>
         </div>
       </div>
@@ -392,7 +392,7 @@ function GraficoVolume({ dias }) {
                 Abertos: {dias[selecionado].abertos}
               </span>{" "}
               <span className="dash-tooltip-closed">
-                Fechados: {dias[selecionado].fechados}
+                Resolvidos: {dias[selecionado].fechados}
               </span>{" "}
             </div>
           )}
