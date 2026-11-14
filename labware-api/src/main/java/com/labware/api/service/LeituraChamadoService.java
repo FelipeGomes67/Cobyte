@@ -30,7 +30,7 @@ public class LeituraChamadoService {
     public void marcar(Long chamadoId,Long usuarioId) {
         var c=chamados.findById(chamadoId).orElseThrow(()->new ResourceNotFoundException("Chamado não encontrado"));
         var u=usuarios.findById(usuarioId).orElseThrow(()->new ResourceNotFoundException("Usuário não encontrado"));
-        acesso.exigir(c,u);
+        acesso.exigirLeitura(c,u);
         jdbc.update("""
             INSERT INTO leitura_chamado(usuario_id,chamado_id,ultima_mensagem_id)
             SELECT ?,?,COALESCE(max(id),0) FROM mensagens WHERE chamado_id=? AND (? OR NOT visivel_apenas_suporte)

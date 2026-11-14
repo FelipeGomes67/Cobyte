@@ -51,7 +51,7 @@ public class MensagemService {
     private MensagemResponse enviar(Long chamadoId, Long usuarioId, CriarMensagemRequest req, TipoMensagem tipo) {
         Chamado chamado = buscarChamado(chamadoId);
         Usuario autor = buscarUsuario(usuarioId);
-        acesso.exigir(chamado, autor);
+        acesso.exigirLeitura(chamado, autor);
 
         if (req.conteudo() == null || req.conteudo().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O texto da mensagem é obrigatório");
@@ -73,7 +73,7 @@ public class MensagemService {
         if (req.anexoId() != null) {
             anexo = anexoRepository.findById(req.anexoId())
                     .orElseThrow(() -> new ResourceNotFoundException("Anexo não encontrado"));
-            acesso.exigir(anexo.getChamado(), autor);
+            acesso.exigirLeitura(anexo.getChamado(), autor);
             if (!anexo.getChamado().getId().equals(chamadoId)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Anexo deve pertencer ao mesmo chamado da mensagem");
             }
@@ -126,7 +126,7 @@ public class MensagemService {
         Chamado chamado = chamadoRepository.findById(chamadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chamado não encontrado"));
         Usuario usuario = buscarUsuario(usuarioId);
-        acesso.exigir(chamado, usuario);
+        acesso.exigirLeitura(chamado, usuario);
 
         List<Mensagem> mensagens = acesso.ehSuporte(usuario)
                 ? mensagemRepository.findByChamadoIdOrderByCriadoEmAscIdAsc(chamadoId)

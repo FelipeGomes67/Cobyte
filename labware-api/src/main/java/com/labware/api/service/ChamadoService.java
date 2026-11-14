@@ -241,7 +241,7 @@ public class ChamadoService {
     @Transactional(readOnly = true)
     public ChamadoResponse buscar(Long chamadoId, Long usuarioId) {
         Chamado chamado = buscarEntidade(chamadoId);
-        acesso.exigir(chamado, buscarUsuario(usuarioId));
+        acesso.exigirLeitura(chamado, buscarUsuario(usuarioId));
         return ChamadoResponse.from(chamado,
                 classificacaoIaRepository.findByChamadoId(chamadoId).orElse(null),
                 leituras.temNova(chamadoId, buscarUsuario(usuarioId)));
@@ -280,7 +280,11 @@ public class ChamadoService {
         Chamado chamado = chamadoRepository.findParaAvaliacao(chamadoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chamado não encontrado"));
         Usuario usuario = buscarUsuario(usuarioId);
-        acesso.exigir(chamado, usuario);
+        if (req.novoStatus() == StatusChamado.CANCELADO) {
+            acesso.exigirLeitura(chamado, usuario);
+        } else {
+            acesso.exigir(chamado, usuario);
+        }
         StatusChamado atual = chamado.getStatus();
         StatusChamado novo = req.novoStatus();
         if (atual.finalizado()) {

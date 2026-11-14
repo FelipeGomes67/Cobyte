@@ -57,7 +57,7 @@ public class AnexoService {
 
     @Transactional(readOnly = true)
     public List<AnexoResponse> listar(Long chamadoId, Long usuarioId) {
-        acesso.exigir(buscarChamado(chamadoId), buscarUsuario(usuarioId));
+        acesso.exigirLeitura(buscarChamado(chamadoId), buscarUsuario(usuarioId));
         return anexoRepository.findByChamadoIdOrderByEnviadoEmAscIdAsc(chamadoId).stream()
                 .map(AnexoResponse::from).toList();
     }
@@ -66,7 +66,7 @@ public class AnexoService {
     public Download baixar(Long anexoId, Long usuarioId) {
         Anexo anexo = anexoRepository.findById(anexoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Anexo não encontrado"));
-        acesso.exigir(anexo.getChamado(), buscarUsuario(usuarioId));
+        acesso.exigirLeitura(anexo.getChamado(), buscarUsuario(usuarioId));
         return new Download(armazenamento.carregar(anexo.getChamado().getId(), anexo.getCaminhoArquivo()),
                 anexo.getNomeArquivo(), anexo.getTamanhoBytes());
     }

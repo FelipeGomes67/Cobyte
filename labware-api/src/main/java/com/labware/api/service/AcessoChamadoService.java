@@ -22,6 +22,15 @@ public class AcessoChamadoService {
         }
     }
 
+    public void exigirLeitura(Chamado chamado, Usuario usuario) {
+        exigirEmpresaVinculada(usuario);
+        if (ehSuporte(usuario)) return;
+        if (usuario != null && usuario.getPerfil() == PerfilUsuario.CLIENTE
+                && usuario.getEmpresa() != null && chamado.getEmpresa() != null
+                && usuario.getEmpresa().getId().equals(chamado.getEmpresa().getId())) return;
+        exigir(chamado, usuario);
+    }
+
     public void exigir(Chamado chamado, Usuario usuario) {
         exigirEmpresaVinculada(usuario);
         if (ehSuporte(usuario)) return;
