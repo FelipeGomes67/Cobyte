@@ -430,3 +430,5 @@
     flex-direction: column;
   }
 }
+.profile-panel .avatar-editar>.avatar{display:flex;align-items:center;justify-content:center;text-align:center}
+.profile-panel .profile-info>.profile-actions{grid-column:1/-1;display:flex;justify-content:flex-end;width:100%;margin-top:6px}
