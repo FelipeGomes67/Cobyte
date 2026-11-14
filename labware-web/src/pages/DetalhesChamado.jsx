@@ -495,7 +495,7 @@ function DetalhesEmAtendimento({
   return (
     <div className="history-page-shell">
       <button type="button" className="ticket-back-link" onClick={aoVoltar}>
-        <ArrowLeft size={14} aria-hidden="true" /> Voltar para chamados
+        <ArrowLeft size={14} aria-hidden="true" /> Voltar à tela anterior
       </button>
       <div className="history-shell panel">
         <div className="history-layout">
@@ -717,7 +717,7 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
   return (
     <div className="history-page-shell">
       <button type="button" className="ticket-back-link" onClick={aoVoltar}>
-        <ArrowLeft size={14} aria-hidden="true" /> Voltar para chamados
+        <ArrowLeft size={14} aria-hidden="true" /> Voltar à tela anterior
       </button>
       <div className="history-shell panel">
         <div className="history-layout">
@@ -776,7 +776,7 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
               </div>
 
               <button type="button" className="secondary-button wide-button" onClick={aoVoltar}>
-                Voltar aos chamados
+                Voltar à tela anterior
               </button>
             </div>
 
@@ -858,7 +858,15 @@ export default function DetalhesChamado() {
   const origem = caminho.split('/')[1];
   const destino = ['dashboard', 'chamados', 'chamados-empresa', 'meus-chamados', 'historico'].includes(origem)
     ? '/' + origem : '/chamados';
-  const voltar = () => navegar(destino);
+  const voltar = () => {
+    // Retorna à tela realmente visitada antes do detalhe, inclusive dashboard e notificações.
+    // Links diretos e novas abas não possuem uma página anterior dentro da aplicação.
+    if (typeof window.history.state?.idx === 'number' && window.history.state.idx > 0) {
+      navegar(-1);
+    } else {
+      navegar(destino, { replace: true });
+    }
+  };
 
   const handleNovaMensagem = (novaMsg) => {
     setChamado(prev => {
@@ -937,7 +945,7 @@ export default function DetalhesChamado() {
       ) : (
         <>
           <button type="button" className="ticket-back-link" onClick={voltar}>
-            <ArrowLeft size={14} aria-hidden="true" /> Voltar para chamados
+            <ArrowLeft size={14} aria-hidden="true" /> Voltar à tela anterior
           </button>
           <p className="panel empty-state" role="status">
             Chamado não encontrado ou indisponível para este usuário.
