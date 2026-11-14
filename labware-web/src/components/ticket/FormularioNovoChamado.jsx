@@ -382,7 +382,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
 
               <p className="instrucao-audio">
                 {transcrevendo
-                  ? 'Transcrevendo áudio com inteligência artificial…'
+                  ? 'Transcrevendo áudio com inteligência artificial...'
                   : !gravando
                   ? 'Clique no microfone para começar a gravar.'
                   : pausado
@@ -443,7 +443,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                   onClick={enviarAudioParaTranscricao}
                 >
                   <img src="/icons/enviar.svg" alt="" className="icone-enviar-branco" />
-                  <span>{transcrevendo ? 'Transcrevendo…' : 'Enviar'}</span>
+                  <span>{transcrevendo ? 'Transcrevendo...' : 'Enviar'}</span>
                 </button>
               </div>
             </div>
@@ -521,7 +521,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
             onDrop={handleDrop}
           >
             <p className="dropzone-texto">
-              {arrastando ? 'Solte os arquivos aqui…' : 'Arraste e solte os seus arquivos aqui'}
+              {arrastando ? 'Solte os arquivos aqui...' : 'Arraste e solte os seus arquivos aqui'}
             </p>
             <div className="botoes-upload-grupo">
               <button
@@ -585,7 +585,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           >
             <img src="/icons/enviar.svg" alt="" className="icone-enviar-branco" />
             <span>
-              {enviando ? 'Analisando e enviando…' : transcrevendo ? 'Transcrevendo…' : 'Enviar Chamado'}
+              {enviando ? 'Analisando e enviando...' : transcrevendo ? 'Transcrevendo...' : 'Enviar Chamado'}
             </span>
           </button>
         </div>

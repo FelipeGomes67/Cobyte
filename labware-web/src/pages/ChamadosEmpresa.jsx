@@ -43,7 +43,7 @@ export default function ChamadosEmpresa() {
       <button type="button" aria-pressed={!historico} onClick={() => definirSituacao('ativos')}>Em andamento</button>
       <button type="button" aria-pressed={historico} onClick={() => definirSituacao('encerrados')}>Encerrados</button>
     </div>
-    {dados.carregando ? <p className="panel loading-state" role="status">Carregando chamados da empresa…</p>
+    {dados.carregando ? <p className="panel loading-state" role="status">Carregando chamados da empresa...</p>
       : dados.erro ? <div className="panel empresa-erro"><p role="alert">{dados.erro}</p><button type="button" className="secondary-button" onClick={() => definirTentativa(valor => valor + 1)}>Tentar novamente</button></div>
         : <TabelaChamados key={situacao} tickets={chamados} query={busca} onSearch={definirBusca}
           titulo="Chamados da empresa" historico={historico} rotaBase="/chamados-empresa"/>}

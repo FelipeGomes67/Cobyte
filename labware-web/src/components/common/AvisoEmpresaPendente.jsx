@@ -21,7 +21,7 @@ export default function AvisoEmpresaPendente() {
     <h2>Aguardando vinculação de empresa</h2>
     <p>Aguardando aprovação e vinculação de empresa pelo suporte. Você poderá abrir e acompanhar chamados assim que seu vínculo for concluído.</p>
     <button type="button" className="secondary-button" onClick={verificar} disabled={carregando}>
-      {carregando ? 'Verificando…' : 'Verificar vinculação'}
+      {carregando ? 'Verificando...' : 'Verificar vinculação'}
     </button>
     {erro && <p role="alert">{erro}</p>}
   </section>;

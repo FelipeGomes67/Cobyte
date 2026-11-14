@@ -27,7 +27,7 @@ export function ProtectedRoute() {
 
   // Enquanto inicializa e valida o token existente com a API
   if (inicializando) {
-    return <main className="auth-screen" role="status">Carregando sessão…</main>;
+    return <main className="auth-screen" role="status">Carregando sessão...</main>;
   }
 
   // Se a inicialização terminou e não há usuário válido autenticado
@@ -60,7 +60,7 @@ export function PublicRoute({ children }) {
   const token = obterToken();
 
   if (token && inicializando) {
-    return <main className="auth-screen" role="status">Carregando sessão…</main>;
+    return <main className="auth-screen" role="status">Carregando sessão...</main>;
   }
 
   if (usuario && token) {
@@ -75,7 +75,7 @@ function RotaRaiz() {
   const token = obterToken();
 
   if (token && inicializando) {
-    return <main className="auth-screen" role="status">Carregando sessão…</main>;
+    return <main className="auth-screen" role="status">Carregando sessão...</main>;
   }
 
   return usuario && token ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;

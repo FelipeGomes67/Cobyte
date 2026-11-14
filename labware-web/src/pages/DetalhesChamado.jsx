@@ -370,7 +370,7 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
               onClick={onReabrir}
               disabled={reabrindo}
             >
-              <RotateCcw size={12} /> {reabrindo ? 'Reabrindo chamado…' : 'Reabrir chamado'}
+              <RotateCcw size={12} /> {reabrindo ? 'Reabrindo chamado...' : 'Reabrir chamado'}
             </button>
           )}
         </div>
@@ -570,7 +570,7 @@ function DetalhesEmAtendimento({
               {podeEditar && <div className="assumir-chamado">
                 <button type="button" className="primary-button" onClick={assumirAtendimento}
                   disabled={assumindo || salvandoStatus || salvandoPrioridade || (jaParticipa && codigoAtual !== 'ABERTO')}>
-                  {assumindo ? 'Assumindo…' : jaParticipa && codigoAtual !== 'ABERTO' ? 'Você já está neste chamado' : 'Assumir chamado'}
+                  {assumindo ? 'Assumindo...' : jaParticipa && codigoAtual !== 'ABERTO' ? 'Você já está neste chamado' : 'Assumir chamado'}
                 </button>
                 <p>Mais de um técnico pode participar deste atendimento.</p>
               </div>}
@@ -761,7 +761,7 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
               {erroFechamento && <p role="alert">{erroFechamento}</p>}
               {resolvido && usuario?.perfil === 'CLIENTE' && <button type="button"
                 className="primary-button wide-button" disabled={fechando} onClick={confirmarResolucao}>
-                {fechando ? 'Fechando…' : 'Confirmar resolução e fechar'}
+                {fechando ? 'Fechando...' : 'Confirmar resolução e fechar'}
               </button>}
               {onReabrir && resolvido && (
                 <button
@@ -771,7 +771,7 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
                   disabled={reabrindo}
                   style={{ marginTop: '10px' }}
                 >
-                  <RotateCcw size={14} /> {reabrindo ? 'Reabrindo chamado…' : 'Reabrir chamado'}
+                  <RotateCcw size={14} /> {reabrindo ? 'Reabrindo chamado...' : 'Reabrir chamado'}
                 </button>
               )}
             </div>

@@ -55,7 +55,7 @@ export default function UsuariosPendentes() {
               {empresas.map(empresa => <option key={empresa.id} value={empresa.id}>{empresa.nome}</option>)}
             </select></td>
             <td><button className="primary-button" disabled={!selecoes[usuario.id] || salvando[usuario.id]}
-              onClick={() => aprovar(usuario)}>{salvando[usuario.id] ? 'Vinculando…' : 'Aprovar e Vincular'}</button></td>
+              onClick={() => aprovar(usuario)}>{salvando[usuario.id] ? 'Vinculando...' : 'Aprovar e Vincular'}</button></td>
           </tr>)}</tbody>
         </table></div>}
       {empresas.length === 0 && <p className="empty-state">Cadastre uma empresa oficial para aprovar os clientes.</p>}
