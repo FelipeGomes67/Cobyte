@@ -238,6 +238,7 @@ function SecaoAnexos({ anexos }) {
 
 function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
   const { usuario } = useAutenticacao();
+  const clienteLogado = usuario?.perfil === 'CLIENTE' || usuario?.role === 'client';
   const solicitanteId = chamado.solicitanteId ?? chamado.ownerId ?? chamado.solicitante?.id;
   const descricaoPropria = solicitanteId != null && usuario?.id != null
     && String(solicitanteId) === String(usuario.id);
@@ -306,7 +307,7 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
         <span className="conversation-date">{dataAbertura}</span>
       </div>
 
-      <div className={`history-message-row ${descricaoPropria ? "message-sent" : "message-received"}`}>
+      <div className={`history-message-row ${clienteLogado || descricaoPropria ? "message-sent" : "message-received"}`}>
         <AvatarUsuario user={descricaoPropria ? usuario : {
           nome: chamado.solicitanteNome || 'Solicitante',
           fotoPerfil: chamado.solicitanteId ? '/api/usuarios/' + chamado.solicitanteId + '/foto' : null,
@@ -326,9 +327,10 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
         const nome = msg.autorNome || msg.autor || msg.usuario || 'Usuário';
         const perfil = { CLIENTE: 'Cliente', SUPORTE: 'Suporte', ADMIN: 'Administrador' }[msg.autorPerfil || msg.perfilUsuario]
           || (msg.ehSuporte ? 'Suporte' : 'Cliente');
+        const mesmoLado = propria || (clienteLogado && perfil === 'Cliente');
         const data = msg.criadoEm || msg.enviadoEm;
         return (
-          <div key={msg.id ?? index} className={`history-message-row ${propria ? 'message-sent' : 'message-received'}`}>
+          <div key={msg.id ?? index} className={`history-message-row ${mesmoLado ? 'message-sent' : 'message-received'}`}>
             <AvatarUsuario user={propria ? usuario : {
               nome,
               fotoPerfil: autorId ? '/api/usuarios/' + autorId + '/foto' : null,
