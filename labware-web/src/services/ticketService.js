@@ -190,17 +190,30 @@ export function mapearChamadoApi(c) {
     temNovaMensagem: Boolean(c.temNovaMensagem) && !['Resolvido', 'Fechado', 'Cancelado'].includes(statusFormatado),
     responsavel: c.responsavel,
     empresa: c.empresa,
+    rating: c.notaAvaliacao ?? null,
+    firstResponseMinutes: c.primeiraRespostaEm && c.abertoEm ? (new Date(c.primeiraRespostaEm) - new Date(c.abertoEm)) / 60000 : null,
+    slaDueAt: c.prazoResolucao || null,
+    slaStatus: c.slaResolucao || c.slaStatus,
+    slaPausado: Boolean(c.slaPausado),
+    assigneeName: typeof c.responsavel === 'string' ? c.responsavel : c.responsavel?.nome,
+    requesterName: c.solicitante,
+    companyName: c.empresa,
   };
 }
 
 export async function obterMeusChamados() {
   try {
-    const { data } = await api.get('/chamados');
-    const rawList = Array.isArray(data)
-      ? data
-      : (data && Array.isArray(data.content) ? data.content : []);
-
-    return rawList.map(mapearChamadoApi);
+    const lista = [];
+    let page = 0;
+    let totalPages = 1;
+    do {
+      const { data } = await api.get('/chamados', { params: { page, size: 100 } });
+      if (Array.isArray(data)) return data.map(mapearChamadoApi);
+      lista.push(...(data.content || []));
+      totalPages = data.totalPages || 0;
+      page++;
+    } while (page < totalPages);
+    return [...new Map(lista.map(c => [c.id, c])).values()].map(mapearChamadoApi);
   } catch (error) {
     throw new Error(error?.message || 'Falha ao carregar chamados. Verifique sua conexão e tente novamente.', { cause: error });
   }
@@ -362,10 +375,20 @@ export async function enviarMensagem(chamadoId, texto) {
 export async function baixarArquivoAnexo(anexoId, nomeArquivo) {
   const token = obterToken();
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
-  const response = await api.get(`/chamados/anexos/${anexoId}/download`, {
-    responseType: 'blob',
-    headers,
-  });
+  let response;
+  try {
+    response = await api.get('/chamados/anexos/' + anexoId + '/download', { responseType: 'blob', headers });
+  } catch (erro) {
+    let detalhe;
+    try {
+      const corpo = erro.response?.data;
+      detalhe = corpo instanceof Blob ? JSON.parse(await corpo.text()) : corpo;
+    } catch { /* Resposta sem corpo JSON. */ }
+    const mensagem = erro.response?.status === 404
+      ? 'O arquivo não foi encontrado neste servidor. Se foi enviado em outra máquina, é necessário disponibilizar a pasta de uploads aqui.'
+      : detalhe?.message || detalhe?.mensagem || detalhe?.detail || 'Não foi possível baixar o arquivo. Tente novamente.';
+    throw new Error(mensagem, { cause: erro });
+  }
   const blob = new Blob([response.data], { type: response.headers['content-type'] });
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -374,7 +397,7 @@ export async function baixarArquivoAnexo(anexoId, nomeArquivo) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
+  setTimeout(() => window.URL.revokeObjectURL(url), 60000);
 }
 
 /** GET /chamados/{id} com suporte a busca simultânea de anexos e mensagens. */

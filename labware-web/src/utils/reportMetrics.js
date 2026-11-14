@@ -60,12 +60,8 @@ export function getAxisScale(maxValue, targetIntervals = 4) {
 export function getReportSummary(tickets) {
   const ratings = tickets.map(ticket => ticket.rating).filter(value => Number.isFinite(value));
   const firstResponses = tickets.map(ticket => ticket.firstResponseMinutes).filter(value => Number.isFinite(value) && value >= 0);
-  const slaEvaluated = tickets.filter(ticket => Number.isFinite(Date.parse(ticket.slaDueAt))
-    && (ticket.status !== 'Resolvido' || Number.isFinite(Date.parse(ticket.resolvedAt))));
-  const slaMet = slaEvaluated.filter(ticket => {
-    const completedAt = ticket.resolvedAt || new Date().toISOString();
-    return new Date(completedAt) <= new Date(ticket.slaDueAt);
-  });
+  const slaEvaluated = tickets.filter(t => ['Resolvido', 'Fechado'].includes(t.status) && ['CUMPRIDO','VIOLADO'].includes(t.slaStatus));
+  const slaMet = slaEvaluated.filter(t => t.slaStatus === 'CUMPRIDO');
   const categoryNames = new Map(REPORT_CATEGORIES.map(name => [normalize(name), name]));
   const categoryCounts = new Map(REPORT_CATEGORIES.map(name => [name, 0]));
   tickets.forEach(ticket => {

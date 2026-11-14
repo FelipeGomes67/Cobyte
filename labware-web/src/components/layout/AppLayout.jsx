@@ -35,7 +35,7 @@ export default function AppLayout() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const notificationRef = useRef(null);
-  const ehDetalheChamado = /^\/(dashboard|chamado|chamados|meus-chamados|historico)\/[^/]+\/?$/.test(location.pathname)
+  const ehDetalheChamado = /^\/(dashboard|chamado|chamados|chamados-empresa|meus-chamados|historico)\/[^/]+\/?$/.test(location.pathname)
     && location.pathname.replace(/\/$/, '') !== '/chamados/novo'
     && location.pathname.replace(/\/$/, '') !== '/novo-chamado';
   const title = ehDetalheChamado ? 'Detalhes' : pageNames[location.pathname] || 'Central de Suporte';

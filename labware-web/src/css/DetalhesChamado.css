@@ -991,3 +991,20 @@
   letter-spacing:3px;
   margin:10px 0;
 }
+
+.cancelamento-separado{margin-top:22px;padding-top:18px;border-top:1px solid #e2e8f0}
+.btn-abrir-cancelamento,.btn-confirmar-cancelamento{width:100%;padding:10px 14px;border:1px solid #fecaca;border-radius:7px;color:#991b1b;background:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.btn-confirmar-cancelamento{background:#b91c1c;color:#fff;border-color:#b91c1c;margin-top:12px}
+.cancelamento-formulario{margin-top:14px}
+.btn-abrir-cancelamento:disabled,.btn-confirmar-cancelamento:disabled{opacity:.5;cursor:default}
+
+.atendimento-status-atual{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:12px;margin:16px 0}
+.atendimento-status-atual>span:first-child{font-size:14px;font-weight:600;color:#475569}
+.atendimento-status-atual .chamado-badge{font-size:16px;padding:10px 15px;gap:9px;line-height:1.4;white-space:normal}
+.atendimento-status-atual .chamado-badge>i{width:8px;height:8px;flex-basis:8px}
+
+.detalhes-chamado-page .history-person-box{align-content:start;grid-auto-rows:min-content}
+.detalhes-chamado-page .history-person-box .history-person-label{min-height:20px}
+.detalhes-chamado-page .history-sidebar{background:#fff}
+.detalhes-chamado-page .history-sidebar .history-summary-card,
+.detalhes-chamado-page .history-sidebar .history-info-card{background:#f8fafc}

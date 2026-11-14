@@ -1,3 +1,4 @@
+import ResumoEmpresa from '../components/reports/ResumoEmpresa';
 import ChamadoBadge from '../components/ticket/ChamadoBadge';
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -514,7 +515,7 @@ function ChamadosPrioritarios({ chamados, agora }) {
 
 export default function DashboardPage() {
   const { usuario } = useAutenticacao();
-  const { tickets: chamados, loading: carregando, error: erro } = useTickets();
+  const { tickets: chamados, loading: carregando, error: erro } = useTickets('empresa');
   const [agora, definirAgora] = useState(() => Date.now());
   useEffect(() => {
     const intervalo = window.setInterval(() => definirAgora(Date.now()), 1000);
@@ -525,6 +526,13 @@ export default function DashboardPage() {
       ? chamados
       : chamados.filter((chamado) => chamado.ownerId === usuario?.id);
   const dados = calcularDashboard(chamadosUsuario, agora);
+  if (usuario?.perfil === 'CLIENTE') {
+    if (carregando) return <p role="status">Carregando indicadores da empresa...</p>;
+    if (erro) return <p role="alert">{erro}</p>;
+    if (!usuario.empresaId) return <p>Os indicadores estarão disponíveis após a vinculação da empresa.</p>;
+    return <ResumoEmpresa tickets={chamados} usuario={usuario} />;
+  }
+
 
   return (
     <div className="dashboard-page">

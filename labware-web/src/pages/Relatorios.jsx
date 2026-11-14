@@ -1,3 +1,4 @@
+import { BarrasResumo } from '../components/reports/ResumoEmpresa';
 import { useState } from 'react';
 import { Check, Clock3, Star } from 'lucide-react';
 import { useTickets } from '../hooks/useTickets';
@@ -38,7 +39,16 @@ function PriorityChart({ priorities }) {
 }
 
 export default function ReportsPage() {
-  const { tickets, loading, error } = useTickets();
+  const { tickets: todos, loading, error } = useTickets();
+  const [empresa, setEmpresa] = useState('');
+  const [tecnico, setTecnico] = useState('');
+  const [inicio, setInicio] = useState('');
+  const [fim, setFim] = useState('');
+  const empresas = [...new Set(todos.map(t => t.empresa).filter(Boolean))].sort();
+  const tecnicos = [...new Set(todos.map(t => t.assigneeName).filter(Boolean))].sort();
+  const tickets = todos.filter(t => (!empresa || t.empresa === empresa) && (!tecnico || t.assigneeName === tecnico) &&
+    (!inicio || t.createdAt?.slice(0,10) >= inicio) && (!fim || t.createdAt?.slice(0,10) <= fim));
+  const agrupar = campo => Object.entries(tickets.reduce((acc,t)=>{const nome=t[campo] || 'Não informado';acc[nome]=(acc[nome]||0)+1;return acc;},{})).map(([nome,quantidade])=>({nome,quantidade}));
   const years = getReportYears();
   const [selectedYear, setSelectedYear] = useState(() => years[0]);
   if (loading) return <div className="panel loading-state" role="status">Carregando relatórios...</div>;
@@ -48,6 +58,14 @@ export default function ReportsPage() {
   const firstResponse = summary.firstResponseMinutes === null ? null : Math.round(summary.firstResponseMinutes);
   return <>
     <PageHeading/>
+    <div className="panel relatorio-filtros">
+      <label>Empresa<select value={empresa} onChange={e=>setEmpresa(e.target.value)}><option value="">Todas</option>{empresas.map(n=><option key={n}>{n}</option>)}</select></label>
+      <label>Técnico responsável<select value={tecnico} onChange={e=>setTecnico(e.target.value)}><option value="">Todos</option>{tecnicos.map(n=><option key={n}>{n}</option>)}</select></label>
+      <label>Abertos a partir de<input type="date" value={inicio} max={fim || undefined} onChange={e=>setInicio(e.target.value)}/></label>
+      <label>Abertos até<input type="date" value={fim} min={inicio || undefined} onChange={e=>setFim(e.target.value)}/></label>
+      <button className="secondary-button" onClick={()=>{setEmpresa('');setTecnico('');setInicio('');setFim('');}}>Limpar filtros</button>
+      <span>{tickets.length} chamados no recorte</span>
+    </div>
     {error && <div className="data-warning" role="status">{error}</div>}
     <div className="metric-grid">
       <MetricCard icon={<Star size={21} fill="currentColor"/>} value={rating} label="Avaliação média do atendimento" tone="metric-yellow"/>
@@ -55,6 +73,7 @@ export default function ReportsPage() {
       <MetricCard icon={<Check size={21}/>} value={summary.slaPercent} suffix={summary.slaPercent === null ? '' : '%'} label="SLAs cumpridos no prazo" tone="metric-green"/>
     </div>
     <div className="charts-grid"><CategoryChart categories={summary.categories}/><PriorityChart priorities={summary.priorities}/></div>
+    <div className="empresa-graficos" style={{ marginBottom: 20 }}><BarrasResumo titulo="Chamados por empresa" itens={agrupar('empresa')}/><BarrasResumo titulo="Chamados por técnico responsável" itens={agrupar('assigneeName')}/></div>
     <EvolucaoMensalChart
       trend={trend}
       years={years}

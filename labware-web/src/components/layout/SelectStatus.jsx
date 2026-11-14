@@ -36,9 +36,10 @@ export default function SelectStatus({
   aoAlterar,
   desabilitado = false,
   somenteCancelamento = false,
+  ocultarCancelamento = false,
 }) {
   const chave = codigosStatus[statusAtual] || String(statusAtual || '').toUpperCase().replace('AGUARDANDO_CLIENTE', 'AGUARDANDO_SOLICITANTE');
-  const opcoes = (transicoes[chave] || []).filter(status => !somenteCancelamento || status === 'CANCELADO');
+  const opcoes = (transicoes[chave] || []).filter(status => (!somenteCancelamento || status === 'CANCELADO') && (!ocultarCancelamento || status !== 'CANCELADO'));
   const labelAtual = nomesStatus[chave] || nomesStatus[statusAtual] || statusAtual || 'Selecione um status';
 
   return (

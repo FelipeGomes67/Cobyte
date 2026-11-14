@@ -1,13 +1,17 @@
+import { useAutenticacao } from './useAuth';
 import { useEffect, useState } from 'react';
-import { obterMeusChamados } from '../services/ticketService';
+import { obterMeusChamados, obterChamadosDaEmpresa } from '../services/ticketService';
 
-export function useTickets() {
+export function useTickets(escopo = 'pessoal') {
+  const { usuario } = useAutenticacao();
   const [data, setData] = useState({ tickets: [], loading: true, error: null });
   useEffect(() => {
     let ativo = true;
     async function carregar() {
       try {
-        const tickets = await obterMeusChamados();
+        const tickets = escopo === 'empresa' && usuario?.perfil === 'CLIENTE'
+          ? (usuario.empresaId ? await obterChamadosDaEmpresa(usuario.empresaId) : [])
+          : await obterMeusChamados();
         if (ativo) {
           setData({ tickets, loading: false, error: null });
         }
@@ -19,6 +23,6 @@ export function useTickets() {
     }
     carregar();
     return () => { ativo = false; };
-  }, []);
+  }, [escopo, usuario?.id, usuario?.perfil, usuario?.empresaId]);
   return data;
 }

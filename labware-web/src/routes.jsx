@@ -130,6 +130,7 @@ export default function RotasAplicacao() {
           <Route path="/chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/todos-chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/meus-chamados" element={<MeusChamados />} />
+          <Route path="/chamados-empresa/:id" element={<ExigirCliente><DetalhesChamado /></ExigirCliente>} />
           <Route path="/chamados-empresa" element={<ExigirCliente><ChamadosEmpresa /></ExigirCliente>} />
           <Route path="/meus-chamados/:ticketId" element={<DetalhesChamado />} />
           <Route path="/historico" element={<TicketsPage mode="history" />} />

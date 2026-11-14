@@ -176,12 +176,21 @@ function PainelIa({ chamado }) {
 }
 
 function SecaoAnexos({ anexos }) {
+  const [baixando, setBaixando] = useState(null);
+  const [erroDownload, setErroDownload] = useState('');
+  async function baixar(anexo) {
+    setBaixando(anexo.id); setErroDownload('');
+    try { await baixarArquivoAnexo(anexo.id, anexo.nomeArquivo); }
+    catch (erro) { setErroDownload(erro.message); }
+    finally { setBaixando(null); }
+  }
   const lista = Array.isArray(anexos) ? anexos : [];
   return (
     <div className="history-evidences">
       <div className="evidence-header">
         <h4>Evidências ({lista.length})</h4>
       </div>
+      {erroDownload && <p role="alert" className="mensagem-erro-conversa">{erroDownload}</p>}
       {lista.length > 0 ? (
         <div className="evidence-list">
           {lista.map((anexo, idx) => {
@@ -210,10 +219,11 @@ function SecaoAnexos({ anexos }) {
                 <button
                   type="button"
                   className="secondary-button small-button"
-                  onClick={() => baixarArquivoAnexo(anexo.id, anexo.nomeArquivo)}
+                  disabled={baixando !== null}
+                  onClick={() => baixar(anexo)}
                   title={`Baixar ${anexo.nomeArquivo}`}
                 >
-                  <Download size={12} /> Baixar
+                  <Download size={12} /> {baixando === anexo.id ? 'Baixando...' : 'Baixar'}
                 </button>
               </div>
             );
@@ -363,7 +373,7 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
       ) : (
         <div className="history-message-composer-encerrado">
           <p>Este chamado está encerrado e não aceita novas mensagens.</p>
-          {onReabrir && (chamado.statusRaw === 'RESOLVIDO' || chamado.status === 'Resolvido') && (
+          {onReabrir && (descricaoPropria || usuario?.perfil !== 'CLIENTE') && (chamado.statusRaw === 'RESOLVIDO' || chamado.status === 'Resolvido') && (
             <button
               type="button"
               className="secondary-button small-button btn-reabrir"
@@ -398,10 +408,12 @@ function DetalhesEmAtendimento({
 
   const statusAtivo = ['ABERTO', 'EM_ANALISE', 'EM_ATENDIMENTO', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
   const podeEditar = ehSuporte && statusAtivo;
-  const podeAlterarStatus = podeEditar || (!ehSuporte && ['ABERTO', 'EM_ANALISE', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual));
+  const podeAlterarStatus = podeEditar;
+  const podeCancelar = ['ABERTO', 'EM_ANALISE', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
   const podeAlterarPrioridade = ehSuporte && codigoAtual === 'EM_ANALISE';
 
   const [statusSelecionado, setStatusSelecionado] = useState('');
+  const [cancelamentoAberto, setCancelamentoAberto] = useState(false);
   const [motivoCancelamento, setMotivoCancelamento] = useState('');
   const [salvandoStatus, setSalvandoStatus] = useState(false);
 
@@ -431,12 +443,13 @@ function DetalhesEmAtendimento({
   const tituloExibicao = chamado.tituloGeradoIa?.trim() || chamado.classificacaoIa?.tituloGeradoIa?.trim() || chamado.titulo || chamado.title;
   const descricao = chamado.descricao || chamado.description || 'Sem descrição informada.';
 
-  const handleConfirmarStatus = async () => {
-    if (!statusSelecionado || statusSelecionado === codigoAtual || salvandoStatus) return;
+  const handleConfirmarStatus = async (destino = statusSelecionado) => {
+    if (!destino || destino === codigoAtual || salvandoStatus) return;
+    if (destino === 'CANCELADO' && motivoCancelamento.trim().length < 10) return;
     setSalvandoStatus(true);
     setFeedbackAtendimento(null);
     try {
-      const atualizado = await alterarStatus(chamado.id, statusSelecionado, motivoCancelamento);
+      const atualizado = await alterarStatus(chamado.id, destino, motivoCancelamento);
       setStatusSelecionado('');
       setFeedbackAtendimento({ tipo: 'sucesso', texto: 'Status alterado com sucesso!' });
       if (onChamadoAtualizado) onChamadoAtualizado(atualizado);
@@ -574,11 +587,12 @@ function DetalhesEmAtendimento({
                 </button>
                 <p>Mais de um técnico pode participar deste atendimento.</p>
               </div>}
-              {ehSuporte || podeAlterarStatus ? (
+              {ehSuporte || podeCancelar ? (
                 <>
-                  <p>
-                    Status atual: <strong>{statusExibido}</strong>.
-                  </p>
+                  <div className="atendimento-status-atual">
+                    <span>Status atual:</span>
+                    <ChamadoBadge valor={statusExibido} />
+                  </div>
 
                   {feedbackAtendimento && (
                     <p className={`aviso-atendimento ${feedbackAtendimento.tipo}`} role="alert">
@@ -593,22 +607,14 @@ function DetalhesEmAtendimento({
                           statusAtual={codigoAtual}
                           valor={statusSelecionado}
                           aoAlterar={setStatusSelecionado}
-                          somenteCancelamento={!ehSuporte}
+                          ocultarCancelamento
                           desabilitado={salvandoStatus}
                         />
-                        {statusSelecionado === 'CANCELADO' && <label className="cancellation-reason">
-                          Relatório de cancelamento
-                          <textarea required minLength={10} maxLength={4000} rows={4}
-                            value={motivoCancelamento} onChange={evento => setMotivoCancelamento(evento.target.value)}
-                            placeholder="Explique por que este chamado deve ser cancelado."
-                            disabled={salvandoStatus} />
-                          <small>Informe entre 10 e 4000 caracteres. O motivo ficará registrado com seu nome e a data.</small>
-                        </label>}
                         <button
                           type="button"
                           className="primary-button small-button btn-confirmar-status"
-                          onClick={handleConfirmarStatus}
-                          disabled={salvandoStatus || !statusSelecionado || statusSelecionado === codigoAtual || (statusSelecionado === 'CANCELADO' && motivoCancelamento.trim().length < 10)}
+                          onClick={() => handleConfirmarStatus()}
+                          disabled={salvandoStatus || !statusSelecionado || statusSelecionado === codigoAtual}
                         >
                           {salvandoStatus ? 'Salvando...' : 'Confirmar Status'}
                         </button>
@@ -646,9 +652,31 @@ function DetalhesEmAtendimento({
                       </div>
                     )}
                   </div>
+                  {podeCancelar && <section className="cancelamento-separado">
+                    <button type="button" className="btn-abrir-cancelamento" aria-expanded={cancelamentoAberto}
+                      disabled={salvandoStatus} onClick={() => setCancelamentoAberto(!cancelamentoAberto)}>
+                      {cancelamentoAberto ? 'Voltar sem cancelar' : 'Cancelar chamado'}
+                    </button>
+                    {cancelamentoAberto && <div className="cancelamento-formulario">
+                      <label className="cancellation-reason">Motivo do cancelamento
+                        <textarea required minLength={10} maxLength={4000} rows={4} value={motivoCancelamento}
+                          onChange={e => setMotivoCancelamento(e.target.value)} disabled={salvandoStatus}
+                          placeholder="Explique por que o chamado deve ser cancelado." />
+                        <small>De 10 a 4000 caracteres. Seu nome e a data ficarão registrados.</small>
+                      </label>
+                      <button type="button" className="btn-confirmar-cancelamento"
+                        disabled={salvandoStatus || motivoCancelamento.trim().length < 10}
+                        onClick={() => handleConfirmarStatus('CANCELADO')}>
+                        {salvandoStatus ? 'Cancelando...' : 'Confirmar cancelamento'}
+                      </button>
+                    </div>}
+                  </section>}
                 </>
               ) : (
-                <p>Status atual: <strong>{statusExibido}</strong>. Acompanhe as etapas de resolução realizadas pela equipe técnica.</p>
+                <div className="atendimento-status-atual">
+                  <span>Status atual</span>
+                  <ChamadoBadge valor={statusExibido} />
+                </div>
               )}
             </div>
           </aside>
@@ -759,11 +787,11 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
                 <small>{chamado.canceladoPorNome} · {formatarDataHoraMensagem(chamado.canceladoEm)}</small>
               </section>}
               {erroFechamento && <p role="alert">{erroFechamento}</p>}
-              {resolvido && usuario?.perfil === 'CLIENTE' && <button type="button"
+              {resolvido && usuario?.perfil === 'CLIENTE' && String(usuario.id) === String(chamado.solicitanteId) && <button type="button"
                 className="primary-button wide-button" disabled={fechando} onClick={confirmarResolucao}>
                 {fechando ? 'Fechando...' : 'Confirmar resolução e fechar'}
               </button>}
-              {onReabrir && resolvido && (
+              {onReabrir && resolvido && (usuario?.perfil !== 'CLIENTE' || String(usuario.id) === String(chamado.solicitanteId)) && (
                 <button
                   type="button"
                   className="primary-button wide-button"
@@ -826,7 +854,7 @@ export default function DetalhesChamado() {
   }, [codigo]);
 
   const origem = caminho.split('/')[1];
-  const destino = ['dashboard', 'chamados', 'meus-chamados', 'historico'].includes(origem)
+  const destino = ['dashboard', 'chamados', 'chamados-empresa', 'meus-chamados', 'historico'].includes(origem)
     ? '/' + origem : '/chamados';
   const voltar = () => navegar(destino);
 
@@ -879,7 +907,7 @@ export default function DetalhesChamado() {
     (chamado?.solicitanteNome && (chamado.solicitanteNome === usuario?.nome || chamado.solicitanteNome === usuario?.name)) ||
     (usuario?.perfil === 'CLIENTE' && chamado !== null);
 
-  const podeVisualizar = ehSuporte || ehSolicitante;
+  const podeVisualizar = ehSuporte || ehSolicitante || caminho.startsWith('/chamados-empresa/');
   const chamadoVisivel = podeVisualizar ? chamado : null;
 
   return (
