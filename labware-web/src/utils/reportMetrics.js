@@ -1,6 +1,6 @@
 import { obterVisualChamado } from './chamadoVisual';
 export const REPORT_CATEGORIES = ['Indisponibilidade', 'Integração', 'Acesso', 'Dúvida', 'Segurança', 'Outros'];
-export const REPORT_PRIORITIES = ['Crítica', 'Alta', 'Média', 'Baixa', 'Sem prioridade', 'Melhoria']
+export const REPORT_PRIORITIES = ['Crítica', 'Alta', 'Média', 'Baixa', 'Melhoria', 'Sem prioridade']
   .map(name => ({ name, color: obterVisualChamado(name, 'prioridade').cor }));
 
 function normalize(value) {
@@ -62,12 +62,22 @@ export function getReportSummary(tickets) {
   const firstResponses = tickets.map(ticket => ticket.firstResponseMinutes).filter(value => Number.isFinite(value) && value >= 0);
   const slaEvaluated = tickets.filter(t => ['Resolvido', 'Fechado'].includes(t.status) && ['CUMPRIDO','VIOLADO'].includes(t.slaStatus));
   const slaMet = slaEvaluated.filter(t => t.slaStatus === 'CUMPRIDO');
-  const categoryNames = new Map(REPORT_CATEGORIES.map(name => [normalize(name), name]));
-  const categoryCounts = new Map(REPORT_CATEGORIES.map(name => [name, 0]));
+  const categoryCounts = new Map();
   tickets.forEach(ticket => {
-    const category = categoryNames.get(normalize(ticket.category)) || 'Outros';
-    categoryCounts.set(category, categoryCounts.get(category) + 1);
+    const name = String(ticket.category || ticket.categoria || 'Não informada').trim();
+    const key = normalize(name);
+    const atual = categoryCounts.get(key) || { name, count: 0 };
+    atual.count++;
+    categoryCounts.set(key, atual);
   });
+  const ordenadas = [...categoryCounts.values()]
+    .sort((a,b) => b.count - a.count || a.name.localeCompare(b.name, 'pt-BR'));
+  // Preserva as categorias recorrentes; reúne ocorrências isoladas e a cauda em Outros.
+  const principais = ordenadas.filter(item => item.count > 1 && normalize(item.name) !== 'outros').slice(0, 5);
+  const mantidas = new Set(principais.map(item => normalize(item.name)));
+  const outros = ordenadas.filter(item => !mantidas.has(normalize(item.name)))
+    .reduce((total,item) => total + item.count, 0);
+  const categorias = [...principais, ...(outros ? [{ name: 'Outros', count: outros }] : [])];
   // Cada chamado cai em exatamente um grupo de prioridade (a soma dos grupos = total de chamados).
   const priorityCounts = new Map(REPORT_PRIORITIES.map(priority => [priority.name, 0]));
   tickets.forEach(ticket => {
@@ -81,7 +91,7 @@ export function getReportSummary(tickets) {
     firstResponseCount: firstResponses.length,
     slaPercent: slaEvaluated.length ? Math.round((slaMet.length / slaEvaluated.length) * 100) : null,
     slaCount: slaEvaluated.length,
-    categories: REPORT_CATEGORIES.map(name => ({ name, count: categoryCounts.get(name) })),
+    categories: categorias,
     priorities: REPORT_PRIORITIES.map(priority => ({ ...priority, count: priorityCounts.get(priority.name) })),
   };
 }

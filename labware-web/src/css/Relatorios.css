@@ -1176,3 +1176,14 @@
   left: 0;
   clip: rect(0, 0, 0, 0);
 }
+/* Cabeçalhos consistentes entre todos os gráficos do relatório. */
+.chart-panel.category-panel>h2,
+.priority-panel .priority-panel-heading h2 {
+  font-family:var(--font-body);
+  font-size:17px;
+  font-weight:600;
+  line-height:1.4;
+  color:#172235;
+}
+.chart-panel.category-panel>h2{margin:0 0 20px}
+.priority-panel .priority-panel-heading p{font-size:12px;line-height:1.5;margin-top:6px}

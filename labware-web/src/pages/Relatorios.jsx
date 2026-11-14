@@ -48,7 +48,7 @@ export default function ReportsPage() {
   const tecnicos = [...new Set(todos.map(t => t.assigneeName).filter(Boolean))].sort();
   const tickets = todos.filter(t => (!empresa || t.empresa === empresa) && (!tecnico || t.assigneeName === tecnico) &&
     (!inicio || t.createdAt?.slice(0,10) >= inicio) && (!fim || t.createdAt?.slice(0,10) <= fim));
-  const agrupar = campo => Object.entries(tickets.reduce((acc,t)=>{const nome=t[campo] || 'Não informado';acc[nome]=(acc[nome]||0)+1;return acc;},{})).map(([nome,quantidade])=>({nome,quantidade}));
+  const agrupar = campo => Object.entries(tickets.reduce((acc,t)=>{const nome=t[campo] || 'Não informado';acc[nome]=(acc[nome]||0)+1;return acc;},{})).map(([nome,quantidade])=>({nome,quantidade})).sort((a,b)=>b.quantidade-a.quantidade || a.nome.localeCompare(b.nome, 'pt-BR'));
   const years = getReportYears();
   const [selectedYear, setSelectedYear] = useState(() => years[0]);
   if (loading) return <div className="panel loading-state" role="status">Carregando relatórios...</div>;
