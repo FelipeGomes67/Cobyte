@@ -33,7 +33,7 @@ function CategoryChart({ categories }) {
 
 function PriorityChart({ priorities }) {
   return <section className="panel chart-panel priority-panel">
-    <div className="priority-panel-heading"><div><h2>Chamados por Prioridade</h2><p>Distribuição por nível de atendimento</p></div><span>6 níveis</span></div>
+    <div className="priority-panel-heading"><div><h2>Chamados por Prioridade</h2><p>Distribuição por nível de atendimento</p></div><span>{priorities.length} níveis</span></div>
     {priorities.every(item => item.count === 0) ? <div className="chart-empty">Sem dados no período</div> : <HorizontalBars items={priorities} variant="priority"/>}
   </section>;
 }
