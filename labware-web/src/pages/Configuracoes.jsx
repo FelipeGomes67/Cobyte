@@ -1,3 +1,5 @@
+import MigracaoArquivos from '../components/layout/MigracaoArquivos';
+import { useAutenticacao } from '../hooks/useAuth';
 import PreferenciasNotificacao from '../components/layout/PreferenciasNotificacao';
 import { alterarSenha } from '../services/perfilService';
 import { useState } from 'react';
@@ -6,13 +8,16 @@ import { Eye, EyeOff, Save } from 'lucide-react';
 
 export default function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get('aba') === 'notificacoes' ? 'notifications' : 'security';
+  const { usuario } = useAutenticacao();
+  const admin = usuario?.perfil === 'ADMIN';
+  const tab = admin && searchParams.get('aba') === 'arquivos' ? 'files'
+    : searchParams.get('aba') === 'notificacoes' ? 'notifications' : 'security';
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('success');
   const [working, setWorking] = useState(false);
   function selectTab(nextTab) {
-    setSearchParams(nextTab === 'notifications' ? { aba: 'notificacoes' } : {});
+    setSearchParams(nextTab === 'files' ? { aba: 'arquivos' } : nextTab === 'notifications' ? { aba: 'notificacoes' } : {});
     setMessage('');
   }
 
@@ -48,6 +53,7 @@ export default function SettingsPage() {
       <div className="settings-tabs" role="tablist" aria-label="Configurações da conta">
         <button role="tab" aria-selected={tab === 'security'} className={tab === 'security' ? 'selected' : ''} onClick={() => selectTab('security')}>Segurança</button>
         <button role="tab" aria-selected={tab === 'notifications'} className={tab === 'notifications' ? 'selected' : ''} onClick={() => selectTab('notifications')}>Notificações</button>
+        {admin && <button role="tab" aria-selected={tab === 'files'} className={tab === 'files' ? 'selected' : ''} onClick={() => selectTab('files')}>Arquivos</button>}
       </div>
 
       <section className={`panel settings-panel settings-reference-card ${tab === 'security' ? 'security-card' : 'notification-card'}`}>
@@ -60,7 +66,7 @@ export default function SettingsPage() {
             <label className="form-label">Confirmar nova senha<input name="confirmPassword" type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength="8" maxLength="72" required /></label>
             <div className="settings-footer">{message && <span className={`settings-message ${messageType}`} role="status">{message}</span>}<button className="primary-button" type="submit" disabled={working}><Save size={16} /> {working ? 'Atualizando...' : 'Atualizar senha'}</button></div>
           </form>
-        </> : <PreferenciasNotificacao />}
+        </> : tab === 'files' ? <MigracaoArquivos /> : <PreferenciasNotificacao />}
       </section>
     </div>
   </>;

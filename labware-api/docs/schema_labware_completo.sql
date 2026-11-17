@@ -214,3 +214,10 @@ CREATE TABLE leitura_chamado (
 
 COMMIT;
 
+
+-- Conteúdo compartilhado de evidências e fotos, separado das listagens.
+CREATE TABLE arquivo_compartilhado (
+    chave VARCHAR(180) PRIMARY KEY,
+    conteudo BYTEA NOT NULL,
+    criado_em TIMESTAMP NOT NULL
+);

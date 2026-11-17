@@ -334,3 +334,6 @@
     padding: 20px
   }
 }
+.migracao-arquivos h2{font-size:22px}
+.migracao-arquivos p{font-size:14px;line-height:1.6;margin:16px 0;color:#475569}
+.migracao-arquivos .ticket-table-wrap{margin-top:20px}

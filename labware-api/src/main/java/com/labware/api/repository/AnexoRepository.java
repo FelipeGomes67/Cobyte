@@ -6,6 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface AnexoRepository extends JpaRepository<Anexo, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select a from Anexo a where a.id = :id")
+    java.util.Optional<Anexo> buscarParaMigracao(@org.springframework.data.repository.query.Param("id") Long id);
+
+    List<Anexo> findTop20ByIdGreaterThanOrderByIdAsc(Long id);
     @EntityGraph(attributePaths = {"chamado", "usuario"})
     List<Anexo> findByChamadoIdOrderByEnviadoEmAscIdAsc(Long chamadoId);
 }

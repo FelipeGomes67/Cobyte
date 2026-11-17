@@ -31,6 +31,7 @@ public class PerfilService {
     private final PasswordEncoder encoder;
     private final com.labware.api.repository.EmpresaRepository empresas;
     private final Path diretorioFotos;
+    private final ArquivosCompartilhadosService compartilhados;
 
     public record FotoPerfilDownload(Resource recurso, MediaType mediaType) {}
 
@@ -38,11 +39,18 @@ public class PerfilService {
     public PerfilService(UsuarioRepository usuarios,
                          PasswordEncoder encoder,
                          com.labware.api.repository.EmpresaRepository empresas,
-                         @Value("${labware.uploads.diretorio-fotos:./uploads/fotos}") String diretorioFotos) {
+                         @Value("${labware.uploads.diretorio-fotos:./uploads/fotos}") String diretorioFotos,
+                         ArquivosCompartilhadosService compartilhados) {
+        this.compartilhados = compartilhados;
         this.usuarios = usuarios;
         this.encoder = encoder;
         this.empresas = empresas;
         this.diretorioFotos = Path.of(diretorioFotos).toAbsolutePath().normalize();
+    }
+
+    public PerfilService(UsuarioRepository usuarios, PasswordEncoder encoder,
+                         com.labware.api.repository.EmpresaRepository empresas, String diretorioFotos) {
+        this(usuarios, encoder, empresas, diretorioFotos, null);
     }
 
     // Construtor para compatibilidade com testes unitários
@@ -118,6 +126,10 @@ public class PerfilService {
     }
 
     public PerfilResponse salvarFoto(Long id, MultipartFile arquivo) {
+        return salvarFoto(id, arquivo, false);
+    }
+
+    private PerfilResponse salvarFoto(Long id, MultipartFile arquivo, boolean preservarOriginal) {
         var u = usuario(id);
         if (arquivo == null || arquivo.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo de foto ausente ou vazio");
@@ -158,11 +170,19 @@ public class PerfilService {
                     leitor.dispose();
                 }
             }
-            Files.createDirectories(diretorioFotos);
             String versao = java.util.UUID.randomUUID().toString();
-            novaFoto = diretorioFotos.resolve("usuario-" + id + "." + versao + ".png");
-            if (!javax.imageio.ImageIO.write(imagem, "png", novaFoto.toFile())) {
-                throw new IOException("Nao foi possivel codificar a imagem");
+            if (compartilhados != null && compartilhados.habilitado()) {
+                var saida = new java.io.ByteArrayOutputStream();
+                if (!javax.imageio.ImageIO.write(imagem, "png", saida))
+                    throw new IOException("Não foi possível codificar a imagem");
+                if (saida.size() > 10 * 1024 * 1024)
+                    throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Foto convertida excede 10 MB");
+                compartilhados.salvar(chaveFoto(id, versao), saida.toByteArray());
+            } else {
+                Files.createDirectories(diretorioFotos);
+                novaFoto = diretorioFotos.resolve("usuario-" + id + "." + versao + ".png");
+                if (!javax.imageio.ImageIO.write(imagem, "png", novaFoto.toFile()))
+                    throw new IOException("Não foi possível codificar a imagem");
             }
             u.setFotoPerfil("/api/usuarios/" + id + "/foto?v=" + versao);
             var resposta = PerfilResponse.from(usuarios.saveAndFlush(u));
@@ -173,10 +193,10 @@ public class PerfilService {
                             @Override
                             public void afterCompletion(int status) {
                                 if (status != STATUS_COMMITTED) apagarFoto(gravada);
-                                else apagarFotoAnterior(id, fotoAnterior);
+                                else if (!preservarOriginal) apagarFotoAnterior(id, fotoAnterior);
                             }
                         });
-            } else {
+            } else if (!preservarOriginal) {
                 apagarFotoAnterior(id, fotoAnterior);
             }
             return resposta;
@@ -198,6 +218,10 @@ public class PerfilService {
     @Transactional(readOnly = true)
     public FotoPerfilDownload carregarFoto(Long id) {
         var u = usuario(id);
+        String versao = versaoFoto(u.getFotoPerfil());
+        if (compartilhados != null && versao != null && compartilhados.existe(chaveFoto(id, versao))) {
+            return new FotoPerfilDownload(compartilhados.carregar(chaveFoto(id, versao)), MediaType.IMAGE_PNG);
+        }
         try {
             Path foto = localizarFoto(id, u.getFotoPerfil());
             String nome = foto.getFileName().toString().toLowerCase(Locale.ROOT);
@@ -209,6 +233,39 @@ public class PerfilService {
         } catch (IOException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Falha ao carregar foto de perfil", ex);
         }
+    }
+
+    private String versaoFoto(String url) {
+        if (url == null || !url.contains("?v=")) return null;
+        String versao = url.substring(url.indexOf("?v=") + 3);
+        return versao.matches("[a-f0-9-]{36}") ? versao : null;
+    }
+
+    private String chaveFoto(Long id, String versao) { return "fotos/" + id + "/" + versao + ".png"; }
+
+    public boolean migrarFotoLocal(Long id) throws IOException {
+        var u = usuario(id);
+        if (u.getFotoPerfil() == null) return false;
+        if (compartilhados == null || !compartilhados.habilitado())
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ative o armazenamento compartilhado");
+        String versao = versaoFoto(u.getFotoPerfil());
+        if (versao != null && compartilhados.existe(chaveFoto(id, versao))) return false;
+        Path local = localizarFoto(id, u.getFotoPerfil());
+        if (Files.size(local) > 10 * 1024 * 1024)
+            throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Foto legada excede 10 MB");
+        // Passa pela mesma validação e conversão do upload normal.
+        byte[] dados = Files.readAllBytes(local);
+        salvarFoto(id, new org.springframework.web.multipart.MultipartFile() {
+            public String getName() { return "foto"; }
+            public String getOriginalFilename() { return local.getFileName().toString(); }
+            public String getContentType() { return "application/octet-stream"; }
+            public boolean isEmpty() { return dados.length == 0; }
+            public long getSize() { return dados.length; }
+            public byte[] getBytes() { return dados; }
+            public InputStream getInputStream() { return new java.io.ByteArrayInputStream(dados); }
+            public void transferTo(java.io.File destino) throws IOException { Files.write(destino.toPath(), dados); }
+        }, true);
+        return true;
     }
 
     private Path localizarFoto(Long id, String url) throws IOException {
@@ -229,6 +286,12 @@ public class PerfilService {
 
     private void apagarFotoAnterior(Long id, String url) {
         if (url == null) return;
+        String versao = versaoFoto(url);
+        if (compartilhados != null && versao != null && compartilhados.existe(chaveFoto(id, versao))) {
+            try { compartilhados.excluir(chaveFoto(id, versao)); }
+            catch (RuntimeException ex) { org.slf4j.LoggerFactory.getLogger(PerfilService.class).warn("Falha ao limpar foto compartilhada antiga do usuário {}", id); }
+            return;
+        }
         try {
             apagarFoto(localizarFoto(id, url));
         } catch (IOException | ResourceNotFoundException ex) {

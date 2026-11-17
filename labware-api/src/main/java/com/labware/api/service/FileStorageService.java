@@ -18,12 +18,20 @@ import java.util.UUID;
 public class FileStorageService implements ArmazenamentoService {
     private final Path raiz;
     private final long tamanhoMaximo;
+    private final ArquivosCompartilhadosService compartilhados;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public FileStorageService(@Value("${labware.uploads.diretorio:./uploads/chamados}") String diretorio,
-                              @Value("${labware.uploads.tamanho-maximo-bytes:10485760}") long tamanhoMaximo) {
+                              @Value("${labware.uploads.tamanho-maximo-bytes:10485760}") long tamanhoMaximo,
+                              ArquivosCompartilhadosService compartilhados) {
         this.raiz = Path.of(diretorio).toAbsolutePath().normalize();
-        if (tamanhoMaximo <= 0) throw new IllegalArgumentException("Limite de upload deve ser positivo");
+        if (tamanhoMaximo <= 0 || tamanhoMaximo > Integer.MAX_VALUE - 1) throw new IllegalArgumentException("Limite de upload inválido");
         this.tamanhoMaximo = tamanhoMaximo;
+        this.compartilhados = compartilhados;
+    }
+
+    public FileStorageService(String diretorio, long tamanhoMaximo) {
+        this(diretorio, tamanhoMaximo, null);
     }
 
     @Override
@@ -33,6 +41,21 @@ public class FileStorageService implements ArmazenamentoService {
         }
         validarTamanho(arquivo.getSize());
         String nome = sanitizarNome(arquivo.getOriginalFilename());
+        diretorio(chamadoId); // valida o escopo antes de gravar.
+        if (compartilhados != null && compartilhados.habilitado()) {
+            try (var entrada = arquivo.getInputStream()) {
+                byte[] dados = entrada.readNBytes((int) tamanhoMaximo + 1);
+                validarTamanho(dados.length);
+                if (dados.length == 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo vazio");
+                String chave = "anexos/" + chamadoId + "/" + UUID.randomUUID();
+                compartilhados.salvar(chave, dados);
+                String tipo = arquivo.getContentType();
+                if (tipo == null || tipo.length() > 255 || tipo.chars().anyMatch(Character::isISOControl)) tipo = "application/octet-stream";
+                return new Arquivo(nome, tipo, "db:" + chave, dados.length);
+            } catch (IOException ex) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Falha ao armazenar arquivo", ex);
+            }
+        }
         Path destino = diretorio(chamadoId).resolve(UUID.randomUUID().toString());
         try {
             Files.createDirectories(raiz);
@@ -71,6 +94,9 @@ public class FileStorageService implements ArmazenamentoService {
 
     @Override
     public Resource carregar(Long chamadoId, String caminhoArquivo) {
+        if (caminhoArquivo != null && caminhoArquivo.startsWith("db:")) {
+            return compartilhados.carregar(chaveBanco(chamadoId, caminhoArquivo));
+        }
         Path arquivo = validarCaminho(chamadoId, caminhoArquivo);
         try {
             if (!Files.exists(arquivo, LinkOption.NOFOLLOW_LINKS)) throw new ResourceNotFoundException("Arquivo não encontrado");
@@ -88,12 +114,44 @@ public class FileStorageService implements ArmazenamentoService {
 
     @Override
     public void excluir(Long chamadoId, String caminhoArquivo) {
+        if (caminhoArquivo != null && caminhoArquivo.startsWith("db:")) {
+            // Uma gravação compartilhada participa da transação do anexo e é revertida com ela.
+            return;
+        }
         Path arquivo = validarCaminho(chamadoId, caminhoArquivo);
         try {
             verificarDiretorio(arquivo.getParent());
             Files.deleteIfExists(arquivo);
         } catch (IOException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Falha ao remover arquivo", ex);
+        }
+    }
+
+    private String chaveBanco(Long chamadoId, String caminho) {
+        diretorio(chamadoId);
+        String chave = caminho.substring(3);
+        if (!chave.matches("anexos/" + chamadoId + "/[a-f0-9-]{36}"))
+            throw new AccessDeniedException("Arquivo fora do escopo do chamado");
+        return chave;
+    }
+
+    public Arquivo migrarLocal(Long chamadoId, String caminho, String nome, String tipo) {
+        if (compartilhados == null || !compartilhados.habilitado())
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ative o armazenamento compartilhado");
+        String nomeFisico = caminho.replace('\\', '/');
+        nomeFisico = nomeFisico.substring(nomeFisico.lastIndexOf('/') + 1);
+        if (!nomeFisico.matches("[a-fA-F0-9-]{36}")) throw new AccessDeniedException("Nome físico legado inválido");
+        Path local = diretorio(chamadoId).resolve(nomeFisico);
+        Resource recurso = carregar(chamadoId, local.toString());
+        try (var entrada = recurso.getInputStream()) {
+            byte[] dados = entrada.readNBytes((int) tamanhoMaximo + 1);
+            validarTamanho(dados.length);
+            if (dados.length == 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo legado vazio");
+            String chave = "anexos/" + chamadoId + "/" + UUID.randomUUID();
+            compartilhados.salvar(chave, dados);
+            return new Arquivo(nome, tipo, "db:" + chave, dados.length);
+        } catch (IOException ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Falha ao importar arquivo local", ex);
         }
     }
 
