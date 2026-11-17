@@ -197,6 +197,8 @@ export function mapearChamadoApi(c) {
     slaDueAt: c.prazoResolucao || null,
     slaStatus: c.slaResolucao || c.slaStatus,
     slaPausado: Boolean(c.slaPausado),
+    slaResolucaoRestanteSegundos: c.slaResolucaoRestanteSegundos ?? null,
+    slaConsultadoEm: Date.now(),
     assigneeName: typeof c.responsavel === 'string' ? c.responsavel : c.responsavel?.nome,
     requesterName: c.solicitante,
     companyName: c.empresa,

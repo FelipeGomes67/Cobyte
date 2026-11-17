@@ -1,3 +1,4 @@
+import { restanteSlaMs } from '../utils/sla';
 import { STATUS_VISUAL, PRIORIDADE_VISUAL, obterVisualChamado } from '../utils/chamadoVisual';
 export const STATUS_DASHBOARD = Object.entries(STATUS_VISUAL)
   .map(([chave, visual]) => ({ chave, ...visual }));
@@ -20,8 +21,7 @@ function obterData(valor) {
 }
 
 export function obterRestanteSla(chamado, agora) {
-  const prazo = obterData(chamado.slaDueAt);
-  return prazo === null ? null : prazo - agora;
+  return restanteSlaMs(chamado, agora);
 }
 
 export function formatarDuracao(minutos) {

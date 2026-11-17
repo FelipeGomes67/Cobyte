@@ -88,7 +88,8 @@ public record ChamadoResponse(
         Long canceladoPorId,
         String canceladoPorNome,
         long slaPausaTotalSegundos,
-        java.util.List<TecnicoResponse> tecnicos
+        java.util.List<TecnicoResponse> tecnicos,
+        Long slaResolucaoRestanteSegundos
 ) {
 
     public record TecnicoResponse(Long id, String nome) { }
@@ -165,7 +166,9 @@ public record ChamadoResponse(
                 (c.getStatus() == StatusChamado.AGUARDANDO_CLIENTE ? "Pausado · " : "") + formatar(c,referencia), resolucao, temNovaMensagem,
                 c.getMotivoCancelamento(), c.getCanceladoEm(),
                 c.getCanceladoPor() == null ? null : c.getCanceladoPor().getId(),
-                c.getCanceladoPor() == null ? (c.getMotivoCancelamento() != null && c.getMotivoCancelamento().startsWith("Cancelado pela IA:") ? "Triagem por IA" : null) : c.getCanceladoPor().getNome(), pausaSegundos, tecnicosDoChamado(c)
+                c.getCanceladoPor() == null ? (c.getMotivoCancelamento() != null && c.getMotivoCancelamento().startsWith("Cancelado pela IA:") ? "Triagem por IA" : null) : c.getCanceladoPor().getNome(), pausaSegundos, tecnicosDoChamado(c),
+                melhoria || c.getPrazoResolucao() == null ? null : java.time.Duration.between(
+                        c.getResolvidoEm() != null ? c.getResolvidoEm() : referencia, c.getPrazoResolucao()).getSeconds()
         );
     }
 

@@ -59,7 +59,13 @@ api.interceptors.request.use(
 
 // Interceptor de resposta: tratamento centralizado de erros e expiração de sessão
 api.interceptors.response.use(
-  resposta => resposta,
+  resposta => {
+    const metodo = resposta.config?.method?.toLowerCase();
+    if (metodo && metodo !== 'get' && /\/chamados(?:\/|$)/.test(resposta.config?.url || '')) {
+      window.dispatchEvent(new Event('labware-chamados-atualizados'));
+    }
+    return resposta;
+  },
   falha => {
     const resposta = falha.response;
 

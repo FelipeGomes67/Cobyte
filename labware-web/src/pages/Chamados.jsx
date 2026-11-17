@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEstadoUrl } from '../hooks/useEstadoUrl';
+import { useTickets } from '../hooks/useTickets';
 import { useNavigate } from 'react-router-dom';
 import { Headset } from 'lucide-react';
-import { obterMeusChamados } from '../services/ticketService';
 import { useAutenticacao } from '../hooks/useAuth';
 import TabelaChamados from '../components/ticket/TabelaChamados';
 
@@ -10,10 +10,8 @@ function Heading({ title, description, action }) {
 }
 
 export function TicketsPage({ mode }) {
-  const [query, setQuery] = useState('');
-  const [chamadosApi, setChamadosApi] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [query, setQuery] = useEstadoUrl('busca', '');
+  const { tickets: chamadosApi, loading, error } = useTickets();
   const navigate = useNavigate();
   const { usuario: user } = useAutenticacao();
   const ehSuporte =
@@ -23,32 +21,6 @@ export function TicketsPage({ mode }) {
   const ehCliente =
     user?.perfil === 'CLIENTE' ||
     user?.role === 'client';
-
-  useEffect(() => {
-    let ativo = true;
-    async function carregar() {
-      try {
-        setLoading(true);
-        const lista = await obterMeusChamados();
-        if (ativo) {
-          setChamadosApi(lista);
-          setError(null);
-        }
-      } catch (err) {
-        if (ativo) {
-          setError(err.message || 'Falha ao carregar chamados');
-        }
-      } finally {
-        if (ativo) {
-          setLoading(false);
-        }
-      }
-    }
-    carregar();
-    return () => {
-      ativo = false;
-    };
-  }, []);
 
   const meus = chamadosApi.filter(ticket => {
     if (ehSuporte && user?.id != null && ticket.tecnicos?.some(tecnico => String(tecnico.id) === String(user.id))) return true;
@@ -69,7 +41,7 @@ export function TicketsPage({ mode }) {
     <Heading title={title} description="Acompanhe solicitações e atualizações da equipe de suporte." action={createButton}/>
     {loading && <div className="panel loading-state" role="status">Carregando chamados...</div>}
     {error && <div className="data-warning" role="status">{error}</div>}
-    {!loading && <TabelaChamados porPrioridade={mode === 'mine'} historico={mode === 'history'} titulo={mode === 'history' ? 'Histórico de chamados' : 'Solicitações'} tickets={tickets} query={query} onSearch={setQuery} rotaBase="/chamados"/>}
+    {!loading && <TabelaChamados ocultarFiltroResponsavel={mode === 'mine' || (!ehSuporte && mode !== 'history')} porPrioridade={mode === 'mine'} historico={mode === 'history'} titulo={mode === 'history' ? 'Histórico de chamados' : 'Solicitações'} tickets={tickets} query={query} onSearch={setQuery} rotaBase="/chamados"/>}
     <div className="list-note"><Headset size={17}/> Precisa de ajuda? <a href="mailto:suporte@labware.com.br">Fale com o suporte LabWare</a></div>
   </>;
 }
