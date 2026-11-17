@@ -92,10 +92,10 @@ export function calcularDashboard(chamados, agora) {
   const temposResposta = chamados.map(chamado => chamado.firstResponseMinutes).filter(valor => typeof valor === 'number' && Number.isFinite(valor) && valor >= 0);
   const prioritarios = ativos.filter(chamado => criticos.includes(chamado) || emRisco.includes(chamado) || normalizar(chamado.priority) === 'URGENTE')
     .sort((a, b) => (obterRestanteSla(a, agora) ?? Infinity) - (obterRestanteSla(b, agora) ?? Infinity));
-  const evolucao = Array.from({ length: 30 }, (_, indice) => {
+  const evolucao = Array.from({ length: 7 }, (_, indice) => {
     const data = new Date(agora);
     data.setHours(0, 0, 0, 0);
-    data.setDate(data.getDate() - 29 + indice);
+    data.setDate(data.getDate() - 6 + indice);
     const chave = chaveDia(data);
     return {
       chave,

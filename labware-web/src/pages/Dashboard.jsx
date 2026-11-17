@@ -271,7 +271,7 @@ function GraficoVolume({ dias }) {
     <section className="dash-card dash-volume">
       <div className="dash-volume-heading">
         <h2>
-          <span>Volume Diário: </span>Criados vs Resolvidos
+          <span>Volume Diário: </span>Criados vs Resolvidos <small className="dash-volume-periodo">Últimos 7 dias</small>
         </h2>
         <div className="dash-line-legend">
           <span>
@@ -302,7 +302,7 @@ function GraficoVolume({ dias }) {
             viewBox="0 0 1000 270"
             preserveAspectRatio="none"
             role="group"
-            aria-label="Chamados criados e resolvidos por dia nos últimos 30 dias"
+            aria-label="Chamados criados e resolvidos por dia nos últimos 7 dias"
           >
             {[0, 1, 2, 3, 4].map((indice) => (
               <line
@@ -369,7 +369,7 @@ function GraficoVolume({ dias }) {
           <div className="dash-x-axis" aria-hidden="true">
             {dias.map(
               (dia, indice) =>
-                (indice % 5 === 0 || indice === dias.length - 1) && (
+                (indice % 2 === 0 || indice === dias.length - 1) && (
                   <span
                     key={dia.chave}
                     style={{ left: `${ponto(0, indice).x / 10}%` }}

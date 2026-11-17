@@ -916,3 +916,6 @@
     text-decoration: none;
   }
 }
+.dash-volume-periodo{display:block;font-family:var(--font-body);font-size:13px;font-weight:400;color:#526176;margin-top:6px}
+.dashboard-page .dash-x-axis span:nth-child(even){visibility:visible}
+@media(max-width:480px){.dashboard-page .dash-volume{padding:18px 12px}.dashboard-page .dash-volume h2{font-size:18px}.dashboard-page .dash-x-axis{font-size:10px}}
