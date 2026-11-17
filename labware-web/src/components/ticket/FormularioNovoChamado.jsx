@@ -14,6 +14,8 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
   const [arquivos, setArquivos] = useState([]);
   const [audioBlob, setAudioBlob] = useState(null);
   const [gravando, setGravando] = useState(false);
+  const [solicitandoMicrofone, setSolicitandoMicrofone] = useState(false);
+  const tipoAudioRef = useRef('audio/webm');
   const [pausado, setPausado] = useState(false);
   const [tocando, setTocando] = useState(false);
   const [tempo, setTempo] = useState(0);
@@ -58,9 +60,23 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
     }
 
     if (!gravando) {
+      if (solicitandoMicrofone) return;
+      if (!window.isSecureContext) {
+        setErroAudio('A gravação no navegador exige HTTPS. Abra o endereço HTTPS local e confie no certificado no celular, ou anexe um áudio já gravado.');
+        return;
+      }
+      if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+        setErroAudio('Este navegador não oferece gravação de áudio. Tente um navegador atualizado ou anexe um áudio.');
+        return;
+      }
+      setSolicitandoMicrofone(true);
+      let stream;
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorderRef.current = new MediaRecorder(stream);
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const tipo = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus']
+          .find(valor => MediaRecorder.isTypeSupported(valor));
+        mediaRecorderRef.current = new MediaRecorder(stream, tipo ? { mimeType: tipo } : undefined);
+        tipoAudioRef.current = mediaRecorderRef.current.mimeType || tipo || 'audio/webm';
         audioChunksRef.current = [];
 
         mediaRecorderRef.current.ondataavailable = (e) => {
@@ -75,8 +91,13 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
         setAudioBlob(null);
       } catch (err) {
         console.error('Erro ao acessar microfone:', err);
-        setErroAudio('Permissão de microfone negada ou dispositivo não encontrado.');
-      }
+        stream?.getTracks().forEach(track => track.stop());
+        setErroAudio(err.name === 'NotAllowedError'
+          ? 'Permissão de microfone bloqueada. Libere o microfone nas permissões deste site e tente novamente.'
+          : err.name === 'NotFoundError' ? 'Nenhum microfone foi encontrado neste dispositivo.'
+          : err.name === 'NotReadableError' ? 'Não foi possível acessar o microfone. Feche outros aplicativos que estejam usando-o.'
+          : 'Não foi possível iniciar a gravação. Tente novamente ou anexe um áudio.');
+      } finally { setSolicitandoMicrofone(false); }
     } else if (pausado) {
       mediaRecorderRef.current?.resume();
       setPausado(false);
@@ -103,7 +124,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
     return new Promise((resolve) => {
       if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
         if (audioChunksRef.current.length > 0) {
-          const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const blob = new Blob(audioChunksRef.current, { type: tipoAudioRef.current });
           setAudioBlob(blob);
           resolve(blob);
         } else {
@@ -113,7 +134,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
       }
 
       mediaRecorderRef.current.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const blob = new Blob(audioChunksRef.current, { type: tipoAudioRef.current });
         setAudioBlob(blob);
         resolve(blob);
       };
@@ -139,7 +160,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
 
     let blobParaTocar = audioBlob;
     if (!blobParaTocar && audioChunksRef.current.length > 0) {
-      blobParaTocar = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      blobParaTocar = new Blob(audioChunksRef.current, { type: tipoAudioRef.current });
       setAudioBlob(blobParaTocar);
     }
 
@@ -302,7 +323,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
     // Validação da trava de tamanho total
     let audioFinal = null;
     if (modo === 'voz') {
-      audioFinal = audioBlob || (audioChunksRef.current.length > 0 ? new Blob(audioChunksRef.current, { type: 'audio/webm' }) : null);
+      audioFinal = audioBlob || (audioChunksRef.current.length > 0 ? new Blob(audioChunksRef.current, { type: tipoAudioRef.current }) : null);
     }
 
     const tamanhoTotal = arquivos.reduce((acc, f) => acc + (f.size || 0), (audioFinal?.size || 0));
@@ -333,7 +354,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
   };
 
   const fmtTempo = `${String(Math.floor(tempo / 60)).padStart(2, '0')}:${String(tempo % 60).padStart(2, '0')}`;
-  const desabilitarGeral = enviando || transcrevendo;
+  const desabilitarGeral = enviando || transcrevendo || solicitandoMicrofone;
   const modoVozSemTranscricao = modo === 'voz' && !textos.trans.trim();
 
   return (
@@ -375,6 +396,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 className={`btn-gravador-circulo ${gravando && !pausado ? 'gravando' : ''}`}
                 onClick={toggleGravacao}
                 disabled={desabilitarGeral}
+                aria-label={!gravando ? 'Iniciar gravação' : pausado ? 'Retomar gravação' : 'Pausar gravação'}
                 title={!gravando ? 'Iniciar gravação' : pausado ? 'Retomar gravação' : 'Pausar gravação'}
               >
                 <img src="/icons/mic.svg" alt="Mic" />
@@ -383,6 +405,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
               <p className="instrucao-audio">
                 {transcrevendo
                   ? 'Transcrevendo áudio com inteligência artificial...'
+                  : solicitandoMicrofone ? 'Aguardando permissão do microfone...'
                   : !gravando
                   ? 'Clique no microfone para começar a gravar.'
                   : pausado
