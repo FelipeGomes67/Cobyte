@@ -204,13 +204,15 @@ public class ClassificadorIaService {
                     + (justificativa == null ? "" : justificativa);
         }
         boolean insuficiente = json.path("informacoesInsuficientes").asBoolean(false);
-        if (insuficiente || prioridade == null || categoria == null || truncada) {
+        boolean precisaRevisao = insuficiente || prioridade == null || categoria == null || truncada
+                || sintoma == null || impacto == null;
+        if (precisaRevisao) {
             String faltantes = texto(json, "informacoesFaltantes");
             justificativa = "[Revisão necessária] " + (faltantes == null
                     ? "Confirmar operação afetada, abrangência do bloqueio e existência de alternativa." : limitar(faltantes, 400))
                     + " " + (justificativa == null ? "" : justificativa);
         }
-        boolean completa = !truncada && prioridade != null && categoria != null && tituloIa != null
+        boolean completa = !precisaRevisao && prioridade != null && categoria != null && tituloIa != null
                 && sintoma != null && impacto != null && justificativa != null;
         if (completa) {
             log.info("Triagem: camada enriquecida concluída ({}/{})", categoria, prioridade);
