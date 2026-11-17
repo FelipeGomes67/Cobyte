@@ -14,6 +14,7 @@ springdoc:
 
 labware:
   email:
+    frontend-url: ${FRONTEND_URL:http://localhost:5173}
     remetente: ${MAIL_FROM:noreply@labware.local}
     fila-habilitada: ${MAIL_QUEUE_ENABLED:true}
     intervalo-ms: ${MAIL_QUEUE_INTERVAL_MS:10000}
@@ -30,7 +31,7 @@ labware:
     secret: ${JWT_SECRET:labware-segredo-jwt-com-ao-menos-32-bytes-padrao}
     expiracao-minutos: 120
   cors:
-    origens: http://localhost:5173
+    origens: ${CORS_ORIGENS:http://localhost:5173}
   ia:
     timeout-ms: ${IA_TIMEOUT_MS:30000}
     max-tokens: ${IA_MAX_TOKENS:768}
@@ -74,9 +75,9 @@ spring:
         multiplier: 2
         max-interval: 2s
     ollama:
-      base-url: http://localhost:11434
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       chat:
         options:
-          model: llama3.2
+          model: ${OLLAMA_MODEL:llama3.2}
           temperature: 0.1
           format: json

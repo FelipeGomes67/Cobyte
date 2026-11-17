@@ -3,8 +3,9 @@ import axios from 'axios';
 export const CHAVE_TOKEN = 'labware-token';
 export const EVENTO_SESSAO_EXPIRADA = 'labware-sessao-expirada';
 
-// Base URL vinda de variável de ambiente ou fallback para http://localhost:8080
-const baseEnv = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// No desenvolvimento, o proxy do Vite permite usar o mesmo endereço no PC e no celular.
+const baseEnv = import.meta.env.VITE_API_BASE_URL
+  || (import.meta.env.DEV ? window.location.origin : 'http://localhost:8080');
 export const API_BASE_URL = baseEnv.trim().replace(/\/+$/, '');
 
 export function obterToken() {
@@ -85,6 +86,10 @@ api.interceptors.response.use(
         mensagem = dados.mensagem;
       } else if (resposta.status === 401) {
         mensagem = 'E-mail ou senha inválidos.';
+      } else if (resposta.status === 403) {
+        mensagem = typeof dados === 'string' && dados.includes('Invalid CORS request')
+          ? 'A API bloqueou a origem deste acesso. Verifique a configuração de rede do servidor.'
+          : 'Você não tem permissão para realizar esta operação.';
       } else if (resposta.status === 400) {
         mensagem = 'Dados inválidos. Verifique as informações preenchidas.';
       } else if (resposta.status === 409) {

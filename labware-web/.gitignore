@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Certificados e chaves locais de desenvolvimento
+.certs/
+public/labware-local-ca.cer
