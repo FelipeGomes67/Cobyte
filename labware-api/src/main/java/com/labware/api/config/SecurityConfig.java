@@ -12,7 +12,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -26,6 +25,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final RestSecurityHandlers handlers;
+    private final com.labware.api.repository.UsuarioRepository usuarios;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -63,15 +63,20 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /** O claim "perfil" do token (CLIENTE/SUPORTE/ADMIN) vira a authority ROLE_<perfil>. */
+    /** Consulta o perfil atual para que alterações administrativas revoguem privilégios antigos. */
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
-        authorities.setAuthoritiesClaimName("perfil");
-        authorities.setAuthorityPrefix("ROLE_");
-
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(authorities);
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            Long id;
+            try { id = UsuarioLogado.id(jwt); }
+            catch (RuntimeException e) {
+                throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Usuário inválido");
+            }
+            var usuario = usuarios.findById(id).orElseThrow(() ->
+                    new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Usuário não encontrado"));
+            return List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + usuario.getPerfil().name()));
+        });
         return converter;
     }
 

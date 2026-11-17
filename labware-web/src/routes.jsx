@@ -1,3 +1,4 @@
+import Administracao from './pages/Administracao';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import UsuariosPendentes from './pages/UsuariosPendentes';
@@ -35,6 +36,9 @@ export function ProtectedRoute() {
     return <Navigate to="/login" replace state={{ from: localizacao.pathname }} />;
   }
 
+  if (usuario.perfil === 'ADMIN' && !['/admin/usuarios', '/admin/empresas', '/usuarios-pendentes', '/perfil', '/configuracoes'].includes(localizacao.pathname)) {
+    return <Navigate to="/admin/usuarios" replace />;
+  }
   return <AppLayout />;
 }
 
@@ -44,7 +48,12 @@ export function ExigirSuporte({ children }) {
     usuario?.role === 'support' ||
     usuario?.perfil === 'SUPORTE' ||
     usuario?.perfil === 'ADMIN';
-  return ehSuporte ? children : <Navigate to="/dashboard" replace />;
+  return ehSuporte ? children : <Navigate to={usuario?.perfil === 'ADMIN' ? '/admin/usuarios' : '/dashboard'} replace />;
+}
+
+export function ExigirAdmin({ children }) {
+  const { usuario } = useAutenticacao();
+  return usuario?.perfil === 'ADMIN' ? children : <Navigate to={usuario?.perfil === 'ADMIN' ? '/admin/usuarios' : '/dashboard'} replace />;
 }
 
 export function ExigirCliente({ children }) {
@@ -64,7 +73,7 @@ export function PublicRoute({ children }) {
   }
 
   if (usuario && token) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={usuario?.perfil === 'ADMIN' ? '/admin/usuarios' : '/dashboard'} replace />;
   }
 
   return children;
@@ -78,7 +87,7 @@ function RotaRaiz() {
     return <main className="auth-screen" role="status">Carregando sessão...</main>;
   }
 
-  return usuario && token ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />;
+  return usuario && token ? <Navigate to={usuario?.perfil === 'ADMIN' ? '/admin/usuarios' : '/dashboard'} replace /> : <Navigate to="/login" replace />;
 }
 
 export default function RotasAplicacao() {
@@ -103,6 +112,8 @@ export default function RotasAplicacao() {
           }
         />
         <Route element={<ProtectedRoute />}>
+          <Route path="/admin/usuarios" element={<ExigirAdmin><Administracao key="usuarios" tipo="usuarios" /></ExigirAdmin>} />
+          <Route path="/admin/empresas" element={<ExigirAdmin><Administracao key="empresas" tipo="empresas" /></ExigirAdmin>} />
           <Route path="/usuarios-pendentes" element={<ExigirSuporte><UsuariosPendentes /></ExigirSuporte>} />
           <Route path="/notificacoes" element={<Notificacoes />} />
           <Route path="/chamado/:id" element={<DetalhesChamado />} />
@@ -145,7 +156,7 @@ export default function RotasAplicacao() {
           />
           <Route path="/configuracoes" element={<SettingsPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -11,7 +11,7 @@ export default function ProfileMenu({ user, onRequestLogout, onNavigate, variant
   const triggerRef = useRef(null);
   const focusFirstRef = useRef(false);
   const menuId = useId();
-  const roleLabel = user.role === 'support' ? 'Suporte' : 'Cliente';
+  const roleLabel = user.perfil === 'ADMIN' ? 'Admin' : user.role === 'support' ? 'Suporte' : 'Cliente';
 
   const closeMenu = useCallback((returnFocus = false) => {
     setOpen(false);

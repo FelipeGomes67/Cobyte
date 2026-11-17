@@ -16,7 +16,7 @@ export default function ProfilePage() {
   const [carregandoLista, setCarregandoLista] = useState(false);
   const [erroLista, setErroLista] = useState('');
   useEffect(() => {
-    if (!suporte) return;
+    if (!suporte || user?.perfil === 'ADMIN') return;
     let ativo = true;
     async function carregar() {
       try {
@@ -28,7 +28,7 @@ export default function ProfilePage() {
     const timer = setInterval(() => { if (!document.hidden) carregar(); }, 30000);
     window.addEventListener('focus', carregar);
     return () => { ativo = false; clearInterval(timer); window.removeEventListener('focus', carregar); };
-  }, [suporte, user?.id]);
+  }, [suporte, user?.id, user?.perfil]);
   useEffect(() => {
     if (!suporte || !mostrarAvaliacoes) return;
     let ativo = true;
@@ -261,7 +261,7 @@ export default function ProfilePage() {
           </form>
         </div>
       </section>
-      <section className="panel profile-avaliacoes profile-avaliacoes-compacto">
+      {user?.perfil !== 'ADMIN' && <section className="panel profile-avaliacoes profile-avaliacoes-compacto">
         <div>
           <h2>{suporte ? 'Minhas avaliações' : 'Avaliações dos atendimentos'}</h2>
           {suporte ? <p aria-live="polite">{erroAvaliacoes || (!avaliacoes ? 'Carregando avaliações...' : avaliacoes.quantidade > 0
@@ -273,8 +273,8 @@ export default function ProfilePage() {
           onClick={() => { setMostrarAvaliacoes(!mostrarAvaliacoes); setCarregandoLista(true); setErroLista(''); }}>
           {mostrarAvaliacoes ? 'Ocultar avaliações' : 'Ver avaliações'}
         </button> : <Link className="secondary-button" to="/historico">Ver avaliações</Link>}
-      </section>
-      {suporte && mostrarAvaliacoes && <section className="panel perfil-lista-avaliacoes" aria-label="Avaliações recebidas">
+      </section>}
+      {user?.perfil !== 'ADMIN' && suporte && mostrarAvaliacoes && <section className="panel perfil-lista-avaliacoes" aria-label="Avaliações recebidas">
         {carregandoLista ? <p role="status">Carregando avaliações...</p> : erroLista ? <p role="alert">{erroLista}</p> : listaAvaliacoes.length === 0 ? <p>Nenhuma avaliação recebida.</p> :
           listaAvaliacoes.map(t => <article key={t.id}>
             <Link to={'/chamados/' + t.id}>{t.protocolo} · {t.titulo}</Link>

@@ -12,6 +12,8 @@ import { empresaPendente } from '../../utils/acessoUsuario';
 import { useAutenticacao } from '../../hooks/useAuth';
 
 const pageNames = {
+  '/admin/usuarios': 'Gerenciar usuários',
+  '/admin/empresas': 'Gerenciar empresas',
   '/dashboard': 'Dashboard',
   '/chamados': 'Todos Chamados',
   '/meus-chamados': 'Meus Chamados',
@@ -97,7 +99,7 @@ export default function AppLayout() {
           <div className="breadcrumb"><span>Central de Suporte</span><strong>{title}</strong></div>
 
           <div className="top-actions">
-            <div className="notification-center" ref={notificationRef}>
+            {user?.perfil !== 'ADMIN' && <div className="notification-center" ref={notificationRef}>
               <button
                 type="button"
                 className="topbar-bell-button"
@@ -114,7 +116,7 @@ export default function AppLayout() {
                   onViewAll={openNotifications}
                 />
               )}
-            </div>
+            </div>}
             <ProfileMenu user={user} variant="header" onRequestLogout={() => setLogoutOpen(true)} />
           </div>
         </header>

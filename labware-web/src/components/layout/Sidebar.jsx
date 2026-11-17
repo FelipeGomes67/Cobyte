@@ -27,7 +27,13 @@ export default function Sidebar({ open, onNavigate, user: userProp, onRequestLog
     user?.perfil === 'ADMIN';
 
   // Itens dinâmicos de acordo com o perfil do usuário
-  const navItems = empresaPendente(user)
+  const navItems = user?.perfil === 'ADMIN'
+    ? [
+        { label: 'Usuários pendentes', to: '/usuarios-pendentes', Icon: Users, active: currentPath === '/usuarios-pendentes' },
+        { label: 'Gerenciar usuários', to: '/admin/usuarios', Icon: Users, active: currentPath === '/admin/usuarios' },
+        { label: 'Gerenciar empresas', to: '/admin/empresas', Icon: ClipboardCheck, active: currentPath === '/admin/empresas' },
+      ]
+    : empresaPendente(user)
     ? [
         {
           label: 'DashBoard',
@@ -125,9 +131,10 @@ export default function Sidebar({ open, onNavigate, user: userProp, onRequestLog
       },
     ];
 
+
   return (
     <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
-      <Link className="brand" to="/dashboard" onClick={onNavigate} aria-label="CoBYTE - início">
+      <Link className="brand" to={user?.perfil === 'ADMIN' ? '/admin/usuarios' : '/dashboard'} onClick={onNavigate} aria-label="CoBYTE - início">
         <img className="brand-logo" src="/Propriedade%201=Padr%C3%A3o.png" alt="CoBYTE" />
       </Link>
       <nav className="side-nav" aria-label="Navegação principal">

@@ -19,6 +19,31 @@ public class UsuarioService {
     private final EmpresaRepository empresas;
     private final NotificacaoService notificacoes;
 
+    @Transactional
+    public UsuarioResponse atualizarAdministracao(Long id, Long administradorId,
+            com.labware.api.dto.request.AtualizarUsuarioAdminRequest request) {
+        var usuario = usuarios.buscarParaAprovacao(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+        if (id.equals(administradorId) && request.perfil() != PerfilUsuario.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Você não pode remover seu próprio acesso de administrador");
+        }
+        if (request.perfil() != PerfilUsuario.CLIENTE && request.empresaId() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Apenas clientes possuem empresa vinculada");
+        }
+        com.labware.api.model.entity.Empresa empresa = null;
+        if (request.empresaId() != null) {
+            empresa = empresas.findById(request.empresaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Empresa não encontrada"));
+            if (!empresa.isAtiva()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empresa inativa");
+            }
+        }
+        usuario.setPerfil(request.perfil());
+        usuario.setEmpresa(empresa);
+        return UsuarioResponse.from(usuarios.save(usuario));
+    }
+
     @Transactional(readOnly = true)
     public List<UsuarioResponse> pendentes() {
         return usuarios.findByPerfilAndEmpresaIsNullOrderByIdDesc(PerfilUsuario.CLIENTE)
