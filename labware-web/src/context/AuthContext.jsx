@@ -1,7 +1,7 @@
 import { desativarPush } from '../services/webPushService';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { obterUsuarioDaSessao, cadastrarUsuario, entrar, sair, normalizarUsuario } from '../services/authService';
-import { EVENTO_SESSAO_EXPIRADA } from '../services/api';
+import { obterToken, EVENTO_SESSAO_EXPIRADA } from '../services/api';
 import { ContextoAutenticacao } from './authContext';
 
 export function ProvedorAutenticacao({ children: conteudo }) {
@@ -39,6 +39,36 @@ export function ProvedorAutenticacao({ children: conteudo }) {
       window.removeEventListener(EVENTO_SESSAO_EXPIRADA, encerrarSessao);
     };
   }, []);
+
+  // Revalida permissões e vínculo de empresa de quem já está conectado.
+  useEffect(() => {
+    if (!usuario?.id || inicializando) return;
+    let ativo = true, consultando = false;
+    async function sincronizar() {
+      if (document.hidden || consultando) return;
+      const token = obterToken();
+      if (!token) return;
+      consultando = true;
+      try {
+        const atual = await obterUsuarioDaSessao();
+        if (ativo && obterToken() === token && atual) {
+          definirUsuario(anterior => {
+            if (!anterior || String(anterior.id) !== String(atual.id)) return anterior;
+            return JSON.stringify(anterior) === JSON.stringify(atual) ? anterior : atual;
+          });
+        }
+      } catch { /* Falha de rede não encerra uma sessão válida; 401 é tratado pelo interceptor. */ }
+      finally { consultando = false; }
+    }
+    const intervalo = setInterval(sincronizar, 30000);
+    window.addEventListener('focus', sincronizar);
+    document.addEventListener('visibilitychange', sincronizar);
+    return () => {
+      ativo = false; clearInterval(intervalo);
+      window.removeEventListener('focus', sincronizar);
+      document.removeEventListener('visibilitychange', sincronizar);
+    };
+  }, [usuario?.id, inicializando]);
 
   const autenticar = useCallback(async (email, senha) => {
     definirCarregando(true);
