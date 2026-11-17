@@ -246,6 +246,9 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
   const { usuario } = useAutenticacao();
   const clienteLogado = usuario?.perfil === 'CLIENTE' || usuario?.role === 'client';
   const solicitanteId = chamado.solicitanteId ?? chamado.ownerId ?? chamado.solicitante?.id;
+  const suporteSemParticipacao = ['SUPORTE', 'ADMIN'].includes(usuario?.perfil)
+    && !(chamado.tecnicos || []).some(tecnico => String(tecnico.id) === String(usuario.id))
+    && String(chamado.responsavelId ?? chamado.responsavel?.id ?? '') !== String(usuario.id);
   const descricaoPropria = solicitanteId != null && usuario?.id != null
     && String(solicitanteId) === String(usuario.id);
   const mensagens = Array.isArray(chamado.historico) && chamado.historico.length > 0
@@ -276,6 +279,10 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
     if (evento) evento.preventDefault();
     if (enviando || !texto.trim()) return;
 
+    if (suporteSemParticipacao) {
+      setErroEnvio('Participe do atendimento antes de enviar mensagens neste chamado.');
+      return;
+    }
     if (chamadoEncerrado) {
       setErroEnvio('Chamados encerrados não aceitam novas mensagens.');
       return;
@@ -356,7 +363,11 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
         <p className="mensagem-erro-conversa" role="alert">{erroEnvio}</p>
       )}
 
-      {!chamadoEncerrado ? (
+      {suporteSemParticipacao && !chamadoEncerrado ? (
+        <div className="history-message-composer-encerrado" role="status">
+          <p>Você pode ler a conversa. Para enviar mensagens, clique em Participar do atendimento.</p>
+        </div>
+      ) : !chamadoEncerrado ? (
         <form className="history-message-composer" onSubmit={handleEnviar}>
           <textarea
             rows={1}

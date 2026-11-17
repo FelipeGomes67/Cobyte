@@ -62,6 +62,9 @@ public class MensagemService {
         }
 
         boolean ehSuporte = acesso.ehSuporte(autor);
+        if (ehSuporte && !chamado.possuiTecnico(autor.getId())) {
+            throw new AccessDeniedException("Participe do atendimento antes de enviar mensagens neste chamado");
+        }
         boolean visivel = !req.visivelApenasSuporte();
 
         if (!ehSuporte && !visivel) {
