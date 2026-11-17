@@ -216,6 +216,7 @@ function DistribuicaoBarras({
         titulo={titulo}
         etiqueta={etiqueta}
       />
+      {itens.length === 0 && <p>Nenhum chamado para exibir.</p>}
       <ul className="dash-bars">
         {itens.map((item) => {
           const percentual = total ? (item.quantidade / total) * 100 : 0;
@@ -225,7 +226,7 @@ function DistribuicaoBarras({
                 <span className="dash-bar-name">{item.nome}</span>
                 <strong>{item.quantidade}</strong>
                 <span className="dash-percentage">
-                  {percentual.toFixed(1)}%
+                  {percentual.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
                 </span>
               </div>
               <div
@@ -235,7 +236,7 @@ function DistribuicaoBarras({
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={percentual}
-                aria-valuetext={`${item.quantidade} chamados, ${percentual.toFixed(1)}%`}
+                aria-valuetext={`${item.quantidade} chamados, ${percentual.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`}
               >
                 <span style={{ width: `${percentual}%` }} />
               </div>
@@ -561,8 +562,8 @@ export default function DashboardPage() {
             />
             <DistribuicaoBarras
               contexto="RECORRÊNCIA POR CATEGORIA"
-              titulo="Chamados por Módulo"
-              itens={dados.categorias}
+              titulo="Chamados por Categoria"
+              itens={dados.categorias.filter(item => item.quantidade > 0).sort((a, b) => b.quantidade - a.quantidade || a.nome.localeCompare(b.nome, 'pt-BR'))}
               total={dados.total}
               tipo="category"
             />
