@@ -590,9 +590,9 @@ function DetalhesEmAtendimento({
               {ehSuporte && statusAtivo && <div className="assumir-chamado">
                 <button type="button" className="primary-button" onClick={assumirAtendimento}
                   disabled={assumindo || salvandoStatus || salvandoPrioridade || (jaParticipa && codigoAtual !== 'ABERTO')}>
-                  {assumindo ? 'Entrando...' : jaParticipa && codigoAtual !== 'ABERTO' ? 'Você já está neste chamado' : 'Participar do atendimento'}
+                  {assumindo ? (jaParticipa ? 'Iniciando análise...' : 'Entrando...') : jaParticipa ? (codigoAtual === 'ABERTO' ? 'Iniciar análise' : 'Você já está neste chamado') : 'Participar do atendimento'}
                 </button>
-                <p>Mais de um técnico pode participar deste atendimento.</p>
+                <p>{jaParticipa ? (codigoAtual === 'ABERTO' ? 'Você já está atribuído a este chamado. Inicie a análise para começar o atendimento.' : 'Você já participa deste atendimento.') : 'Mais de um técnico pode participar deste atendimento.'}</p>
               </div>}
               {ehSuporte || podeCancelar ? (
                 <>
