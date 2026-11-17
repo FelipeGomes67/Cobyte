@@ -45,15 +45,15 @@ public class TriagemService {
             if (c.getStatus() == StatusChamado.EM_ANALISE && (c.getCategoria() == null || eraFallback)) {
                 c.setCategoria(r.categoria());
                 c.setPrioridade(r.prioridade());
-                c.setPrazoResolucao(r.prioridade().minutosResolucao() == null ? null : c.getAbertoEm().plusMinutes(r.prioridade().minutosResolucao()).plus(c.duracaoPausasEncerradas()));
+                c.setPrazoResolucao(r.prioridade() == null || r.prioridade().minutosResolucao() == null ? null : c.getAbertoEm().plusMinutes(r.prioridade().minutosResolucao()).plus(c.duracaoPausasEncerradas()));
                 c.setPrazoPrimeiraResposta(null);
-                if (r.prioridade().minutosResolucao() != null) {
+                if (r.prioridade() != null && r.prioridade().minutosResolucao() != null) {
                     politicas.findByPrioridade(r.prioridade()).ifPresent(p ->
                             c.setPrazoPrimeiraResposta(c.getAbertoEm().plusMinutes(p.getMinutosPrimeiraResposta())));
                 }
             }
             ia.setTecnicoSugerido(null);
-            ia.setSlaMetaMinutos(r.prioridade().minutosResolucao());
+            ia.setSlaMetaMinutos(r.prioridade() == null ? null : r.prioridade().minutosResolucao());
             return TriagemResponse.from(classificacoes.save(ia));
         });
     }

@@ -147,6 +147,10 @@ function PainelIa({ chamado }) {
         <strong>Resumo técnico da triagem</strong>
       </div>
 
+      {justificativa?.includes('[Revisão necessária]') && <div role="status" className="ia-revisao-aviso">
+        <strong>Triagem pendente de confirmação</strong>
+        <p>Há informações não confirmadas. Consulte a justificativa abaixo e complemente o relato; os campos sem evidências ficam a definir.</p>
+      </div>}
       {tituloSugerido && (
         <div className="ia-item-secao">
           <span className="ia-label">Título Técnico Sugerido:</span>

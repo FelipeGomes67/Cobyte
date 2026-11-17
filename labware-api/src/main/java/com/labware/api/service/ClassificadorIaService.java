@@ -36,6 +36,9 @@ public class ClassificadorIaService {
             Não invente um problema técnico para justificar um relato alheio ao contexto.
             Em caso de dúvida ou relato técnico incompleto, foraDoEscopo=false e motivoCancelamento="".
             Não cancele por falta de detalhes, linguagem informal ou erros de escrita.
+            Falha de comunicação com servidor ou banco de dados ao salvar prescrição pertence
+            ao suporte técnico. Dúvidas técnicas também pertencem ao escopo e não são motivo
+            de cancelamento. Não confunda uma classificação incerta com assunto fora do escopo.
             Para foraDoEscopo=true, use categoria DUVIDA, prioridade MEDIA e campos técnicos
             indicando ausência de problema técnico relatado, sem inventar sintomas ou impacto.
 
@@ -58,16 +61,26 @@ public class ClassificadorIaService {
 
             Gere um título técnico específico de 16 a 160 caracteres, descrevendo apenas o sintoma relatado.
             Sintoma observado, impacto e justificativa: uma frase específica cada, até 240 caracteres.
-            Não invente causas ou soluções. Relato insuficiente: MEDIA/DUVIDA e alcance a confirmar.
+            Não invente causas ou soluções. Nunca preencha lacunas com MEDIA/DUVIDA.
+            Se não houver evidências para categoria ou prioridade, retorne null nesse campo.
+            Marque informacoesInsuficientes=true e descreva em informacoesFaltantes exatamente
+            quais dados faltam (operação afetada, bloqueio, abrangência, alternativa disponível).
+            Preserve a categoria identificável mesmo quando a prioridade estiver indefinida.
+            Falha ao salvar uma prescrição é ERRO_FUNCIONAL; prescrição bloqueada é operação
+            clínica importante e indica ALTA, sem presumir paralisação total.
+            A palavra urgente isolada não determina prioridade. Dúvida exige pedido de orientação.
+            Quando houver dados suficientes, informacoesInsuficientes=false e informacoesFaltantes vazio.
             """;
     private static final String SCHEMA = """
             {"type":"object","additionalProperties":false,
-             "required":["foraDoEscopo","motivoCancelamento","categoriaGeradaIa","prioridadeGeradaIa","tituloGeradoIa","resumoTecnicoIa","justificativaIa"],
+             "required":["informacoesInsuficientes","informacoesFaltantes","foraDoEscopo","motivoCancelamento","categoriaGeradaIa","prioridadeGeradaIa","tituloGeradoIa","resumoTecnicoIa","justificativaIa"],
              "properties":{
+               "informacoesInsuficientes":{"type":"boolean"},
+               "informacoesFaltantes":{"type":"string","maxLength":400},
                "foraDoEscopo":{"type":"boolean"},
                "motivoCancelamento":{"type":"string","maxLength":600},
-               "categoriaGeradaIa":{"type":"string","enum":["INDISPONIBILIDADE","ERRO_FUNCIONAL","LENTIDAO","ACESSO","DUVIDA","MELHORIA"]},
-               "prioridadeGeradaIa":{"type":"string","enum":["CRITICA","ALTA","MEDIA","BAIXA","MELHORIA"]},
+               "categoriaGeradaIa":{"type":["string","null"],"enum":[null,"INDISPONIBILIDADE","ERRO_FUNCIONAL","LENTIDAO","ACESSO","DUVIDA","MELHORIA"]},
+               "prioridadeGeradaIa":{"type":["string","null"],"enum":[null,"CRITICA","ALTA","MEDIA","BAIXA","MELHORIA"]},
                "tituloGeradoIa":{"type":"string","minLength":16,"maxLength":160},
                "resumoTecnicoIa":{"type":"object","additionalProperties":false,
                  "required":["sintomaObservado","impactoOperacional"],
@@ -153,6 +166,10 @@ public class ClassificadorIaService {
         String motivoForaEscopo = texto(json, "motivoCancelamento");
         if (!truncada && json.path("foraDoEscopo").isBoolean() && json.path("foraDoEscopo").asBoolean()
                 && motivoForaEscopo != null && motivoForaEscopo.trim().length() >= 10) {
+            if (possuiContextoTecnico(titulo, descricao)) {
+                log.warn("Triagem: cancelamento fora do escopo rejeitado; relato contém contexto técnico. Encaminhando para revisão");
+                return emergencia(titulo, descricao, "decisão de fora do escopo incompatível com o relato técnico");
+            }
             String motivo = limitar(motivoForaEscopo.trim(), 600);
             log.info("Triagem: relato identificado pela IA como fora do escopo");
             return new ClassificacaoIaResultadoReponse(Prioridade.MEDIA, CategoriaChamado.DUVIDA,
@@ -172,6 +189,27 @@ public class ClassificadorIaService {
         if (sintoma != null && sintoma.length() < 10) sintoma = null;
         if (impacto != null && impacto.length() < 10) impacto = null;
         String justificativa = texto(json, "justificativaIa", "justificativa", "motivo");
+        var regras = porRegras(titulo, descricao);
+        // Não aceite orientação genérica quando o próprio relato descreve uma falha operacional.
+        if ((categoria == null || categoria == CategoriaChamado.DUVIDA) && regras.categoria() != null
+                && regras.categoria() != CategoriaChamado.DUVIDA) {
+            categoria = regras.categoria();
+            justificativa = "Categoria identificada pelo relato técnico; confirmar os demais dados pendentes. "
+                    + (justificativa == null ? "" : justificativa);
+        }
+        if ((prioridade == null || prioridade == Prioridade.MEDIA)
+                && (regras.prioridade() == Prioridade.ALTA || regras.prioridade() == Prioridade.CRITICA)) {
+            prioridade = regras.prioridade();
+            justificativa = "Impacto operacional importante explicitado no relato. "
+                    + (justificativa == null ? "" : justificativa);
+        }
+        boolean insuficiente = json.path("informacoesInsuficientes").asBoolean(false);
+        if (insuficiente || prioridade == null || categoria == null || truncada) {
+            String faltantes = texto(json, "informacoesFaltantes");
+            justificativa = "[Revisão necessária] " + (faltantes == null
+                    ? "Confirmar operação afetada, abrangência do bloqueio e existência de alternativa." : limitar(faltantes, 400))
+                    + " " + (justificativa == null ? "" : justificativa);
+        }
         boolean completa = !truncada && prioridade != null && categoria != null && tituloIa != null
                 && sintoma != null && impacto != null && justificativa != null;
         if (completa) {
@@ -182,8 +220,8 @@ public class ClassificadorIaService {
         if (prioridade != null || categoria != null || tituloIa != null || sintoma != null || impacto != null || justificativa != null) {
             log.info("Triagem: enriquecida -> parcial; preservando campos válidos");
             var basica = porRegras(titulo, descricao);
-            return resultado(prioridade == null ? basica.prioridade() : prioridade,
-                    categoria == null ? basica.categoria() : categoria,
+            return resultado(prioridade == null && !json.has("prioridadeGeradaIa") ? basica.prioridade() : prioridade,
+                    categoria == null && !json.has("categoriaGeradaIa") ? basica.categoria() : categoria,
                     justificativa == null ? "Campos ausentes preenchidos por regras locais." : limitar(justificativa, 1600),
                     tituloIa == null ? basica.tituloGeradoIa() : limitar(tituloIa, 255),
                     sintoma == null ? basica.resumoTecnicoIa().sintomaObservado() : limitar(sintoma, 2000),
@@ -245,16 +283,16 @@ public class ClassificadorIaService {
             return resultado;
         } catch (Exception e) {
             log.error("Triagem: emergência -> padrão ({})", e.getClass().getSimpleName());
-            return new ClassificacaoIaResultadoReponse(Prioridade.MEDIA, CategoriaChamado.DUVIDA,
-                    "[Padrão] Triagem padrão aplicada. Categoria: DUVIDA. Prioridade: MEDIA. SLA: 720 minutos.");
+            return new ClassificacaoIaResultadoReponse(null, null,
+                    "[Revisão necessária] Triagem indisponível. Categoria e prioridade aguardam análise do suporte.");
         }
     }
 
     private ClassificacaoIaResultadoReponse porRegras(String titulo, String descricao) {
         String relato = normalizar(limitar(titulo, 255) + " " + limitar(descricao, 12000));
         if (relato.isBlank()) throw new IllegalArgumentException("Relato vazio");
-        Prioridade prioridade = Prioridade.MEDIA;
-        CategoriaChamado categoria = CategoriaChamado.DUVIDA;
+        Prioridade prioridade = null;
+        CategoriaChamado categoria = null;
         if (relato.matches(".*\\b(sistema|setor|laboratorio) (esta |ficou |inteiro |todo |totalmente )?(parado|fora do ar|indisponivel|inoperante)\\b.*")
                 || relato.matches(".*\\b(parada total|todos os usuarios sem acesso|nenhum usuario consegue acessar)\\b.*")
                 || (relato.matches(".*\\buti\\b.*") && relato.matches(".*\\blaudos?\\b.*")
@@ -264,7 +302,7 @@ public class ClassificadorIaService {
         } else if (relato.matches(".*\\b(erro|falha|nao funciona|nao imprime|nao consigo|bloqueado|sem acesso|lentidao|lento)\\b.*")) {
             categoria = relato.matches(".*\\b(acesso|login|senha|permissao)\\b.*") ? CategoriaChamado.ACESSO
                     : relato.matches(".*\\b(lentidao|lento)\\b.*") ? CategoriaChamado.LENTIDAO : CategoriaChamado.ERRO_FUNCIONAL;
-            if (relato.matches(".*\\b(laudos?|impressora|faturamento|financeiro|fechamento|integracao|amostras?)\\b.*")) prioridade = Prioridade.ALTA;
+            if (relato.matches(".*\\b(laudos?|impressora|faturamento|financeiro|fechamento|integracao|amostras?|prescricao|prescricoes)\\b.*")) prioridade = Prioridade.ALTA;
         } else if (relato.matches(".*\\b(melhoria|nova funcionalidade|adicionar funcionalidade|sugestao)\\b.*")) {
             prioridade = Prioridade.MELHORIA;
             categoria = CategoriaChamado.MELHORIA;
@@ -272,21 +310,24 @@ public class ClassificadorIaService {
             prioridade = Prioridade.BAIXA;
             categoria = CategoriaChamado.ERRO_FUNCIONAL;
         }
+        if (categoria == null && relato.matches(".*\\b(como|duvida|orientacao|onde encontro)\\b.*")) {
+            categoria = CategoriaChamado.DUVIDA;
+        }
         String sintoma = limitar(descricao, 500);
         if (sintoma.isBlank()) sintoma = limitar(titulo, 255);
         if (sintoma.isBlank()) sintoma = "Relato insuficiente para identificar o sintoma.";
         String impacto = prioridade == Prioridade.CRITICA
                 ? "Relato contém indicação de paralisação ou bloqueio crítico; confirmar alcance com o solicitante."
                 : "Alcance operacional não confirmado. Validar com o solicitante antes de ampliar a severidade.";
-        return resultado(prioridade, categoria, "Regras locais aplicadas ao relato; análise da IA indisponível ou incompleta.",
+        return resultado(prioridade, categoria, "[Revisão necessária] Regras locais provisórias; análise da IA indisponível ou incompleta. Confirmar abrangência, bloqueio e alternativa disponível.",
                 null, sintoma, impacto, "Emergência");
     }
 
     private ClassificacaoIaResultadoReponse resultado(Prioridade prioridade, CategoriaChamado categoria,
             String motivo, String titulo, String sintoma, String impacto, String camada) {
-        String sla = prioridade.minutosResolucao() == null ? "sem SLA" : prioridade.minutosResolucao() + " minutos";
+        String sla = prioridade == null || prioridade.minutosResolucao() == null ? "sem SLA" : prioridade.minutosResolucao() + " minutos";
         return new ClassificacaoIaResultadoReponse(prioridade, categoria,
-                "[" + camada + "] Categoria: " + categoria + ". Prioridade: " + prioridade + ". SLA: " + sla + ". " + motivo,
+                "[" + camada + "] Categoria: " + (categoria == null ? "A definir" : categoria) + ". Prioridade: " + (prioridade == null ? "A definir" : prioridade) + ". SLA: " + sla + ". " + motivo,
                 titulo, null, new ResumoTecnicoIaResponse(sintoma, impacto));
     }
 
@@ -294,6 +335,14 @@ public class ClassificadorIaService {
         String texto = normalizar(titulo);
         return java.util.Set.of("modulo sintoma tecnico", "sintoma tecnico", "titulo tecnico",
                 "titulo gerado ia", "fato relatado").contains(texto);
+    }
+
+    /** Cancelamento automático deve ser conservador; dúvida técnica permanece no suporte. */
+    static boolean possuiContextoTecnico(String titulo, String descricao) {
+        String relato = normalizar(limitar(titulo, 255) + " " + limitar(descricao, 12000));
+        return relato.matches(".*\\b(sistema|software|servidor|banco de dados|database|sql|prescricao|prescricoes|"
+                + "laudo|laudos|amostra|amostras|laboratorio|equipamento|impressora|integracao|login|senha|"
+                + "autenticacao|faturamento|financeiro|aplicativo|portal|rede|backup|permissao)\\b.*");
     }
 
     private static String texto(JsonNode json, String... chaves) {

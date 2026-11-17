@@ -101,7 +101,7 @@ export function formatarNomeStatus(status) {
 }
 
 export function formatarNomePrioridade(prioridade) {
-  if (!prioridade) return 'Média';
+  if (!prioridade) return 'A definir';
   const normalizada = String(prioridade).toUpperCase();
   switch (normalizada) {
     case 'CRITICA':
@@ -120,7 +120,7 @@ export function formatarNomePrioridade(prioridade) {
 }
 
 export function formatarNomeCategoria(categoria) {
-  if (!categoria) return 'Dúvida';
+  if (!categoria) return 'A definir';
   const normalizada = String(categoria).toUpperCase();
   switch (normalizada) {
     case 'INDISPONIBILIDADE':

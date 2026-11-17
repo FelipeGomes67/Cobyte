@@ -188,15 +188,6 @@ public class ChamadoService {
                 log.error("Triagem padrão também falhou no chamado {}: {}. Aplicando classificação mínima.", chamadoId, e2.getMessage(), e2);
                 return tx.execute(status -> {
                     Chamado chamado = chamadoRepository.findById(chamadoId).orElseThrow();
-                    if (chamado.getPrioridade() == null) {
-                        chamado.setPrioridade(Prioridade.MEDIA);
-                    }
-                    if (chamado.getCategoria() == null) {
-                        chamado.setCategoria(CategoriaChamado.DUVIDA);
-                    }
-                    if (chamado.getPrazoResolucao() == null && chamado.getPrioridade().minutosResolucao() != null) {
-                        chamado.setPrazoResolucao(chamado.getAbertoEm().plusMinutes(chamado.getPrioridade().minutosResolucao()));
-                    }
                     return toResponse(chamado);
                 });
             }
@@ -210,9 +201,8 @@ public class ChamadoService {
 
     private ClassificacaoIaResultadoReponse respostaPadraoIa() {
         return new ClassificacaoIaResultadoReponse(
-                Prioridade.MEDIA,
-                CategoriaChamado.DUVIDA,
-                "Triagem padrão aplicada devido a indisponibilidade/falha de resposta da IA."
+                null, null,
+                "[Revisão necessária] Triagem indisponível. Categoria e prioridade aguardam análise do suporte."
         );
     }
 
@@ -457,16 +447,16 @@ public class ChamadoService {
             return toResponse(chamado);
         }
 
-        // Se a IA falhar ou não devolver prioridade/categoria, usa MEDIA e DUVIDA para o SLA e classificação
-        Prioridade prioridade = ia.map(ClassificacaoIaResultadoReponse::prioridade).filter(java.util.Objects::nonNull).orElse(Prioridade.MEDIA);
-        CategoriaChamado categoria = ia.map(ClassificacaoIaResultadoReponse::categoria).filter(java.util.Objects::nonNull).orElse(CategoriaChamado.DUVIDA);
+        // Ausência de evidências permanece pendente, sem classificação ou SLA inventados.
+        Prioridade prioridade = ia.map(ClassificacaoIaResultadoReponse::prioridade).filter(java.util.Objects::nonNull).orElse(null);
+        CategoriaChamado categoria = ia.map(ClassificacaoIaResultadoReponse::categoria).filter(java.util.Objects::nonNull).orElse(null);
 
         chamado.setPrioridade(prioridade);
         chamado.setCategoria(categoria);
 
         chamado.setPrazoPrimeiraResposta(null);
         chamado.setPrazoResolucao(null);
-        if (prioridade.minutosResolucao() != null) {
+        if (prioridade != null && prioridade.minutosResolucao() != null) {
             // A regra vigente prevalece sobre políticas antigas já existentes no banco.
             chamado.setPrazoResolucao(chamado.getAbertoEm().plusMinutes(prioridade.minutosResolucao()));
             politicaSlaRepository.findByPrioridade(prioridade).ifPresentOrElse(
@@ -492,11 +482,11 @@ public class ChamadoService {
                 .tituloGeradoIa(r.tituloGeradoIa())
                 .sintomaObservadoIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().sintomaObservado())
                 .impactoOperacionalIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().impactoOperacional())
-                .slaMetaMinutos(prioridade.minutosResolucao())
+                .slaMetaMinutos(prioridade == null ? null : prioridade.minutosResolucao())
                 .build()));
 
         try {
-            registrarHistorico(chamado, null, null, prioridade.name());
+            registrarHistorico(chamado, null, null, prioridade == null ? "Prioridade aguardando análise" : prioridade.name());
         } catch (Exception e) {
             log.error("Falha ao registrar histórico do chamado {}: {}", chamado.getProtocolo(), e.getMessage());
         }
