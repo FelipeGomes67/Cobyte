@@ -78,7 +78,7 @@ export default function EditorFoto({ onPreparar, user }) {
         onPointerDown={iniciarArraste} onPointerMove={moverFoto} onPointerUp={terminarArraste}
         onPointerCancel={terminarArraste} onLostPointerCapture={terminarArraste} onKeyDown={moverTeclado} />
       <div><p>Arraste a foto para ajustar e clique em Salvar no perfil.</p>
-        <label>Zoom<input type="range" min="1" max="3" step="0.01" value={zoom} onChange={e => setZoom(Number(e.target.value))} /></label>
+        <label>Zoom<input type="range" min="1" max="3" step="0.01" aria-valuetext={Math.round(zoom * 100) + '%'} value={zoom} onChange={e => setZoom(Number(e.target.value))} /></label>
         <button type="button" className="secondary-button" onClick={redefinir}>Redefinir</button>
       </div>
     </div>}

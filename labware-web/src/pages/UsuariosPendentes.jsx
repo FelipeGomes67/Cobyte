@@ -47,8 +47,8 @@ export default function UsuariosPendentes() {
     {mensagem && <p role="status">{mensagem}</p>}
     {carregando ? <EstadoConteudo tipo="carregando" mensagem="Carregando usuários e empresas..." /> : !erro && <section className="panel">
       {usuarios.length === 0 ? <p className="empty-state">Nenhum usuário aguardando vinculação.</p> :
-        <div className="pending-users-table"><table>
-          <thead><tr><th>Nome</th><th>E-mail</th><th>Empresa informada pelo cliente</th><th>Empresa oficial</th><th>Ação</th></tr></thead>
+        <div className="pending-users-table" role="region" tabIndex={0} aria-label="Usuários pendentes; role horizontalmente para ver todas as colunas"><table>
+          <thead><tr><th scope="col">Nome</th><th scope="col">E-mail</th><th scope="col">Empresa informada pelo cliente</th><th scope="col">Empresa oficial</th><th scope="col">Ação</th></tr></thead>
           <tbody>{usuarios.map(usuario => <tr key={usuario.id}>
             <td>{usuario.nome}</td><td>{usuario.email}</td><td>{usuario.empresaInformada || 'Não informada'}</td>
             <td><select aria-label={`Empresa para ${usuario.nome}`} value={selecoes[usuario.id] || ''}

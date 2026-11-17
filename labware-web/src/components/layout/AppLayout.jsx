@@ -1,3 +1,4 @@
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useNotificacoes } from '../../hooks/useNotificacoes';
 import '../../css/NotificacoesReais.css';
 import { useEffect, useRef, useState } from 'react';
@@ -34,6 +35,14 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [telaPequena, setTelaPequena] = useState(() => window.matchMedia('(max-width: 720px)').matches);
+  const menuRef = useFocusTrap(menuOpen && telaPequena, () => setMenuOpen(false));
+  useEffect(() => {
+    const consulta = window.matchMedia('(max-width: 720px)');
+    function ajustar(evento) { setTelaPequena(evento.matches); if (!evento.matches) setMenuOpen(false); }
+    consulta.addEventListener('change', ajustar);
+    return () => consulta.removeEventListener('change', ajustar);
+  }, []);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const notificationRef = useRef(null);
@@ -64,11 +73,15 @@ export default function AppLayout() {
 
   useEffect(() => {
     if (!notificationsOpen) return undefined;
+    notificationRef.current?.querySelector('.notification-dropdown-card button')?.focus();
     function closeOnOutsideClick(event) {
       if (!notificationRef.current?.contains(event.target)) setNotificationsOpen(false);
     }
     function closeOnEscape(event) {
-      if (event.key === 'Escape') setNotificationsOpen(false);
+      if (event.key === 'Escape') {
+        setNotificationsOpen(false);
+        notificationRef.current?.querySelector('.topbar-bell-button')?.focus();
+      }
     }
     document.addEventListener('pointerdown', closeOnOutsideClick);
     document.addEventListener('keydown', closeOnEscape);
@@ -88,11 +101,12 @@ export default function AppLayout() {
 
   return (
     <div className={`app-shell ${isReportsPage ? 'app-shell--reports' : ''} ${ehDashboard ? 'app-shell--dashboard' : ''}`}>
-      <Sidebar open={menuOpen} onNavigate={() => setMenuOpen(false)} user={user} onRequestLogout={() => setLogoutOpen(true)} />
-      {menuOpen && <button className="mobile-scrim" onClick={() => setMenuOpen(false)} aria-label="Fechar menu" />}
-      <main className={`main-area ${isReportsPage ? 'main-area--reports' : ''}`}>
+      <a className="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
+      <Sidebar sidebarRef={menuRef} mobile={telaPequena} inert={logoutOpen} open={menuOpen} onNavigate={() => setMenuOpen(false)} user={user} onRequestLogout={() => { setMenuOpen(false); setLogoutOpen(true); }} />
+      {menuOpen && <button className="mobile-scrim" tabIndex={-1} onClick={() => setMenuOpen(false)} aria-label="Fechar menu" />}
+      <main inert={logoutOpen || (menuOpen && telaPequena)} className={`main-area ${isReportsPage ? 'main-area--reports' : ''}`}>
         <header className="topbar">
-          <button className="icon-button mobile-menu" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}>
+          <button className="icon-button mobile-menu" onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-controls="menu-lateral" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}>
             {menuOpen ? <X /> : <Menu />}
           </button>
 
@@ -121,7 +135,7 @@ export default function AppLayout() {
           </div>
         </header>
 
-        <div className={`content-area ${isReportsPage ? 'content-area--reports' : ''}`}>
+        <div id="conteudo-principal" tabIndex={-1} className={`content-area ${isReportsPage ? 'content-area--reports' : ''}`}>
           {empresaPendente(user) && <AvisoEmpresaPendente />}
           {empresaPendente(user) && !['/dashboard', '/perfil', '/configuracoes'].includes(location.pathname) ? null : <Outlet />}
         </div>

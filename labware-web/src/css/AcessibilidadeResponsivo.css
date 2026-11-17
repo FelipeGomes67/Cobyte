@@ -1,0 +1,106 @@
+/* Regras compartilhadas de acesso e adaptação; preservam a identidade visual. */
+.skip-link{position:fixed;left:12px;top:-100px;z-index:1000;padding:12px 18px;border-radius:8px;background:#0f347d;color:#fff;font-weight:600}
+.skip-link:focus{top:12px}
+:where(button,a,input,select,textarea,[tabindex]):focus-visible{outline:3px solid #1d4ed8;outline-offset:3px}
+[hidden]{display:none!important}
+.main-area,.content-area,.admin-page,.panel,.profile-info,.history-main,.history-sidebar{min-width:0}
+.side-nav{min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.sidebar-account{flex-shrink:0}
+.sidebar-close{align-self:flex-end;background:#eff6ff;color:#173f83;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;min-height:44px;margin-bottom:12px}
+.profile-field{display:flex;flex-direction:column;gap:7px;min-width:0;font-size:14px;color:#334155}
+.profile-field input{width:100%;min-width:0}
+.ticket-table-wrap,.pending-users-table,.admin-table{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.dialog-backdrop{padding:16px;overflow-y:auto}
+.confirm-dialog{width:min(100%,440px);max-height:calc(100dvh - 32px);overflow-y:auto}
+.dialog-actions{flex-wrap:wrap;gap:12px}
+.notification-dropdown-card{width:min(390px,calc(100vw - 24px));max-height:calc(100dvh - 88px);overflow-y:auto}
+.admin-page header p,.profile-card small,.chamados-rodape{color:#526176}
+button:disabled{cursor:not-allowed}
+@media(max-width:920px){
+ .page-heading{flex-wrap:wrap;gap:16px}
+ .history-layout,.detalhes-chamado-page .history-layout{min-width:0}
+}
+@media(max-width:720px){
+ .app-shell .sidebar{width:min(300px,calc(100vw - 48px));height:100dvh;padding:18px 14px}
+ .sidebar .brand{flex-shrink:0}
+ .sidebar .side-nav{display:flex;flex-direction:column;margin-top:8px}
+ .sidebar .nav-link{flex-shrink:0}
+ .topbar .breadcrumb{min-width:0;overflow-wrap:anywhere}
+ .topbar .top-actions{flex-shrink:0}
+ .content-area .page-heading h1{font-size:clamp(24px,7vw,32px)}
+ .chamados-filtros{display:flex;flex-wrap:wrap;gap:10px}
+ .chamados-filtros input{flex:1 1 100%;width:100%;min-width:0}
+ .chamados-filtros select,.chamados-filtros button{flex:1 1 140px;max-width:100%;min-width:0}
+ .chamados-filtro-avancado{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));padding:14px;min-width:0}
+ .chamados-contadores{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ticket-table-wrap table{min-width:850px}
+ .pending-users-table table{min-width:680px}
+ .admin-page{padding:0}
+ .admin-page label{min-width:0;flex-basis:100%}
+ .admin-form>button{flex:1 1 auto}
+ .detalhes-chamado-page .history-main,.detalhes-chamado-page .history-sidebar{padding:16px}
+ .detalhes-chamado-page .history-ia-card{padding:14px}
+ .detalhes-chamado-page .history-header-row h1,.detalhes-chamado-page .history-header-row h2{overflow-wrap:anywhere}
+ .detalhes-chamado-page .history-message-card{max-width:78%;min-width:0}
+ .history-message-row>.avatar{width:28px;height:28px;flex-basis:28px}
+ .history-message-row{gap:8px}
+ .message-header{flex-wrap:wrap;row-gap:4px}
+ .evidence-item,.evidence-row,.aviso-acoes{flex-wrap:wrap;gap:10px;min-width:0}
+ .profile-card,.profile-main-card,.profile-container{max-width:100%;min-width:0}
+ .profile-info{grid-template-columns:1fr}
+ .profile-actions{grid-column:1/-1;justify-content:flex-end}
+ .editor-foto-ajustes{max-width:100%;min-width:0;flex-wrap:wrap}
+ .editor-foto canvas.foto-arrastavel{max-width:100%;height:auto;aspect-ratio:1}
+ input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:16px}
+ button,.primary-button,.secondary-button,.nav-link,.chamado-ver-detalhes,.icon-button{min-height:44px}
+ .icon-button,.dialog-close,.password-wrap button{min-width:44px;min-height:44px}
+ .chamado-ver-detalhes{display:inline-flex;align-items:center}
+ .notification-dropdown-card{position:fixed;right:12px;top:72px}
+}
+@media(max-width:480px){
+ .app-shell .content-area{padding:20px 12px 32px}
+ .page-heading>.primary-button,.page-heading>.btn-novo-chamado{width:100%;justify-content:center}
+ .detalhes-chamado-page .ia-resumo-destaques,.detalhes-chamado-page .history-people-row,.detalhes-chamado-page .summary-grid{grid-template-columns:1fr}
+ .detalhes-chamado-page .history-message-card{padding:10px;max-width:78%}
+ .history-message-composer{flex-direction:column;align-items:stretch}
+ .dialog-actions>button{flex:1 1 100%}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important;animation-iteration-count:1!important}
+}
+@media(forced-colors:active){
+ .chamado-badge{border:1px solid CanvasText}
+ :focus-visible{outline:3px solid Highlight}
+}
+
+.confirm-dialog p{font-size:14px;color:#526176}
+.profile-panel .profile-info input:focus-visible{outline:3px solid #1d4ed8;outline-offset:3px}
+.profile-panel .profile-field>span{font-weight:500}
+.notificacoes-reais small,.dash-card .dash-percentage,.dash-card .dash-bar-name{color:#526176}
+@media(max-width:720px){
+ .profile-panel .profile-info{grid-template-columns:1fr}
+ .profile-panel .profile-info input{font-size:16px}
+ .settings-layout{grid-template-columns:minmax(0,1fr);min-width:0}
+ .settings-layout .settings-panel{min-width:0;width:100%}
+ .settings-layout .settings-tabs{display:flex;flex-wrap:wrap;gap:8px}
+ .settings-tabs>button{flex:1 1 120px;white-space:normal}
+ .settings-panel .form-label,.settings-panel .password-wrap{min-width:0}
+ .settings-panel .password-wrap input{padding-right:48px}
+ .profile-top .editor-foto-ajustes{width:100%;max-width:100%;padding:14px}
+ .editor-foto-ajustes>div{min-width:0;width:100%}
+ .detalhes-chamado-page .history-message-composer{flex-direction:column;align-items:stretch}
+ .detalhes-chamado-page .history-message-composer textarea{width:100%;min-width:0}
+ .detalhes-chamado-page .history-message-composer button{width:100%}
+ .notification-dropdown-card .aviso-acoes>button{flex:1 1 130px}
+ .notification-dropdown-card .notification-dropdown-list{max-height:none}
+ .settings-panel .settings-footer{flex-wrap:wrap;gap:14px}
+}
+
+@media(max-width:720px){
+ .notification-dropdown-card.notificacoes-reais{width:calc(100vw - 24px);max-height:calc(100dvh - 88px);position:fixed;right:12px;top:72px}
+ .editor-foto-ajustes>div{flex-basis:100%;min-width:0}
+ .detalhes-chamado-page .history-message-composer{display:flex;gap:12px}
+ .detalhes-chamado-page .history-message-composer textarea{min-height:80px}
+ .evidence-info{min-width:0}
+ .evidence-text{overflow-wrap:anywhere}
+}

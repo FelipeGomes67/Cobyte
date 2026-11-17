@@ -66,7 +66,7 @@ export default function Administracao({ tipo }) {
     finally { setSalvando(false); }
   }
   const dados = estado.dados;
-  return <main className="admin-page">
+  return <div className="admin-page">
     <header><p>ADMINISTRAÇÃO</p><h1>{empresas ? 'Empresas' : 'Usuários'}</h1>
       <p>{empresas ? 'Consulte as empresas e cadastre novos vínculos para atendimento.' : 'Consulte as contas, os perfis de acesso e os vínculos de empresa.'}</p>
     </header>
@@ -102,7 +102,7 @@ export default function Administracao({ tipo }) {
     <section className="admin-card" aria-label={empresas ? 'Lista de empresas' : 'Lista de usuários'} aria-busy={estado.carregando}>
       {estado.carregando ? <EstadoConteudo tipo="carregando" mensagem="Carregando registros..." /> : estado.erro ? <EstadoConteudo tipo="erro" mensagem={estado.erro} onTentar={() => setVersao(v => v + 1)} /> : <>
         <p>{dados?.totalElements || 0} {empresas ? 'empresas cadastradas' : 'usuários encontrados'}</p>
-        <div className="admin-table"><table><thead><tr><th>Nome</th>{empresas ? <><th>CNPJ</th><th>Situação</th></> : <><th>E-mail</th><th>Perfil</th><th>Empresa</th><th>Ações</th></>}</tr></thead>
+        <div className="admin-table" role="region" tabIndex={0} aria-label="Registros administrativos; role horizontalmente para ver todas as colunas"><table><thead><tr><th scope="col">Nome</th>{empresas ? <><th scope="col">CNPJ</th><th scope="col">Situação</th></> : <><th scope="col">E-mail</th><th scope="col">Perfil</th><th scope="col">Empresa</th><th scope="col">Ações</th></>}</tr></thead>
           <tbody>{dados?.content.map(item => <tr key={item.id}><td>{item.nome}</td>{empresas ? <><td>{item.cnpj}</td><td>{item.ativa ? 'Ativa' : 'Inativa'}</td></> : <><td>{item.email}</td><td>{item.perfil}</td><td>{item.empresaNome || (item.perfil === 'CLIENTE' ? 'Aguardando vínculo' + (item.empresaInformada ? ' — ' + item.empresaInformada : '') : 'Não se aplica')}</td><td><button disabled={salvando} onClick={() => { setEdicao({ ...item, empresaId: item.empresaId == null ? '' : String(item.empresaId) }); setConfirmando(false); setAviso(''); }}>Editar</button></td></>}</tr>)}</tbody>
         </table></div>
         {!dados?.content.length && <EstadoConteudo mensagem="Nenhum registro encontrado para os filtros selecionados." />}
@@ -111,5 +111,5 @@ export default function Administracao({ tipo }) {
           <button disabled={!dados || page + 1 >= dados.totalPages} onClick={() => setPage(p => p + 1)}>Próxima</button></footer>
       </>}
     </section>
-  </main>;
+  </div>;
 }

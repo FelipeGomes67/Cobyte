@@ -450,7 +450,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
 
             <div className="caixa-transcricao-wrapper">
               <textarea
-                className="campo-transcricao"
+                className="campo-transcricao" aria-label="Relato transcrito; revise antes de enviar"
                 placeholder="Texto transcrito..."
                 value={textos.trans}
                 onChange={(e) => {
@@ -477,7 +477,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
             <h3>Descreva o que aconteceu <span style={{ color: 'red' }}>*</span></h3>
             <p className="subtexto-instrucao">Inclua o erro apresentado e como afeta o seu trabalho.</p>
             <textarea
-              className="campo-textarea-descricao"
+              className="campo-textarea-descricao" aria-label="Descrição do problema" aria-required="true"
               placeholder="Descreva o problema detalhadamente ou cole a mensagem de erro aqui..."
               value={textos.desc}
               onChange={(e) => {

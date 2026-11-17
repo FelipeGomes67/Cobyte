@@ -9,6 +9,7 @@ import './css/Configuracoes.css';
 import './css/Relatorios.css';
 import './css/Chamados.css';
 import './css/DialogConfirmacao.css';
+import './css/AcessibilidadeResponsivo.css';
 import { ProvedorAutenticacao } from './context/AuthContext.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(

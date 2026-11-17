@@ -12,7 +12,7 @@ import { empresaPendente } from '../../utils/acessoUsuario';
 import ProfileMenu from './ProfileMenu';
 import { useAutenticacao } from '../../hooks/useAuth';
 
-export default function Sidebar({ open, onNavigate, user: userProp, onRequestLogout }) {
+export default function Sidebar({ sidebarRef, mobile, inert, open, onNavigate, user: userProp, onRequestLogout }) {
   const { usuario: userContext } = useAutenticacao();
   const user = userProp || userContext;
   const location = useLocation();
@@ -133,16 +133,18 @@ export default function Sidebar({ open, onNavigate, user: userProp, onRequestLog
 
 
   return (
-    <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
+    <aside ref={sidebarRef} id="menu-lateral" tabIndex={-1} inert={inert || (mobile && !open)} role={mobile && open ? 'dialog' : undefined} aria-modal={mobile && open ? true : undefined} aria-label="Menu principal" className={`sidebar ${open ? 'sidebar-open' : ''}`}>
       <Link className="brand" to={user?.perfil === 'ADMIN' ? '/admin/usuarios' : '/dashboard'} onClick={onNavigate} aria-label="CoBYTE - início">
         <img className="brand-logo" src="/Propriedade%201=Padr%C3%A3o.png" alt="CoBYTE" />
       </Link>
-      <nav className="side-nav" aria-label="Navegação principal">
+      {mobile && open && <button type="button" className="sidebar-close" onClick={onNavigate} aria-label="Fechar menu">Fechar menu ×</button>}
+      <nav className="side-nav"  aria-label="Navegação principal">
         {navItems.map(({ label, to, Icon, active }) => (
           <Link
             key={label}
             to={to}
             onClick={onNavigate}
+            aria-current={active ? 'page' : undefined}
             className={`nav-link ${active ? 'active' : ''}`}
           >
             <Icon size={19} className="nav-icon" />

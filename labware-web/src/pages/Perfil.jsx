@@ -199,33 +199,33 @@ export default function ProfilePage() {
           <form onSubmit={handleSave}>
             <div className="profile-info">
               {/* Linha 1: Nome Completo e Email */}
-              <input
-                name="name"
+              <label className="profile-field"><span>Nome completo</span><input
+                name="name" autoComplete="name"
                 value={form.name}
                 onChange={handleChange}
                 placeholder="Nome Completo"
                 required
                 disabled={salvando}
-              />
+              /></label>
 
-              <input
+              <label className="profile-field"><span>E-mail</span><input
                 type="email"
-                name="email"
+                name="email" autoComplete="email"
                 value={form.email}
                 onChange={handleChange}
                 placeholder="Email"
                 required
                 disabled={salvando}
-              />
+              /></label>
 
               {/* Linha 2: Cargo e Empresa */}
-              <input
+              <label className="profile-field"><span>Cargo</span><input
                 name="cargo"
                 value={form.cargo}
                 onChange={handleChange}
                 placeholder="Cargo"
                 disabled={salvando}
-              />
+              /></label>
 
               {user?.perfil === 'CLIENTE' && <div
                 className={`profile-company ${!temEmpresaVinculada ? 'is-empty' : ''}`}
@@ -236,15 +236,15 @@ export default function ProfilePage() {
               </div>}
 
               {/* Linha 3: Telefone e Alinhamento à direita dos botões Salvar e Cancelar */}
-              <input
+              <label className="profile-field"><span>Telefone</span><input
                 type="tel"
-                name="tel"
+                name="tel" autoComplete="tel"
                 maxLength={20}
                 value={form.tel}
                 onChange={handleChange}
                 placeholder="Telefone"
                 disabled={salvando}
-              />
+              /></label>
 
               <div className="profile-actions">
                 <button

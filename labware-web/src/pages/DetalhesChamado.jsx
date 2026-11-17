@@ -360,8 +360,7 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
         <form className="history-message-composer" onSubmit={handleEnviar}>
           <textarea
             rows={1}
-            aria-label="Nova mensagem"
-            placeholder="Digite uma mensagem... (Enter para enviar, Shift+Enter para quebrar linha)"
+            aria-label="Mensagem para a conversa do chamado" placeholder="Digite uma mensagem... (Enter para enviar, Shift+Enter para quebrar linha)"
             value={texto}
             onChange={e => {
               setTexto(e.target.value);

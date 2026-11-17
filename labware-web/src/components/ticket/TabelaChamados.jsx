@@ -86,15 +86,15 @@ export default function TabelaChamados({ tickets = [], query, onSearch, titulo =
         {periodoInvalido && <p role="alert">A data final deve ser igual ou posterior à data inicial.</p>}
       </fieldset>
     </div>
-    <section className="panel tickets-panel" aria-label={titulo}><div className="ticket-table-wrap"><table>
-      <thead><tr><th>Código</th><th>Chamado</th>{!ocultarEmpresa && <th>Empresa</th>}<th>Prioridade</th><th>Origem</th><th>{historico ? 'Finalizado em' : 'Abertura'}</th><th>SLA</th><th>Status</th><th>Ação</th></tr></thead>
+    <section className="panel tickets-panel" aria-label={titulo}><div className="ticket-table-wrap" role="region" tabIndex={0} aria-label="Lista de chamados; role horizontalmente para ver todas as colunas"><table>
+      <thead><tr><th scope="col">Código</th><th scope="col">Chamado</th>{!ocultarEmpresa && <th scope="col">Empresa</th>}<th scope="col">Prioridade</th><th scope="col">Origem</th><th scope="col">{historico ? 'Finalizado em' : 'Abertura'}</th><th scope="col">SLA</th><th scope="col">Status</th><th scope="col">Ação</th></tr></thead>
       <tbody>{filtrados.map(t => <tr key={t.id}>
         <td><Link to={rotaBase + '/' + encodeURIComponent(t.id)}>{t.protocolo || t.id}</Link></td>
         <td><span className="chamado-titulo-resumido" title={t.titulo || t.title}>{resumirTitulo(t.titulo || t.title)}</span>{!historico && !['Resolvido', 'Fechado', 'Cancelado'].includes(t.status) && t.temNovaMensagem && <small className="chamado-nova-mensagem">Nova mensagem</small>}</td>
         {!ocultarEmpresa && <td>{texto(t.empresa)}</td>}<td><ChamadoBadge tipo="prioridade" valor={t.prioridade || t.priority} /></td>
         <td>{origem(t)}</td><td>{data(historico ? t.canceladoEm || t.resolvidoEm || t.resolvedAt : t.abertoEm || t.createdAt)}</td>
         <td>{t.slaTempoRestanteFormatado || '—'}</td><td><ChamadoBadge valor={t.status} /></td>
-        <td><Link className="chamado-ver-detalhes" to={rotaBase + '/' + encodeURIComponent(t.id)}>Ver detalhes</Link></td>
+        <td><Link aria-label={"Ver detalhes do chamado " + (t.protocolo || t.id)} className="chamado-ver-detalhes" to={rotaBase + '/' + encodeURIComponent(t.id)}>Ver detalhes</Link></td>
       </tr>)}</tbody>
     </table></div>{!filtrados.length && <div className="empty-state">Nenhum chamado encontrado.</div>}
     <footer className="chamados-rodape" aria-live="polite">Mostrando {filtrados.length} de {tickets.length} chamados</footer></section>

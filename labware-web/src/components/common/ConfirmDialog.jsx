@@ -1,22 +1,18 @@
-import { useEffect } from 'react';
+import { useId } from 'react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { LogOut, X } from 'lucide-react';
 
 export default function ConfirmDialog({ open, title, message, confirmLabel = 'Confirmar', onConfirm, onCancel }) {
-  useEffect(() => {
-    if (!open) return undefined;
-    function handleKeyDown(event) {
-      if (event.key === 'Escape') onCancel();
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [open, onCancel]);
+  const dialogRef = useFocusTrap(open, onCancel);
+  const titleId = useId();
+  const messageId = useId();
 
   if (!open) return null;
   return <div className="dialog-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onCancel(); }}>
-    <section className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <section ref={dialogRef} tabIndex={-1} className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={messageId}>
       <button className="dialog-close" onClick={onCancel} aria-label="Fechar"><X size={17}/></button>
       <span className="dialog-icon"><LogOut size={20}/></span>
-      <h2 id="confirm-title">{title}</h2><p id="confirm-message">{message}</p>
+      <h2 id={titleId}>{title}</h2><p id={messageId}>{message}</p>
       <div className="dialog-actions"><button className="secondary-button" onClick={onCancel}>Cancelar</button><button className="danger-button" onClick={onConfirm}>{confirmLabel}</button></div>
     </section>
   </div>;
