@@ -314,7 +314,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
     setEnviando(true);
 
     try {
-      await criarChamadoApi({
+      const criado = await criarChamadoApi({
         descricao: texto,
         origem: modo === 'voz' ? 'AUDIO_VOZ' : 'PORTAL_TEXTO',
         duracaoAudioSegundos: modo === 'voz' && tempo > 0 ? tempo : null,
@@ -322,8 +322,8 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
         audio: audioFinal,
       });
 
-      // Redireciona imediatamente para a lista de chamados após 201 Created
-      navigate('/chamados');
+      // Abre o resultado da criação, inclusive quando a triagem cancelou o chamado.
+      navigate('/chamados/' + criado.id);
     } catch (err) {
       console.error('Erro ao criar chamado:', err);
       setErroGeral(err.message || 'Não foi possível registrar o chamado. Tente novamente.');
