@@ -311,6 +311,7 @@ export function mapearDetalheChamadoApi(c) {
 
   return {
     ...base,
+    avisosCarregamento: c.avisosCarregamento || [],
     origem: c.origemFrontend || c.origem || 'TEXTO',
     statusRaw: c.status,
     prazoResolucao: c.prazoResolucao || null,

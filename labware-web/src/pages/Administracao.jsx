@@ -1,3 +1,4 @@
+import EstadoConteudo from '../components/common/EstadoConteudo';
 import { useEffect, useState } from 'react';
 import { listarEmpresas } from '../services/perfilService';
 import { useAutenticacao } from '../hooks/useAuth';
@@ -99,12 +100,12 @@ export default function Administracao({ tipo }) {
       <button type="button" disabled={salvando} onClick={() => { setEdicao(null); setConfirmando(false); setAviso(''); }}>Cancelar</button>
     </form>}
     <section className="admin-card" aria-label={empresas ? 'Lista de empresas' : 'Lista de usuários'} aria-busy={estado.carregando}>
-      {estado.carregando ? <p role="status">Carregando...</p> : estado.erro ? <div role="alert"><p>{estado.erro}</p><button onClick={() => setVersao(v => v + 1)}>Tentar novamente</button></div> : <>
+      {estado.carregando ? <EstadoConteudo tipo="carregando" mensagem="Carregando registros..." /> : estado.erro ? <EstadoConteudo tipo="erro" mensagem={estado.erro} onTentar={() => setVersao(v => v + 1)} /> : <>
         <p>{dados?.totalElements || 0} {empresas ? 'empresas cadastradas' : 'usuários encontrados'}</p>
         <div className="admin-table"><table><thead><tr><th>Nome</th>{empresas ? <><th>CNPJ</th><th>Situação</th></> : <><th>E-mail</th><th>Perfil</th><th>Empresa</th><th>Ações</th></>}</tr></thead>
           <tbody>{dados?.content.map(item => <tr key={item.id}><td>{item.nome}</td>{empresas ? <><td>{item.cnpj}</td><td>{item.ativa ? 'Ativa' : 'Inativa'}</td></> : <><td>{item.email}</td><td>{item.perfil}</td><td>{item.empresaNome || (item.perfil === 'CLIENTE' ? 'Aguardando vínculo' + (item.empresaInformada ? ' — ' + item.empresaInformada : '') : 'Não se aplica')}</td><td><button disabled={salvando} onClick={() => { setEdicao({ ...item, empresaId: item.empresaId == null ? '' : String(item.empresaId) }); setConfirmando(false); setAviso(''); }}>Editar</button></td></>}</tr>)}</tbody>
         </table></div>
-        {!dados?.content.length && <p>Nenhum registro encontrado.</p>}
+        {!dados?.content.length && <EstadoConteudo mensagem="Nenhum registro encontrado para os filtros selecionados." />}
         <footer className="admin-pagination"><button disabled={page === 0} onClick={() => setPage(p => p - 1)}>Anterior</button>
           <span>Página {page + 1} de {Math.max(1, dados?.totalPages || 0)}</span>
           <button disabled={!dados || page + 1 >= dados.totalPages} onClick={() => setPage(p => p + 1)}>Próxima</button></footer>

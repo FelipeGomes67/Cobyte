@@ -1,3 +1,4 @@
+import EstadoConteudo from '../components/common/EstadoConteudo';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAutenticacao } from '../hooks/useAuth';
@@ -29,9 +30,9 @@ export default function ChamadosEmpresa() {
       <button type="button" aria-pressed={!historico} onClick={() => definirSituacao('ativos')}>Em andamento</button>
       <button type="button" aria-pressed={historico} onClick={() => definirSituacao('encerrados')}>Encerrados</button>
     </div>
-    {dados.erro && dados.chamados.length > 0 && <p className="data-warning" role="alert">{dados.erro}</p>}
-    {dados.carregando ? <p className="panel loading-state" role="status">Carregando chamados da empresa...</p>
-      : dados.erro && !dados.chamados.length ? <div className="panel empresa-erro"><p role="alert">{dados.erro}</p><button type="button" className="secondary-button" onClick={() => definirTentativa(valor => valor + 1)}>Tentar novamente</button></div>
+    {dados.erro && dados.chamados.length > 0 && <EstadoConteudo tipo="erro" mensagem={dados.erro} onTentar={() => definirTentativa(v => v + 1)} />}
+    {dados.carregando ? <EstadoConteudo tipo="carregando" mensagem="Carregando chamados da empresa..." />
+      : dados.erro && !dados.chamados.length ? <EstadoConteudo tipo="erro" mensagem={dados.erro} onTentar={() => definirTentativa(v => v + 1)} />
         : <TabelaChamados ocultarEmpresa key={situacao} tickets={chamados} query={busca} onSearch={definirBusca}
           titulo="Chamados da empresa" historico={historico} rotaBase="/chamados-empresa"/>}
   </div>;

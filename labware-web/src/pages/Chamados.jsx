@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import EstadoConteudo from '../components/common/EstadoConteudo';
 import { useEstadoUrl } from '../hooks/useEstadoUrl';
 import { useTickets } from '../hooks/useTickets';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +13,8 @@ function Heading({ title, description, action }) {
 
 export function TicketsPage({ mode }) {
   const [query, setQuery] = useEstadoUrl('busca', '');
-  const { tickets: chamadosApi, loading, error } = useTickets();
+  const [tentativa, setTentativa] = useState(0);
+  const { tickets: chamadosApi, loading, error } = useTickets('pessoal', tentativa);
   const navigate = useNavigate();
   const { usuario: user } = useAutenticacao();
   const ehSuporte =
@@ -39,9 +42,9 @@ export function TicketsPage({ mode }) {
   ) : null;
   return <>
     <Heading title={title} description="Acompanhe solicitações e atualizações da equipe de suporte." action={createButton}/>
-    {loading && <div className="panel loading-state" role="status">Carregando chamados...</div>}
-    {error && <div className="data-warning" role="status">{error}</div>}
-    {!loading && <TabelaChamados ocultarFiltroResponsavel={mode === 'mine' || (!ehSuporte && mode !== 'history')} porPrioridade={mode === 'mine'} historico={mode === 'history'} titulo={mode === 'history' ? 'Histórico de chamados' : 'Solicitações'} tickets={tickets} query={query} onSearch={setQuery} rotaBase="/chamados"/>}
+    {loading && <EstadoConteudo tipo="carregando" mensagem="Carregando chamados..." />}
+    {error && <EstadoConteudo tipo="erro" mensagem={error} onTentar={() => setTentativa(v => v + 1)} />}
+    {!loading && (!error || chamadosApi.length > 0) && <TabelaChamados ocultarFiltroResponsavel={mode === 'mine' || (!ehSuporte && mode !== 'history')} porPrioridade={mode === 'mine'} historico={mode === 'history'} titulo={mode === 'history' ? 'Histórico de chamados' : 'Solicitações'} tickets={tickets} query={query} onSearch={setQuery} rotaBase="/chamados"/>}
     <div className="list-note"><Headset size={17}/> Precisa de ajuda? <a href="mailto:suporte@labware.com.br">Fale com o suporte LabWare</a></div>
   </>;
 }

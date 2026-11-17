@@ -1,9 +1,11 @@
+import EstadoConteudo from '../components/common/EstadoConteudo';
 import { useEffect, useState } from 'react';
 import { listarEmpresas } from '../services/perfilService';
 import { listarUsuariosPendentes, aprovarUsuario } from '../services/usuarioService';
 import '../css/UsuariosPendentes.css';
 
 export default function UsuariosPendentes() {
+  const [tentativa, setTentativa] = useState(0);
   const [usuarios, setUsuarios] = useState([]);
   const [empresas, setEmpresas] = useState([]);
   const [selecoes, setSelecoes] = useState({});
@@ -21,7 +23,7 @@ export default function UsuariosPendentes() {
       .catch(falha => { if (ativo) setErro(falha.message); })
       .finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
-  }, []);
+  }, [tentativa]);
 
   async function aprovar(usuario) {
     setErro('');
@@ -41,9 +43,9 @@ export default function UsuariosPendentes() {
   return <div className="pending-users-page">
     <div className="page-heading"><div><h1>Usuários pendentes</h1>
       <p>Confira a empresa informada e selecione o cadastro oficial para liberar o cliente.</p></div></div>
-    {erro && <p role="alert" className="form-error">{erro}</p>}
+    {erro && <EstadoConteudo tipo="erro" mensagem={erro} onTentar={() => { setErro(''); setCarregando(true); setTentativa(v => v + 1); }} />}
     {mensagem && <p role="status">{mensagem}</p>}
-    {carregando ? <p role="status">Carregando usuários e empresas...</p> : <section className="panel">
+    {carregando ? <EstadoConteudo tipo="carregando" mensagem="Carregando usuários e empresas..." /> : !erro && <section className="panel">
       {usuarios.length === 0 ? <p className="empty-state">Nenhum usuário aguardando vinculação.</p> :
         <div className="pending-users-table"><table>
           <thead><tr><th>Nome</th><th>E-mail</th><th>Empresa informada pelo cliente</th><th>Empresa oficial</th><th>Ação</th></tr></thead>

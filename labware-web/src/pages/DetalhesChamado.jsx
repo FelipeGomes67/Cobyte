@@ -1,3 +1,4 @@
+import EstadoConteudo from '../components/common/EstadoConteudo';
 import AvaliacaoAtendimento from '../components/ticket/AvaliacaoAtendimento';
 import AvatarUsuario from '../components/layout/AvatarUsuario';
 import ChamadoBadge from '../components/ticket/ChamadoBadge';
@@ -871,6 +872,7 @@ export default function DetalhesChamado() {
   const [loading, setLoading] = useState(Boolean(codigo));
   const [error, setError] = useState(codigo ? null : 'Código do chamado não fornecido.');
   const [reabrindo, setReabrindo] = useState(false);
+  const [tentativa, setTentativa] = useState(0);
 
   useEffect(() => {
     let ativo = true;
@@ -879,6 +881,7 @@ export default function DetalhesChamado() {
     async function carregar() {
       try {
         setLoading(true);
+        setChamado(null);
         setError(null);
         const dados = await obterChamadoPorId(codigo);
         if (ativo) {
@@ -900,7 +903,7 @@ export default function DetalhesChamado() {
     return () => {
       ativo = false;
     };
-  }, [codigo]);
+  }, [codigo, tentativa, usuario?.id, usuario?.perfil, usuario?.empresaId]);
 
   const origem = caminho.split('/')[1];
   const destino = ['dashboard', 'chamados', 'chamados-empresa', 'meus-chamados', 'historico'].includes(origem)
@@ -969,9 +972,11 @@ export default function DetalhesChamado() {
 
   return (
     <div className="detalhes-chamado-page">
-      {error && <p className="detalhes-aviso" role="alert">{error}</p>}
+      {error && <EstadoConteudo tipo="erro" mensagem={error} onTentar={() => setTentativa(v => v + 1)} />}
+      {!loading && chamado?.avisosCarregamento?.length > 0 && <EstadoConteudo tipo="erro"
+        mensagem={chamado.avisosCarregamento.join(' ')} onTentar={() => setTentativa(v => v + 1)} />}
       {loading ? (
-        <p className="panel empty-state" role="status">Carregando chamado...</p>
+        <EstadoConteudo tipo="carregando" mensagem="Carregando chamado..." />
       ) : chamadoVisivel ? (
         <DetalhesEmAtendimento
           key={`${chamadoVisivel.id}-${chamadoVisivel.status}-${chamadoVisivel.prioridade}-${chamadoVisivel.categoria}`}
