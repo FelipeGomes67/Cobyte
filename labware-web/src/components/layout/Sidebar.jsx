@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   PlusCircle,
   Users,
+  X,
 } from 'lucide-react';
 import { empresaPendente } from '../../utils/acessoUsuario';
 import ProfileMenu from './ProfileMenu';
@@ -36,7 +37,7 @@ export default function Sidebar({ sidebarRef, mobile, inert, open, onNavigate, u
     : empresaPendente(user)
     ? [
         {
-          label: 'DashBoard',
+          label: 'Dashboard',
           to: '/dashboard',
           Icon: LayoutGrid,
           active: currentPath === '/dashboard',
@@ -51,7 +52,7 @@ export default function Sidebar({ sidebarRef, mobile, inert, open, onNavigate, u
     : ehSuporte
     ? [
         {
-          label: 'DashBoard',
+          label: 'Dashboard',
           to: '/dashboard',
           Icon: LayoutGrid,
           active: currentPath === '/dashboard',
@@ -92,7 +93,7 @@ export default function Sidebar({ sidebarRef, mobile, inert, open, onNavigate, u
       ]
     : [
       {
-        label: 'DashBoard',
+        label: 'Dashboard',
         to: '/dashboard',
         Icon: LayoutGrid,
         active: currentPath === '/dashboard',
@@ -137,7 +138,7 @@ export default function Sidebar({ sidebarRef, mobile, inert, open, onNavigate, u
       <Link className="brand" to={user?.perfil === 'ADMIN' ? '/admin/usuarios' : '/dashboard'} onClick={onNavigate} aria-label="CoBYTE - início">
         <img className="brand-logo" src="/Propriedade%201=Padr%C3%A3o.png" alt="CoBYTE" />
       </Link>
-      {mobile && open && <button type="button" className="sidebar-close" onClick={onNavigate} aria-label="Fechar menu">Fechar menu ×</button>}
+      {mobile && open && <button type="button" className="sidebar-close" onClick={onNavigate} aria-label="Fechar menu"><X size={22} aria-hidden="true" /></button>}
       <nav className="side-nav"  aria-label="Navegação principal">
         {navItems.map(({ label, to, Icon, active }) => (
           <Link

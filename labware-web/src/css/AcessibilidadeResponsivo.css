@@ -104,3 +104,22 @@ button:disabled{cursor:not-allowed}
  .evidence-info{min-width:0}
  .evidence-text{overflow-wrap:anywhere}
 }
+
+.sidebar .sidebar-close{position:absolute;top:14px;right:12px;display:grid;place-items:center;width:40px;min-height:40px;padding:0;border:0;border-radius:50%;background:transparent;color:#526176;margin:0}
+.sidebar .sidebar-close:hover{background:#eff6ff;color:#185df1}
+.empresa-dashboard>.page-heading>.primary-button{font-size:16px}
+@media(max-width:720px){
+ .profile-panel{width:100%;padding:20px 16px}
+ .profile-panel .profile-top{flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+ .profile-panel .profile-top .profile-header{width:100%;flex:auto;padding-top:0}
+ .profile-panel .profile-top .editor-foto{display:flex;flex-direction:column;align-items:center;width:100%}
+ .profile-panel .profile-content{width:100%;min-width:0}
+ .profile-panel .profile-info{width:100%;margin-left:auto;margin-right:auto}
+ .profile-panel .profile-info .profile-actions{justify-content:center;height:auto}
+ .profile-panel .profile-actions .btn-save{min-width:120px}
+ .profile-avaliacoes.profile-avaliacoes-compacto{width:100%;margin-left:auto;margin-right:auto;flex-wrap:wrap;justify-content:center;text-align:center}
+ .profile-panel .profile-header p{overflow-wrap:anywhere}
+ .profile-panel .profile-info .profile-company{white-space:normal;overflow:visible;min-height:44px;height:auto;padding:10px 12px;overflow-wrap:anywhere}
+ .editor-foto .editor-foto-ajustes{justify-content:center}
+ .sidebar .brand{padding-right:36px}
+}
