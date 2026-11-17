@@ -1,3 +1,5 @@
+@import "./css/Fontes.css";
+
 :root {
   /* Paleta Principal */
   --bg-dark: #0a0e17; /* Azul quase preto */

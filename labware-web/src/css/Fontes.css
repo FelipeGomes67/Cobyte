@@ -1,0 +1,43 @@
+/* Local Portuguese edition; see public/fonts/NOTICE.txt and OFL license. */
+@font-face {
+  font-family: "42dot Sans";
+  src: url("/fonts/42dot-sans-pt-300.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: "42dot Sans";
+  src: url("/fonts/42dot-sans-pt-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "42dot Sans";
+  src: url("/fonts/42dot-sans-pt-500.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "42dot Sans";
+  src: url("/fonts/42dot-sans-pt-600.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "42dot Sans";
+  src: url("/fonts/42dot-sans-pt-700.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "42dot Sans";
+  src: url("/fonts/42dot-sans-pt-800.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+}
