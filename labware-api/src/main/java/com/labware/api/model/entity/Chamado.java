@@ -49,6 +49,9 @@ public class Chamado {
     @Column(length = 30)
     private CategoriaChamado categoria;
 
+    @Column(name = "categoria_personalizada", length = 100)
+    private String categoriaPersonalizada;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "empresa_id")
     private Empresa empresa;

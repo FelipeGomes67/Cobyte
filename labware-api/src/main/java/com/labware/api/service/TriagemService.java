@@ -42,7 +42,7 @@ public class TriagemService {
             ia.setSintomaObservadoIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().sintomaObservado());
             ia.setImpactoOperacionalIa(r.resumoTecnicoIa()==null?null:r.resumoTecnicoIa().impactoOperacional());
             ia.setJustificativa(r.justificativa()); ia.setModelo(modelo); ia.setClassificadaEm(LocalDateTime.now());
-            if (c.getStatus() == StatusChamado.EM_ANALISE && (c.getCategoria() == null || eraFallback)) {
+            if (c.getStatus() == StatusChamado.EM_ANALISE && (c.getCategoriaPersonalizada() == null && (c.getCategoria() == null || eraFallback))) {
                 c.setCategoria(r.categoria());
                 c.setPrioridade(r.prioridade());
                 c.setPrazoResolucao(r.prioridade() == null || r.prioridade().minutosResolucao() == null ? null : c.getAbertoEm().plusMinutes(r.prioridade().minutosResolucao()).plus(c.duracaoPausasEncerradas()));

@@ -150,7 +150,7 @@ export function mapearChamadoApi(c) {
   const statusFormatado = formatarNomeStatus(c.status);
   const foraDoEscopo = c.foraDoEscopo === true || (c.status === 'CANCELADO' && c.motivoCancelamento?.startsWith('Cancelado pela IA:'));
   const prioridadeFormatada = foraDoEscopo ? 'Não aplicável' : formatarNomePrioridade(c.prioridade || c.priority);
-  const categoriaFormatada = foraDoEscopo ? 'Fora do escopo' : formatarNomeCategoria(c.categoria || c.category);
+  const categoriaFormatada = foraDoEscopo ? 'Fora do escopo' : c.categoriaPersonalizada?.trim() || formatarNomeCategoria(c.categoria || c.category);
   const dataCriacao = c.abertoEm || c.createdAt || new Date().toISOString();
 
   return {
@@ -175,6 +175,7 @@ export function mapearChamadoApi(c) {
     statusRaw: c.status,
     prioridade: prioridadeFormatada,
     priority: prioridadeFormatada,
+    categoriaPersonalizada: c.categoriaPersonalizada || null,
     categoria: categoriaFormatada,
     category: categoriaFormatada,
     dataCriacao,
@@ -506,5 +507,10 @@ export async function reabrirChamado(id) {
 
 export async function avaliarAtendimento(id, notaAvaliacao, comentarioAvaliacao) {
   const { data } = await api.post('/chamados/' + id + '/avaliacao', { notaAvaliacao, comentarioAvaliacao });
+  return mapearDetalheChamadoApi(data);
+}
+
+export async function alterarCategoria(id, novaCategoria, categoriaPersonalizada) {
+  const { data } = await api.patch('/chamados/' + encodeURIComponent(id) + '/categoria', { novaCategoria, categoriaPersonalizada: novaCategoria === 'OUTRA' ? categoriaPersonalizada?.trim() : null });
   return mapearDetalheChamadoApi(data);
 }

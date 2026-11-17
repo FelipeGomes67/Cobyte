@@ -221,3 +221,6 @@ CREATE TABLE arquivo_compartilhado (
     conteudo BYTEA NOT NULL,
     criado_em TIMESTAMP NOT NULL
 );
+
+-- Categoria livre informada pelo técnico ao selecionar Outra.
+ALTER TABLE chamado ADD COLUMN IF NOT EXISTS categoria_personalizada varchar(100);

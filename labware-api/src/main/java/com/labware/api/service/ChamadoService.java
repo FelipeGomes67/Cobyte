@@ -1,6 +1,7 @@
 package com.labware.api.service;
 
 import com.labware.api.dto.response.ChamadoResponse;
+import com.labware.api.exception.ResourceNotFoundException;
 import com.labware.api.dto.request.AbrirChamadoRequest;
 import com.labware.api.dto.request.AlterarPrioridadeRequest;
 import com.labware.api.dto.request.AlterarStatusRequest;
@@ -321,6 +322,10 @@ public class ChamadoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chamado não encontrado"));
         Usuario usuario = buscarUsuarioDoSuporte(usuarioId);
 
+        if (!chamado.possuiTecnico(usuarioId) && usuario.getPerfil() != PerfilUsuario.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente técnicos do chamado podem alterar a prioridade");
+        }
+
         if (chamado.getStatus() != StatusChamado.EM_ANALISE) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Prioridade só pode ser alterada em Em Análise");
         }
@@ -353,6 +358,44 @@ public class ChamadoService {
     @Transactional
     public ChamadoResponse avaliarChamado(Long id, AvaliacaoChamadoRequest dto, Long usuarioId) {
         return avaliarChamado(id, dto, buscarUsuario(usuarioId));
+    }
+
+    @Transactional
+    public ChamadoResponse alterarCategoria(Long chamadoId, Long usuarioId,
+            com.labware.api.dto.request.AlterarCategoriaRequest request) {
+        var chamado = chamadoRepository.findParaAvaliacao(chamadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Chamado não encontrado"));
+        var usuario = buscarUsuarioDoSuporte(usuarioId);
+        if (!chamado.possuiTecnico(usuarioId) && usuario.getPerfil() != PerfilUsuario.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Somente técnicos do chamado podem alterar a categoria");
+        }
+        if (chamado.getStatus() != StatusChamado.EM_ANALISE) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Categoria só pode ser alterada em Em Análise");
+        }
+        var anterior = chamado.getCategoria();
+        boolean outra = "OUTRA".equals(request.novaCategoria());
+        String personalizada = outra && request.categoriaPersonalizada() != null
+                ? request.categoriaPersonalizada().strip() : null;
+        if (outra && (personalizada == null || personalizada.length() < 3 || personalizada.length() > 100)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe uma categoria entre 3 e 100 caracteres");
+        }
+        CategoriaChamado nova = null;
+        if (!outra) {
+            try { nova = CategoriaChamado.valueOf(request.novaCategoria()); }
+            catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoria inválida");
+            }
+        }
+        if (anterior == nova && java.util.Objects.equals(chamado.getCategoriaPersonalizada(), personalizada)) return toResponse(chamado);
+        String valorAnterior = chamado.getCategoriaPersonalizada() != null ? chamado.getCategoriaPersonalizada()
+                : anterior == null ? null : anterior.name();
+        chamado.setCategoria(nova);
+        chamado.setCategoriaPersonalizada(personalizada);
+        final var categoriaFinal = nova;
+        classificacaoIaRepository.findByChamadoId(chamadoId).ifPresent(ia -> ia.setCategoriaFinal(categoriaFinal));
+        registrarHistorico(chamado, usuario, valorAnterior, "CATEGORIA:" + (outra ? personalizada : nova.name()));
+        chamadoRepository.save(chamado);
+        return toResponse(chamado);
     }
 
     /** O bloqueio serializa avaliações concorrentes para impedir sobrescrita da primeira nota. */

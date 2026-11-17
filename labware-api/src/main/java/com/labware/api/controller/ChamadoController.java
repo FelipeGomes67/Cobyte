@@ -168,7 +168,7 @@ public class ChamadoController {
         return chamadoService.alterarStatus(id, UsuarioLogado.id(jwt), request);
     }
 
-    @Operation(summary = "Alterar prioridade", description = "Somente SUPORTE ou ADMIN. Atualiza a prioridade, recalcula o prazo de resolução e registra no histórico.")
+    @Operation(summary = "Alterar categoria", description = "Técnico participante ou ADMIN, durante Em Análise. Registra a decisão manual no histórico e preserva a sugestão original da IA.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
@@ -177,6 +177,15 @@ public class ChamadoController {
             @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
             @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
     })
+    @PatchMapping("/{id}/categoria")
+    @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
+    public ChamadoResponse alterarCategoria(@PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody com.labware.api.dto.request.AlterarCategoriaRequest request) {
+        return chamadoService.alterarCategoria(id, UsuarioLogado.id(jwt), request);
+    }
+
+    @Operation(summary = "Alterar prioridade", description = "Técnico participante ou ADMIN, durante Em Análise. Recalcula o prazo de resolução e registra no histórico.")
     @PatchMapping("/{id}/prioridade")
     @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
     public ChamadoResponse alterarPrioridade(@PathVariable Long id,

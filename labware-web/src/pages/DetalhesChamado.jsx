@@ -22,6 +22,7 @@ import {
   reabrirChamado,
   alterarStatus,
   alterarPrioridade,
+  alterarCategoria,
   assumirChamado,
 } from '../services/ticketService';
 import SelectStatus from '../components/layout/SelectStatus';
@@ -424,9 +425,18 @@ function DetalhesEmAtendimento({
   const [motivoCancelamento, setMotivoCancelamento] = useState('');
   const [salvandoStatus, setSalvandoStatus] = useState(false);
 
-  const prioridadeNormalizada = String(chamado?.prioridade || chamado?.priority || 'MEDIA').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+  const prioridadeRecebida = String(chamado?.prioridade || chamado?.priority || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+  const prioridadeNormalizada = ['MELHORIA', 'BAIXA', 'MEDIA', 'ALTA', 'CRITICA'].includes(prioridadeRecebida) ? prioridadeRecebida : '';
   const [prioridadeSelecionada, setPrioridadeSelecionada] = useState(prioridadeNormalizada);
   const [salvandoPrioridade, setSalvandoPrioridade] = useState(false);
+  const categorias = { INDISPONIBILIDADE: 'Indisponibilidade', ERRO_FUNCIONAL: 'Erro funcional', LENTIDAO: 'Lentidão', ACESSO: 'Acesso', DUVIDA: 'Dúvida', MELHORIA: 'Melhoria', OUTRA: 'Outra' };
+  const normalizarCategoria = valor => String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replaceAll(' ', '_');
+  const categoriaAtual = chamado?.categoriaPersonalizada ? 'OUTRA' : normalizarCategoria(chamado?.categoria);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState(categorias[categoriaAtual] ? categoriaAtual : '');
+  const [categoriaPersonalizada, setCategoriaPersonalizada] = useState(chamado?.categoriaPersonalizada || '');
+  const categoriaSemAlteracao = categoriaSelecionada === categoriaAtual && (categoriaSelecionada !== 'OUTRA' || categoriaPersonalizada.trim() === (chamado?.categoriaPersonalizada || ''));
+  const categoriaInvalida = !categoriaSelecionada || (categoriaSelecionada === 'OUTRA' && categoriaPersonalizada.trim().length < 3);
+  const [salvandoCategoria, setSalvandoCategoria] = useState(false);
 
   const [feedbackAtendimento, setFeedbackAtendimento] = useState(null);
 
@@ -481,6 +491,17 @@ function DetalhesEmAtendimento({
       setSalvandoPrioridade(false);
     }
   };
+
+  async function salvarCategoria() {
+    if (categoriaInvalida || categoriaSemAlteracao || salvandoCategoria) return;
+    setSalvandoCategoria(true); setFeedbackAtendimento(null);
+    try {
+      const atualizado = await alterarCategoria(chamado.id, categoriaSelecionada, categoriaPersonalizada);
+      onChamadoAtualizado?.(atualizado);
+      setFeedbackAtendimento({ tipo: 'sucesso', texto: 'Categoria atualizada com sucesso.' });
+    } catch (erro) { setFeedbackAtendimento({ tipo: 'erro', texto: erro.message || 'Não foi possível alterar a categoria.' }); }
+    finally { setSalvandoCategoria(false); }
+  }
 
   async function assumirAtendimento() {
     if (assumindo || (jaParticipa && codigoAtual !== 'ABERTO')) return;
@@ -628,6 +649,26 @@ function DetalhesEmAtendimento({
                       </div>
                     )}
 
+                    {podeAlterarPrioridade && <div className="status-fixed-group prioridade-group">
+                      <label className="select-status"><span className="select-status-label">Alterar categoria</span>
+                        <select className="select-status-input" value={categoriaSelecionada} disabled={salvandoCategoria || salvandoStatus || salvandoPrioridade}
+                          onChange={e => setCategoriaSelecionada(e.target.value)}>
+                          <option value="" disabled>Selecione a categoria</option>
+                          {Object.entries(categorias).map(([valor, nome]) => <option key={valor} value={valor}>{nome}</option>)}
+                        </select>
+                      </label>
+                      {categoriaSelecionada === 'OUTRA' && <label className="select-status">
+                        <span className="select-status-label">Qual categoria?</span>
+                        <input className="select-status-input" type="text" required minLength={3} maxLength={100}
+                          value={categoriaPersonalizada} onChange={e => setCategoriaPersonalizada(e.target.value)}
+                          disabled={salvandoCategoria || salvandoStatus || salvandoPrioridade}
+                          placeholder="Informe a categoria" />
+                        <small>De 3 a 100 caracteres.</small>
+                      </label>}
+                      <button type="button" className="secondary-button small-button btn-salvar-prioridade"
+                        disabled={salvandoCategoria || salvandoStatus || salvandoPrioridade || categoriaInvalida || categoriaSemAlteracao}
+                        onClick={salvarCategoria}>{salvandoCategoria ? 'Salvando...' : 'Salvar categoria'}</button>
+                    </div>}
                     {podeAlterarPrioridade && (
                       <div className="status-fixed-group prioridade-group">
                         <label className="select-status">
@@ -637,8 +678,9 @@ function DetalhesEmAtendimento({
                               className="select-status-input"
                               value={prioridadeSelecionada}
                               onChange={(e) => setPrioridadeSelecionada(e.target.value)}
-                              disabled={salvandoPrioridade}
+                              disabled={salvandoPrioridade || salvandoCategoria || salvandoStatus}
                             >
+                              <option value="" disabled>Selecione a prioridade</option>
                               <option value="MELHORIA">Melhoria</option>
                               <option value="BAIXA">Baixa</option>
                               <option value="MEDIA">Média</option>
@@ -932,7 +974,7 @@ export default function DetalhesChamado() {
         <p className="panel empty-state" role="status">Carregando chamado...</p>
       ) : chamadoVisivel ? (
         <DetalhesEmAtendimento
-          key={`${chamadoVisivel.id}-${chamadoVisivel.status}-${chamadoVisivel.prioridade}`}
+          key={`${chamadoVisivel.id}-${chamadoVisivel.status}-${chamadoVisivel.prioridade}-${chamadoVisivel.categoria}`}
           chamado={chamadoVisivel}
           aoVoltar={voltar}
           ehSuporte={ehSuporte}
