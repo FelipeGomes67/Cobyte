@@ -390,7 +390,7 @@ export async function baixarArquivoAnexo(anexoId, nomeArquivo) {
       detalhe = corpo instanceof Blob ? JSON.parse(await corpo.text()) : corpo;
     } catch { /* Resposta sem corpo JSON. */ }
     const mensagem = erro.response?.status === 404
-      ? 'O arquivo não foi encontrado neste servidor. Se foi enviado em outra máquina, é necessário disponibilizar a pasta de uploads aqui.'
+      ? 'Esta evidência está indisponível no armazenamento. Se for um upload antigo, peça ao administrador para migrá-lo em Configurações → Arquivos na máquina onde foi enviado. Caso contrário, solicite um novo envio ao suporte.'
       : detalhe?.message || detalhe?.mensagem || detalhe?.detail || 'Não foi possível baixar o arquivo. Tente novamente.';
     throw new Error(mensagem, { cause: erro });
   }
