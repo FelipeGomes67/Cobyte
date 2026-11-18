@@ -487,7 +487,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 <input
                   type="file"
                   ref={audioFileInputRef}
-                  accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac"
+                  accept=".wav,.mp3,.ogg,.m4a,.flac"
                   onChange={handleAudioFileUpload}
                   disabled={desabilitarGeral}
                   hidden
@@ -519,7 +519,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           <input
             type="file"
             ref={cameraInputRef}
-            accept="image/*"
+            accept="image/png,image/jpeg,image/gif,image/webp"
             capture="environment"
             onChange={handleFileSelect}
             disabled={desabilitarGeral}
@@ -528,7 +528,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           <input
             type="file"
             ref={fileInputRef}
-            accept="image/png, image/jpeg, application/pdf"
+            accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
             onChange={handleFileSelect}
             disabled={desabilitarGeral}
             style={{ display: 'none' }}

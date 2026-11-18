@@ -65,6 +65,7 @@ public class TranscricaoService {
             }
             if (bytes.length > maxBytes) throw new TranscricaoException(413, "Áudio excede o tamanho permitido");
             if (bytes.length == 0) throw new TranscricaoException(400, "Arquivo de áudio vazio");
+            TipoArquivoPermitido.identificar(nome, bytes, true);
             var recurso = new ByteArrayResource(bytes) {
                 @Override public String getFilename() { return nome; }
             };

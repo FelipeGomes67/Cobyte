@@ -47,10 +47,9 @@ public class FileStorageService implements ArmazenamentoService {
                 byte[] dados = entrada.readNBytes((int) tamanhoMaximo + 1);
                 validarTamanho(dados.length);
                 if (dados.length == 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo vazio");
+                String tipo = TipoArquivoPermitido.identificar(nome, dados, false);
                 String chave = "anexos/" + chamadoId + "/" + UUID.randomUUID();
                 compartilhados.salvar(chave, dados);
-                String tipo = arquivo.getContentType();
-                if (tipo == null || tipo.length() > 255 || tipo.chars().anyMatch(Character::isISOControl)) tipo = "application/octet-stream";
                 return new Arquivo(nome, tipo, "db:" + chave, dados.length);
             } catch (IOException ex) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Falha ao armazenar arquivo", ex);
@@ -58,6 +57,7 @@ public class FileStorageService implements ArmazenamentoService {
         }
         Path destino = diretorio(chamadoId).resolve(UUID.randomUUID().toString());
         try {
+            String tipo;
             Files.createDirectories(raiz);
             if (Files.isSymbolicLink(raiz)) throw new AccessDeniedException("Diretório de upload inválido");
             Files.createDirectories(destino.getParent());
@@ -65,7 +65,12 @@ public class FileStorageService implements ArmazenamentoService {
             // CREATE_NEW impede sobrescrita. O nome recebido nunca compoe o caminho fisico.
             try (var entrada = arquivo.getInputStream();
                  var saida = Files.newOutputStream(destino, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
-                long total = 0;
+                byte[] cabecalho = entrada.readNBytes(16);
+                validarTamanho(cabecalho.length);
+                if (cabecalho.length == 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo vazio");
+                tipo = TipoArquivoPermitido.identificar(nome, cabecalho, false);
+                saida.write(cabecalho);
+                long total = cabecalho.length;
                 byte[] buffer = new byte[8192];
                 int lidos;
                 while ((lidos = entrada.read(buffer)) != -1) {
@@ -81,10 +86,6 @@ public class FileStorageService implements ArmazenamentoService {
             if (tamanho == 0) {
                 Files.deleteIfExists(destino);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo vazio");
-            }
-            String tipo = arquivo.getContentType();
-            if (tipo != null && (tipo.length() > 255 || tipo.chars().anyMatch(Character::isISOControl))) {
-                tipo = "application/octet-stream";
             }
             return new Arquivo(nome, tipo, destino.toString(), tamanho);
         } catch (IOException ex) {
