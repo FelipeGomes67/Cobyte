@@ -1,3 +1,4 @@
+import { formatChartNumber } from '../utils/chartUtils';
 import { BarrasResumo } from "../components/reports/ResumoEmpresa";
 import { useState } from "react";
 import { Check, Clock3, Star } from "lucide-react";
@@ -126,6 +127,41 @@ function PriorityChart({ priorities }) {
       )}
     </section>
   );
+}
+
+function getPeakMonth(months, key) {
+  return months.reduce((peak, item) => {
+    const value = Number.isFinite(item[key]) ? Math.max(0, item[key]) : 0;
+    return !peak || value > peak.value ? { month: item.month, value } : peak;
+  }, null);
+}
+
+function MonthlyHighlights({ trend, year }) {
+  const months = trend.filter(item => item.available);
+  if (!months.length) return null;
+
+  const highlights = [
+    { key: 'opened', label: 'Mais chamados criados', verb: 'criado' },
+    { key: 'resolved', label: 'Mais chamados resolvidos', verb: 'resolvido' },
+  ].map(item => ({ ...item, peak: getPeakMonth(months, item.key) }));
+
+  return <section className="panel report-highlights" aria-labelledby="report-highlights-title">
+    <div className="report-highlights-heading">
+      <h2 id="report-highlights-title">Destaques do período</h2>
+      <span>{year}</span>
+    </div>
+    <div className="report-highlights-grid">
+      {highlights.map(({ key, label, verb, peak }) => (
+        <article className={`report-highlight report-highlight-${key}`} key={key}>
+          <span>{label}</span>
+          <strong>{peak.value > 0 ? `${peak.month}.` : 'Sem registros'}</strong>
+          <small>{peak.value > 0
+            ? `${formatChartNumber(peak.value)} ${peak.value === 1 ? `chamado ${verb}` : `chamados ${verb}s`}`
+            : `Nenhum chamado ${verb} no período`}</small>
+        </article>
+      ))}
+    </div>
+  </section>;
 }
 
 export default function ReportsPage() {
@@ -281,6 +317,7 @@ export default function ReportsPage() {
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
       />
+      <MonthlyHighlights trend={trend} year={selectedYear} />
     </>
   );
 }
