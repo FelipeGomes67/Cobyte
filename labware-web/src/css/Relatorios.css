@@ -1,3 +1,24 @@
+.relatorio-filtros .relatorio-limpar-filtros {
+  align-self: flex-end;
+  flex: 0 0 auto;
+  min-height: 40px;
+  height: 40px;
+  padding: 0 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.relatorio-filtros .relatorio-total-filtrado {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .metric-card {
   border: 1px solid #e8e9ec;
   border-radius: 7px;

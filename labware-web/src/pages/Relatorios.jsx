@@ -63,8 +63,8 @@ export default function ReportsPage() {
       <label>Técnico responsável<select value={tecnico} onChange={e=>setTecnico(e.target.value)}><option value="">Todos</option>{tecnicos.map(n=><option key={n}>{n}</option>)}</select></label>
       <label>Abertos a partir de<input type="date" value={inicio} max={fim || undefined} onChange={e=>setInicio(e.target.value)}/></label>
       <label>Abertos até<input type="date" value={fim} min={inicio || undefined} onChange={e=>setFim(e.target.value)}/></label>
-      <button className="secondary-button" onClick={()=>{setEmpresa('');setTecnico('');setInicio('');setFim('');}}>Limpar filtros</button>
-      <span>{tickets.length} chamados no recorte</span>
+      <button type="button" className="secondary-button relatorio-limpar-filtros" onClick={()=>{setEmpresa('');setTecnico('');setInicio('');setFim('');}}>Limpar filtros</button>
+      <span className="relatorio-total-filtrado">{tickets.length} chamados no recorte</span>
     </div>
     {error && <div className="data-warning" role="status">{error}</div>}
     <div className="metric-grid">
