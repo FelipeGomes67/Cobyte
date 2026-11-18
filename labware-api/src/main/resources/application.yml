@@ -30,8 +30,6 @@ labware:
   jwt:
     secret: ${JWT_SECRET:labware-segredo-jwt-com-ao-menos-32-bytes-padrao}
     expiracao-minutos: 120
-  cors:
-    origens: ${CORS_ORIGENS:http://localhost:5173}
   ia:
     timeout-ms: ${IA_TIMEOUT_MS:30000}
     max-tokens: ${IA_MAX_TOKENS:768}

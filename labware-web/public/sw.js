@@ -1,5 +1,6 @@
 self.addEventListener('notificationclick', event => {
-  const destination = event.notification.data?.url || '/chamados';
+  const url = new URL(event.notification.data?.url || '/chamados', self.location.origin);
+  const destination = url.origin === self.location.origin ? url.href : new URL('/chamados', self.location.origin).href;
   event.notification.close();
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });

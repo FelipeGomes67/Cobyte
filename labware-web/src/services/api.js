@@ -3,9 +3,8 @@ import axios from 'axios';
 export const CHAVE_TOKEN = 'labware-token';
 export const EVENTO_SESSAO_EXPIRADA = 'labware-sessao-expirada';
 
-// No desenvolvimento, o proxy do Vite permite usar o mesmo endereço no PC e no celular.
-const baseEnv = import.meta.env.VITE_API_BASE_URL
-  || (import.meta.env.DEV ? window.location.origin : 'http://localhost:8080');
+// Na Vercel, aponta para o túnel HTTPS; localmente, usa a API na porta 8080.
+const baseEnv = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 export const API_BASE_URL = baseEnv.trim().replace(/\/+$/, '');
 
 export function obterToken() {

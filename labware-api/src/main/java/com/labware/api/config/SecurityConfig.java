@@ -84,7 +84,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(
             @Value("${labware.cors.origens}") List<String> origens) {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(origens);
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:*", "http://127.0.0.1:*", "https://*.vercel.app"));
+        origens.stream().map(String::trim).filter(origem -> !origem.isEmpty())
+                .forEach(config::addAllowedOriginPattern);
+        config.setAllowCredentials(true);
         config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setMaxAge(3600L);
