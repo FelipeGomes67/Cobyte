@@ -1,4 +1,4 @@
-export default function ChartLegend({ visible, onToggle, showFuture }) {
+export default function ChartLegend({ visible, onToggle }) {
   return <div className="trend-legend" aria-label="Legenda do gráfico">
     <button
       type="button"
@@ -24,6 +24,5 @@ export default function ChartLegend({ visible, onToggle, showFuture }) {
     >
       <i className="trend-legend-pending" aria-hidden="true"/>Pendentes
     </button>
-    {showFuture && <span className="trend-future-legend"><i aria-hidden="true"/>Meses sem dados</span>}
   </div>;
 }

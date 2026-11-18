@@ -507,7 +507,6 @@ export default function EvolucaoMensalChart({
         <ChartLegend
           visible={visible}
           onToggle={toggleSeries}
-          showFuture={futureStartX !== null}
         />
         <p className="trend-footnote">* Pendentes = chamados criados no mês menos resolvidos no mesmo mês, limitado a zero.</p>
         <table className="sr-only">
