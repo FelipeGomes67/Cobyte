@@ -19,9 +19,11 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+    private final LimiteRequisicoes limites;
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest req) {
+        limites.consumir("login-conta:" + req.email().strip().toLowerCase(java.util.Locale.ROOT), limites.loginConta);
         // Mesma mensagem para e-mail inexistente e senha errada
         Usuario usuario = usuarioRepository.findByEmailIgnoreCase(req.email().trim())
                 .filter(u -> passwordEncoder.matches(req.senha(), u.getSenhaHash()))

@@ -26,12 +26,15 @@ public class SecurityConfig {
 
     private final RestSecurityHandlers handlers;
     private final com.labware.api.repository.UsuarioRepository usuarios;
+    private final com.labware.api.service.LimiteRequisicoes limites;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
+                .addFilterAfter(new FiltroLimiteRequisicoes(limites),
+                        org.springframework.security.web.access.intercept.AuthorizationFilter.class)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // "/error" deve permanecer liberado
@@ -40,6 +43,7 @@ public class SecurityConfig {
                                 "/api-docs", "/api-docs.yaml", "/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/cadastrar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/*/foto").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/dashboard/**", "/api/relatorios/**", "/api/metricas/**").hasAnyRole("SUPORTE", "ADMIN")
                         // endpoints antigos de laboratório
                         .requestMatchers("/api/ai/**").hasRole("ADMIN")
@@ -75,6 +79,9 @@ public class SecurityConfig {
             }
             var usuario = usuarios.findById(id).orElseThrow(() ->
                     new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Usuário não encontrado"));
+            if (!usuario.versaoSessaoAtual().equals(jwt.getClaimAsString("versaoSessao"))) {
+                throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Sessão revogada");
+            }
             return List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + usuario.getPerfil().name()));
         });
         return converter;
@@ -84,13 +91,18 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(
             @Value("${labware.cors.origens}") List<String> origens) {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:*", "http://127.0.0.1:*", "https://*.vercel.app"));
-        origens.stream().map(String::trim).filter(origem -> !origem.isEmpty())
-                .forEach(config::addAllowedOriginPattern);
+        config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
+        var origensConfiguradas = origens.stream().map(String::trim).filter(origem -> !origem.isEmpty()).toList();
+        if (origensConfiguradas.isEmpty()) {
+            config.addAllowedOriginPattern("https://*.vercel.app");
+        } else {
+            if (origensConfiguradas.contains("*")) throw new IllegalArgumentException("Informe origens CORS específicas");
+            origensConfiguradas.forEach(config::addAllowedOriginPattern);
+        }
         config.setAllowCredentials(true);
         config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setExposedHeaders(List.of("Retry-After"));
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

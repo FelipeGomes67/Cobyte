@@ -39,6 +39,7 @@ public class UsuarioService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empresa inativa");
             }
         }
+        if (usuario.getPerfil() != request.perfil()) usuario.revogarSessoes();
         usuario.setPerfil(request.perfil());
         usuario.setEmpresa(empresa);
         return UsuarioResponse.from(usuarios.save(usuario));

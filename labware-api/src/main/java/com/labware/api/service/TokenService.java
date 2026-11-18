@@ -23,6 +23,7 @@ public class TokenService {
     private long expiracaoMinutos;
 
     public TokenGerado gerar(Usuario usuario) {
+        if (expiracaoMinutos <= 0) throw new IllegalStateException("JWT_EXPIRACAO_MINUTOS deve ser positivo");
         Instant agora = Instant.now();
         Instant expiraEm = agora.plus(expiracaoMinutos, ChronoUnit.MINUTES);
 
@@ -32,6 +33,7 @@ public class TokenService {
                 .issuedAt(agora)
                 .expiresAt(expiraEm)
                 .claim("perfil", usuario.getPerfil().name())
+                .claim("versaoSessao", usuario.versaoSessaoAtual())
                 .build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();

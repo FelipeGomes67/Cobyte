@@ -79,7 +79,10 @@ api.interceptors.response.use(
 
     if (resposta) {
       const dados = resposta.data;
-      if (dados?.campos && Array.isArray(dados.campos) && dados.campos.length > 0) {
+      if (resposta.status === 429) {
+        const segundos = Number(resposta.headers?.['retry-after']);
+        mensagem = segundos > 0 ? `Muitas tentativas. Tente novamente em ${segundos} s.` : 'Muitas tentativas. Aguarde e tente novamente.';
+      } else if (dados?.campos && Array.isArray(dados.campos) && dados.campos.length > 0) {
         mensagem = dados.campos.map(c => c.mensagem || `${c.campo} inválido`).join('. ');
       } else if (dados?.mensagem) {
         mensagem = dados.mensagem;

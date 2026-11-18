@@ -33,6 +33,11 @@ public class JwtConfig {
 
     @Bean
     public JwtDecoder jwtDecoder(SecretKey jwtSecretKey) {
-        return NimbusJwtDecoder.withSecretKey(jwtSecretKey).macAlgorithm(MacAlgorithm.HS256).build();
+        var decoder = NimbusJwtDecoder.withSecretKey(jwtSecretKey).macAlgorithm(MacAlgorithm.HS256).build();
+        decoder.setJwtValidator(new org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator<>(
+                org.springframework.security.oauth2.jwt.JwtValidators.createDefaultWithIssuer("labware-api"),
+                new org.springframework.security.oauth2.jwt.JwtClaimValidator<java.time.Instant>(
+                        "exp", java.util.Objects::nonNull)));
+        return decoder;
     }
 }

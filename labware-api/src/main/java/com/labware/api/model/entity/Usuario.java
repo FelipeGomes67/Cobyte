@@ -26,6 +26,17 @@ public class Usuario {
     @Column(name = "senha", nullable = false)
     private String senhaHash;
 
+    @Column(name = "versao_sessao")
+    private java.util.UUID versaoSessao;
+
+    public String versaoSessaoAtual() {
+        return versaoSessao == null ? "0" : versaoSessao.toString();
+    }
+
+    public void revogarSessoes() {
+        versaoSessao = java.util.UUID.randomUUID();
+    }
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PerfilUsuario perfil;

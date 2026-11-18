@@ -7,3 +7,10 @@ labware-api/uploads/*
 !labware-api/uploads/.gitkeep
 
 AGENTS.md
+
+# Configuração local e chaves privadas
+.env
+.env.*
+!.env.example
+*.key
+*.pfx

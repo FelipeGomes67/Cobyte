@@ -123,6 +123,7 @@ public class PerfilService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Senha atual incorreta");
         validarSenha(r.novaSenha());
         u.setSenhaHash(encoder.encode(r.novaSenha()));
+        u.revogarSessoes();
     }
 
     public PerfilResponse salvarFoto(Long id, MultipartFile arquivo) {

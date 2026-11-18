@@ -47,7 +47,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 ? er.getBody().getDetail()
                 : textoPadrao(status);
 
-        return montar(status, mensagem, List.of(), request);
+        return montar(status, mensagem, List.of(), request, headers);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -57,22 +57,29 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Object> conflitoDeDados(DataIntegrityViolationException ex, WebRequest request) {
-        log.warn("Violação de integridade: {}", ex.getMostSpecificCause().getMessage());
+        log.warn("Violação de integridade ({})", ex.getClass().getSimpleName());
         return montar(HttpStatus.CONFLICT, "Conflito com dados já existentes", List.of(), request);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> inesperado(Exception ex, WebRequest request) {
-        log.error("Erro inesperado em {}", ((ServletWebRequest) request).getRequest().getRequestURI(), ex);
+        log.error("Erro inesperado em {} ({})", ((ServletWebRequest) request).getRequest().getRequestURI(),
+                ex.getClass().getSimpleName());
         return montar(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno. Tente novamente mais tarde.", List.of(), request);
     }
 
     private ResponseEntity<Object> montar(HttpStatusCode status, String mensagem,
                                           List<ErroResponse.CampoInvalido> campos, WebRequest request) {
+        return montar(status, mensagem, campos, request, HttpHeaders.EMPTY);
+    }
+
+    private ResponseEntity<Object> montar(HttpStatusCode status, String mensagem,
+                                          List<ErroResponse.CampoInvalido> campos, WebRequest request,
+                                          HttpHeaders headers) {
         String caminho = ((ServletWebRequest) request).getRequest().getRequestURI();
         ErroResponse corpo = new ErroResponse(
                 Instant.now(), status.value(), textoPadrao(status), mensagem, caminho, campos);
-        return ResponseEntity.status(status).body(corpo);
+        return ResponseEntity.status(status).headers(headers).body(corpo);
     }
 
     private String textoPadrao(HttpStatusCode status) {
@@ -83,7 +90,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex, HttpHeaders headers,
             HttpStatusCode status, WebRequest request) {
-        log.warn("Corpo da requisição ilegível: {}", ex.getMostSpecificCause().getMessage());
+        log.warn("Corpo da requisição ilegível ({})", ex.getClass().getSimpleName());
         return montar(status, "Corpo da requisição ausente ou inválido (JSON malformado ou tipo incorreto)",
                 List.of(), request);
     }

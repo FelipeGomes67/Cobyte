@@ -28,8 +28,8 @@ labware:
     diretorio-fotos: ${UPLOADS_DIRETORIO_FOTOS:./uploads/fotos}
     tamanho-maximo-bytes: 10485760
   jwt:
-    secret: ${JWT_SECRET:labware-segredo-jwt-com-ao-menos-32-bytes-padrao}
-    expiracao-minutos: 120
+    secret: ${JWT_SECRET}
+    expiracao-minutos: ${JWT_EXPIRACAO_MINUTOS:120}
   ia:
     timeout-ms: ${IA_TIMEOUT_MS:30000}
     max-tokens: ${IA_MAX_TOKENS:768}
@@ -59,7 +59,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/labware}
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:nova_senha_simples}
+    password: ${DB_PASSWORD:}
   jpa:
     hibernate:
       ddl-auto: update
