@@ -60,7 +60,11 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long>, org.spr
                                           @Param("encerrados") java.util.Collection<StatusChamado> encerrados);
 
     Optional<Chamado> findByProtocolo(String protocolo);
+
+    @org.springframework.data.jpa.repository.Query("select c.id from Chamado c where c.idPublico = :idPublico")
+    Optional<Long> buscarIdInterno(@org.springframework.data.repository.query.Param("idPublico") java.util.UUID idPublico);
     List<Chamado> findBySolicitanteIdOrderByAbertoEmDesc(Long solicitanteId);
+    List<Chamado> findBySolicitanteIdAndEmpresaIdOrderByAbertoEmDesc(Long solicitanteId, Long empresaId);
     List<Chamado> findByEmpresaIdOrderByAbertoEmDesc(Long empresaId);
     List<Chamado> findByStatusOrderByAbertoEmDesc(StatusChamado status);
     long countByAbertoEmBetween(java.time.LocalDateTime inicio, java.time.LocalDateTime fim);

@@ -18,12 +18,12 @@ public record NotificacaoResponse(
         @Schema(description = "Indica se a notificação foi lida.", example = "false")
         boolean lida,
         @Schema(description = "Identificador do chamado.", example = "108")
-        Long chamadoId,
+        java.util.UUID chamadoId,
         @Schema(description = "Criado em.")
         LocalDateTime criadoEm
 ) {
     public static NotificacaoResponse from(Notificacao n) {
         return new NotificacaoResponse(n.getId(),n.getUsuario().getId(),n.getTitulo(),n.getMensagem(),n.getTipo(),
-                n.isLida(),n.getChamado()!=null?n.getChamado().getId():null,n.getCriadoEm());
+                n.isLida(),n.getChamado()!=null?n.getChamado().getIdPublico():null,n.getCriadoEm());
     }
 }

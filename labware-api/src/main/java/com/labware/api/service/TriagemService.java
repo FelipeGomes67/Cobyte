@@ -18,17 +18,24 @@ public class TriagemService {
     private final PoliticaSlaRepository politicas;
     private final ClassificadorIaService classificador;
     private final TransactionTemplate tx;
+    private final UsuarioRepository usuarios;
+    private final AcessoChamadoService acesso;
     @Value("${spring.ai.ollama.chat.options.model}") private String modelo;
     public TriagemResponse buscar(Long id) {
         return tx.execute(s->TriagemResponse.from(classificacoes.findByChamadoId(id)
                 .orElseThrow(()->new ResourceNotFoundException("Classificação não encontrada"))));
     }
-    public TriagemResponse reclassificar(Long id) {
-        String[] entrada=tx.execute(s->{ var c=buscarChamado(id); validar(c); return new String[]{c.getTitulo(),c.getDescricao()}; });
+    public TriagemResponse reclassificar(Long id, Long usuarioId) {
+        String[] entrada = tx.execute(s -> {
+            var chamado = buscarChamado(id);
+            validar(chamado, usuarioId);
+            return new String[]{chamado.getTitulo(), chamado.getDescricao()};
+        });
         var r=classificador.classificar(entrada[0],entrada[1])
                 .orElseThrow(()->new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,"IA indisponível ou resposta inválida; sugestões anteriores preservadas"));
         return tx.execute(s->{
-            var c=chamados.findParaAvaliacao(id).orElseThrow(()->new ResourceNotFoundException("Chamado não encontrado")); validar(c);
+            var c=chamados.findParaAvaliacao(id).orElseThrow(()->new ResourceNotFoundException("Chamado não encontrado"));
+            validar(c, usuarioId);
             var ia=classificacoes.findByChamadoId(id).orElseGet(()->ClassificacaoIa.builder().chamado(c).build());
             // Atualiza a classificação do chamado se não possuía categoria ou se usava triagem de fallback inicial
             boolean eraFallback = ia.getJustificativa() != null && (
@@ -58,7 +65,11 @@ public class TriagemService {
         });
     }
     private Chamado buscarChamado(Long id) { return chamados.findById(id).orElseThrow(()->new ResourceNotFoundException("Chamado não encontrado")); }
-    private void validar(Chamado c) {
+    private void validar(Chamado c, Long usuarioId) {
+        var usuario = usuarios.findById(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+        if (!acesso.ehSuporte(usuario)) throw new org.springframework.security.access.AccessDeniedException("Acesso negado");
+        acesso.exigirEdicao(c, usuario);
         if(c.getStatus()==StatusChamado.RESOLVIDO || c.getStatus().finalizado())
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Chamado encerrado não pode ser triado novamente");
     }

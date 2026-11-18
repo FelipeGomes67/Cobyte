@@ -15,30 +15,33 @@ class AcessoChamadoServiceTest {
     @Test void colegaDaEmpresaPodeLerMasNaoAlterar() {
         var colega = Usuario.builder().id(20L).perfil(PerfilUsuario.CLIENTE).empresa(empresa).build();
         assertDoesNotThrow(() -> acesso.exigirLeitura(chamado, colega));
-        assertEquals(403, assertThrows(ResponseStatusException.class, () -> acesso.exigir(chamado, colega)).getStatusCode().value());
+        assertEquals(403, assertThrows(ResponseStatusException.class, () -> acesso.exigirEdicao(chamado, colega)).getStatusCode().value());
     }
 
     @Test void outraEmpresaNaoPodeLerNemAlterar() {
         var externo = Usuario.builder().id(20L).perfil(PerfilUsuario.CLIENTE)
                 .empresa(Empresa.builder().id(2L).build()).build();
         assertEquals(403, assertThrows(ResponseStatusException.class, () -> acesso.exigirLeitura(chamado, externo)).getStatusCode().value());
-        assertThrows(ResponseStatusException.class, () -> acesso.exigir(chamado, externo));
+        assertThrows(ResponseStatusException.class, () -> acesso.exigirEdicao(chamado, externo));
     }
 
     @Test void clienteSemEmpresaNaoAcessaNemSeuChamado() {
         autor.setEmpresa(null);
         assertThrows(ResponseStatusException.class, () -> acesso.exigirLeitura(chamado, autor));
-        assertThrows(ResponseStatusException.class, () -> acesso.exigir(chamado, autor));
+        assertThrows(ResponseStatusException.class, () -> acesso.exigirEdicao(chamado, autor));
     }
 
     @Test void autorPodeAcessarSeuChamado() {
         assertDoesNotThrow(() -> acesso.exigirLeitura(chamado, autor));
-        assertDoesNotThrow(() -> acesso.exigir(chamado, autor));
+        assertDoesNotThrow(() -> acesso.exigirEdicao(chamado, autor));
     }
 
-    @Test void suportePodeAtenderOutraEmpresa() {
+    @Test void suportePodeLerMasSoEditaDepoisDeParticipar() {
         var suporte = Usuario.builder().id(30L).perfil(PerfilUsuario.SUPORTE).build();
-        assertDoesNotThrow(() -> acesso.exigir(chamado, suporte));
+        assertDoesNotThrow(() -> acesso.exigirLeitura(chamado, suporte));
+        assertThrows(ResponseStatusException.class, () -> acesso.exigirEdicao(chamado, suporte));
+        chamado.adicionarTecnico(suporte);
+        assertDoesNotThrow(() -> acesso.exigirEdicao(chamado, suporte));
     }
 
     @Test void semUsuarioNaoAcessa() {

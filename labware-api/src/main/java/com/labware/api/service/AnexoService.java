@@ -27,6 +27,7 @@ public class AnexoService {
     private final UsuarioRepository usuarioRepository;
     private final AcessoChamadoService acesso;
     private final ArmazenamentoService armazenamento;
+    private final com.labware.api.repository.MensagemRepository mensagens;
 
     public record Download(Resource recurso, String nomeArquivo, long tamanhoBytes) {}
 
@@ -34,7 +35,7 @@ public class AnexoService {
     public AnexoResponse enviar(Long chamadoId, Long usuarioId, MultipartFile arquivo) {
         Chamado chamado = buscarChamado(chamadoId);
         Usuario usuario = buscarUsuario(usuarioId);
-        acesso.exigir(chamado, usuario);
+        acesso.exigirEdicao(chamado, usuario);
         var salvo = armazenamento.salvar(chamadoId, arquivo);
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -57,8 +58,12 @@ public class AnexoService {
 
     @Transactional(readOnly = true)
     public List<AnexoResponse> listar(Long chamadoId, Long usuarioId) {
-        acesso.exigirLeitura(buscarChamado(chamadoId), buscarUsuario(usuarioId));
-        return anexoRepository.findByChamadoIdOrderByEnviadoEmAscIdAsc(chamadoId).stream()
+        Usuario usuario = buscarUsuario(usuarioId);
+        acesso.exigirLeitura(buscarChamado(chamadoId), usuario);
+        var itens = acesso.ehSuporte(usuario)
+                ? anexoRepository.findByChamadoIdOrderByEnviadoEmAscIdAsc(chamadoId)
+                : anexoRepository.listarPublicos(chamadoId);
+        return itens.stream()
                 .map(AnexoResponse::from).toList();
     }
 
@@ -66,7 +71,11 @@ public class AnexoService {
     public Download baixar(Long anexoId, Long usuarioId) {
         Anexo anexo = anexoRepository.findById(anexoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Anexo não encontrado"));
-        acesso.exigirLeitura(anexo.getChamado(), buscarUsuario(usuarioId));
+        Usuario usuario = buscarUsuario(usuarioId);
+        acesso.exigirLeitura(anexo.getChamado(), usuario);
+        if (!acesso.ehSuporte(usuario) && mensagens.existsByAnexoIdAndVisivelApenasSuporteTrue(anexoId)) {
+            throw new ResourceNotFoundException("Anexo não encontrado");
+        }
         return new Download(armazenamento.carregar(anexo.getChamado().getId(), anexo.getCaminhoArquivo()),
                 anexo.getNomeArquivo(), anexo.getTamanhoBytes());
     }

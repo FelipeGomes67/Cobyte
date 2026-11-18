@@ -21,7 +21,12 @@ public class NotificacaoService {
 
     @Transactional(readOnly = true)
     public Page<NotificacaoResponse> listar(Long id, int page, int size) {
-        return notificacoes.findByUsuarioIdOrderByCriadoEmDescIdDesc(id, PageRequest.of(page, size)).map(NotificacaoResponse::from);
+        var usuario = usuario(id);
+        var pagina = PageRequest.of(page, size);
+        var itens = usuario.getPerfil() == com.labware.api.model.enums.PerfilUsuario.CLIENTE
+                ? notificacoes.listarCliente(id, pagina)
+                : notificacoes.findByUsuarioIdOrderByCriadoEmDescIdDesc(id, pagina);
+        return itens.map(NotificacaoResponse::from);
     }
 
     @Transactional(readOnly = true)
@@ -97,6 +102,9 @@ public class NotificacaoService {
 
     public void emitir(Usuario destinatario, Long autorId, Chamado chamado, String tipo, String titulo, String texto, String autorNome, String observacao) {
         if (destinatario == null || destinatario.getId().equals(autorId)) return;
+        if (chamado != null && destinatario.getPerfil() == com.labware.api.model.enums.PerfilUsuario.CLIENTE
+                && (destinatario.getEmpresa() == null || chamado.getEmpresa() == null
+                || !destinatario.getEmpresa().getId().equals(chamado.getEmpresa().getId()))) return;
         String chave = switch (tipo) {
             case "MENSAGEM" -> "novasMensagens";
             case "ATRIBUICAO" -> "atribuicoes";
@@ -123,9 +131,9 @@ public class NotificacaoService {
                 ? chamado.getEmpresa().getNome() : null;
         String protocolo = chamado != null ? chamado.getProtocolo() : null;
         String tituloChamado = chamado != null ? chamado.getTitulo() : null;
-        Long chamadoId = chamado != null ? chamado.getId() : null;
+        java.util.UUID chamadoId = chamado != null ? chamado.getIdPublico() : null;
 
-        if (chamado != null) eventos.publishEvent(new WebPushService.Evento(destinatario.getId(), chamado.getId()));
+        if (chamado != null) eventos.publishEvent(new WebPushService.Evento(destinatario.getId(), chamadoId));
         eventos.publishEvent(new EmailService.EmailNotificacao(
                 destinatario.getEmail(),
                 destinatario.getNome(),

@@ -30,7 +30,7 @@ public class EmailService {
             String nome,
             String assunto,
             String tipo,
-            Long chamadoId,
+            java.util.UUID chamadoId,
             String protocolo,
             String titulo,
             String empresa,
@@ -45,7 +45,7 @@ public class EmailService {
         }
 
         public EmailNotificacao(String destinatario, String assunto, String detalhe,
-                               String nome, Long chamadoId, String protocolo, String titulo, String status, String tipo) {
+                               String nome, java.util.UUID chamadoId, String protocolo, String titulo, String status, String tipo) {
             this(destinatario, nome, assunto, tipo, chamadoId, protocolo, titulo, null, status, null, null, detalhe, null);
         }
     }

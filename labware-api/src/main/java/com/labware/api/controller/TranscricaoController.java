@@ -1,5 +1,8 @@
 package com.labware.api.controller;
 
+import com.labware.api.service.IdentificadorChamado;
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/chamados")
 @RequiredArgsConstructor
 public class TranscricaoController {
+    private final IdentificadorChamado identificador;
     private final TranscricaoChamadoService service;
     private final com.labware.api.service.TranscricaoService transcricao;
 
@@ -68,7 +72,7 @@ public class TranscricaoController {
     @PostMapping(value = "/{id}/transcrever-audio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
             description = "Envio multipart com a parte obrigatória arquivo. Opções de persistência são parâmetros de consulta.")
-    public TranscricaoResponse transcrever(@PathVariable Long id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+    public TranscricaoResponse transcrever(@PathVariable UUID id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
                                            @Parameter(description = "Áudio WAV, MP3, OGG, M4A ou FLAC, até 10 MB.")
                                            @RequestParam("arquivo") MultipartFile arquivo,
                                            @Parameter(description = "Armazena o áudio como anexo visível aos usuários com acesso ao chamado.")
@@ -77,6 +81,6 @@ public class TranscricaoController {
                                            @RequestParam(defaultValue = "false") boolean salvarMensagem,
                                            @Parameter(description = "Nota interna: exige SUPORTE/ADMIN, salvarMensagem=true e salvarAnexo=false.")
                                            @RequestParam(defaultValue = "false") boolean visivelApenasSuporte) {
-        return service.transcrever(id, UsuarioLogado.id(jwt), arquivo, salvarAnexo, salvarMensagem, visivelApenasSuporte);
+        return service.transcrever(identificador.interno(id), UsuarioLogado.id(jwt), arquivo, salvarAnexo, salvarMensagem, visivelApenasSuporte);
     }
 }

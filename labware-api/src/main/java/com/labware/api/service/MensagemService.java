@@ -51,7 +51,7 @@ public class MensagemService {
     private MensagemResponse enviar(Long chamadoId, Long usuarioId, CriarMensagemRequest req, TipoMensagem tipo) {
         Chamado chamado = buscarChamado(chamadoId);
         Usuario autor = buscarUsuario(usuarioId);
-        acesso.exigirLeitura(chamado, autor);
+        acesso.exigirEdicao(chamado, autor);
 
         if (req.conteudo() == null || req.conteudo().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O texto da mensagem é obrigatório");
@@ -79,6 +79,9 @@ public class MensagemService {
             acesso.exigirLeitura(anexo.getChamado(), autor);
             if (!anexo.getChamado().getId().equals(chamadoId)) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Anexo deve pertencer ao mesmo chamado da mensagem");
+            }
+            if (visivel && mensagemRepository.existsByAnexoIdAndVisivelApenasSuporteTrue(anexo.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Anexo vinculado a uma nota interna");
             }
         }
 

@@ -24,10 +24,14 @@ public class HistoricoCompletoService {
     public PaginaResponse<ChamadoResponse> listar(Long usuarioId,String busca,int page,int size) {
         var usuario=usuarios.findById(usuarioId).orElseThrow(()->new ResourceNotFoundException("Usuário não encontrado"));
         boolean suporte=acesso.ehSuporte(usuario);
+        acesso.exigirEmpresaVinculada(usuario);
         org.springframework.data.jpa.domain.Specification<com.labware.api.model.entity.Chamado> spec=(root,q,cb)->{
             var p=new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
             p.add(root.get("status").in(StatusChamado.RESOLVIDO,StatusChamado.FECHADO,StatusChamado.CANCELADO));
-            if(!suporte)p.add(cb.equal(root.get("solicitante").get("id"),usuarioId));
+            if (!suporte) {
+                p.add(cb.equal(root.get("solicitante").get("id"), usuarioId));
+                p.add(cb.equal(root.get("empresa").get("id"), usuario.getEmpresa().getId()));
+            }
             if(busca!=null&&!busca.isBlank()) {
                 String termo=busca.trim().toLowerCase(java.util.Locale.ROOT).replace("!","!!").replace("%","!%").replace("_","!_");
                 p.add(cb.or(cb.like(cb.lower(root.get("titulo")),"%"+termo+"%",'!'),cb.like(cb.lower(root.get("protocolo")),"%"+termo+"%",'!')));

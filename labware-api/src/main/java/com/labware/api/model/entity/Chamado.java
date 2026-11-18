@@ -19,6 +19,11 @@ public class Chamado {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Builder.Default
+    @Setter(AccessLevel.NONE)
+    @Column(name = "id_publico", nullable = false, unique = true, updatable = false)
+    private java.util.UUID idPublico = java.util.UUID.randomUUID();
+
     @Column(nullable = false, unique = true, length = 20)
     private String protocolo;
 

@@ -5,6 +5,15 @@ import org.springframework.data.domain.*;
 public interface NotificacaoRepository extends JpaRepository<Notificacao,Long> {
     @EntityGraph(attributePaths="chamado")
     Page<Notificacao> findByUsuarioIdOrderByCriadoEmDescIdDesc(Long usuarioId,Pageable page);
+    @Query("""
+            select n from Notificacao n left join n.chamado c
+            where n.usuario.id = :usuarioId
+            and (c is null or c.empresa.id = n.usuario.empresa.id)
+            order by n.criadoEm desc, n.id desc
+            """)
+    @EntityGraph(attributePaths = "chamado")
+    Page<Notificacao> listarCliente(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId,
+                                   Pageable page);
     java.util.Optional<Notificacao> findByIdAndUsuarioId(Long id,Long usuarioId);
     long countByUsuarioIdAndLidaFalse(Long usuarioId);
     @Modifying @Query("update Notificacao n set n.lida=true where n.usuario.id=:usuarioId and n.lida=false")

@@ -1,5 +1,8 @@
 package com.labware.api.controller;
 
+import com.labware.api.service.IdentificadorChamado;
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +29,7 @@ import java.util.List;
 @RequestMapping("/api/chamados")
 @RequiredArgsConstructor
 public class AnexoController {
+    private final IdentificadorChamado identificador;
     private final AnexoService service;
 
     @Operation(summary = "Enviar anexo", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Arquivo multipart de até 10 MB; retorna metadados e URL de download autenticado.")
@@ -42,9 +46,9 @@ public class AnexoController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
             description = "Envio multipart com a parte obrigatória arquivo, até 10 MB.")
     @ResponseStatus(HttpStatus.CREATED)
-    public AnexoResponse enviar(@PathVariable Long id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+    public AnexoResponse enviar(@PathVariable UUID id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
                                 @RequestParam("arquivo") MultipartFile arquivo) {
-        return service.enviar(id, UsuarioLogado.id(jwt), arquivo);
+        return service.enviar(identificador.interno(id), UsuarioLogado.id(jwt), arquivo);
     }
 
     @Operation(summary = "Listar anexos", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Retorna metadados sem expor caminhos físicos.")
@@ -56,8 +60,8 @@ public class AnexoController {
             @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
     })
     @GetMapping("/{id}/anexos")
-    public List<AnexoResponse> listar(@PathVariable Long id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
-        return service.listar(id, UsuarioLogado.id(jwt));
+    public List<AnexoResponse> listar(@PathVariable UUID id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+        return service.listar(identificador.interno(id), UsuarioLogado.id(jwt));
     }
 
     @Operation(summary = "Baixar anexo", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Retorna arquivo binário com Content-Disposition attachment.")
@@ -72,6 +76,7 @@ public class AnexoController {
     public ResponseEntity<Resource> baixar(@PathVariable Long anexoId, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
         var download = service.baixar(anexoId, UsuarioLogado.id(jwt));
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header("X-Content-Type-Options", "nosniff")
                 .contentLength(download.tamanhoBytes())
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
                         .filename(download.nomeArquivo(), StandardCharsets.UTF_8).build().toString())

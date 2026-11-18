@@ -11,7 +11,7 @@ public record MensagemResponse(
         @Schema(description = "Identificador do recurso.", example = "108")
         Long id,
         @Schema(description = "Identificador do chamado.", example = "108")
-        Long chamadoId,
+        java.util.UUID chamadoId,
         @Schema(description = "Identificador do usuário.", example = "1")
         Long usuarioId,
         @Schema(description = "Usuário autenticado ou nome do autor, conforme o contrato.")
@@ -42,7 +42,7 @@ public record MensagemResponse(
 
     public static MensagemResponse from(Mensagem m) {
         Long anexoId = m.getAnexo() != null ? m.getAnexo().getId() : null;
-        return new MensagemResponse(m.getId(), m.getChamado().getId(), m.getUsuario().getId(),
+        return new MensagemResponse(m.getId(), m.getChamado().getIdPublico(), m.getUsuario().getId(),
                 m.getUsuario().getNome(), m.getUsuario().getPerfil().name(), m.getConteudo(),
                 m.isVisivelApenasSuporte(), m.getCriadoEm(), anexoId, m.getTipo(),
                 anexoId != null ? "/api/chamados/anexos/" + anexoId + "/download" : null);

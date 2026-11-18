@@ -1,5 +1,8 @@
 package com.labware.api.controller;
 
+import com.labware.api.service.IdentificadorChamado;
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Mensagens", description = "Leitura individual das interações.")
 @RestController @RequiredArgsConstructor
 public class LeituraChamadoController {
+    private final IdentificadorChamado identificador;
     private final LeituraChamadoService service;
     @Operation(summary = "Marcar mensagens como lidas", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Avança o marcador individual até a última mensagem visível. Notas internas não entram no marcador do cliente.")
     @ApiResponses({
@@ -27,5 +31,5 @@ public class LeituraChamadoController {
     })
     @PutMapping("/api/chamados/{id}/mensagens/marcar-lidas")
     @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
-    public void marcar(@PathVariable Long id,@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) { service.marcar(id,UsuarioLogado.id(jwt)); }
+    public void marcar(@PathVariable UUID id,@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) { service.marcar(identificador.interno(id),UsuarioLogado.id(jwt)); }
 }

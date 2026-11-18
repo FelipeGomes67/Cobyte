@@ -363,7 +363,9 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
         <p className="mensagem-erro-conversa" role="alert">{erroEnvio}</p>
       )}
 
-      {suporteSemParticipacao && !chamadoEncerrado ? (
+      {clienteLogado && !descricaoPropria ? (
+        <p className="history-message-composer-encerrado">Chamado de outro solicitante. Você pode acompanhar a conversa.</p>
+      ) : suporteSemParticipacao && !chamadoEncerrado ? (
         <div className="history-message-composer-encerrado" role="status">
           <p>Você pode ler a conversa. Para enviar mensagens, clique em Participar do atendimento.</p>
         </div>
@@ -428,7 +430,10 @@ function DetalhesEmAtendimento({
   const statusAtivo = ['ABERTO', 'EM_ANALISE', 'EM_ATENDIMENTO', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
   const podeEditar = ehSuporte && jaParticipa && statusAtivo;
   const podeAlterarStatus = podeEditar;
-  const podeCancelar = (!ehSuporte || jaParticipa) && ['ABERTO', 'EM_ANALISE', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
+  const solicitanteId = chamado?.solicitanteId ?? chamado?.ownerId ?? chamado?.solicitante?.id;
+  const ehSolicitante = solicitanteId != null && String(solicitanteId) === String(usuario?.id);
+  const podeCancelar = (ehSuporte ? jaParticipa : ehSolicitante)
+    && ['ABERTO', 'EM_ANALISE', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
   const podeAlterarPrioridade = ehSuporte && jaParticipa && codigoAtual === 'EM_ANALISE';
 
   const [statusSelecionado, setStatusSelecionado] = useState('');
@@ -970,15 +975,8 @@ export default function DetalhesChamado() {
     usuario?.perfil === 'SUPORTE' ||
     usuario?.perfil === 'ADMIN';
 
-  const ehSolicitante =
-    String(chamado?.ownerId) === String(usuario?.id) ||
-    String(chamado?.solicitante?.id) === String(usuario?.id) ||
-    String(chamado?.solicitanteId) === String(usuario?.id) ||
-    (chamado?.solicitanteNome && (chamado.solicitanteNome === usuario?.nome || chamado.solicitanteNome === usuario?.name)) ||
-    (usuario?.perfil === 'CLIENTE' && chamado !== null);
-
-  const podeVisualizar = ehSuporte || ehSolicitante || caminho.startsWith('/chamados-empresa/');
-  const chamadoVisivel = podeVisualizar ? chamado : null;
+  // A API valida a empresa e o perfil antes de retornar o chamado.
+  const chamadoVisivel = chamado;
 
   return (
     <div className="detalhes-chamado-page">

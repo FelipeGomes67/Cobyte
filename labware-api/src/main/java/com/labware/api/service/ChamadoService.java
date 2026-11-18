@@ -59,7 +59,10 @@ public class ChamadoService {
         acesso.exigirEmpresaVinculada(u);
         org.springframework.data.jpa.domain.Specification<Chamado> spec=(root,q,cb)->{
             var p=new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
-            if(!acesso.ehSuporte(u)) p.add(cb.equal(root.get("solicitante").get("id"),usuarioId));
+            if (!acesso.ehSuporte(u)) {
+                p.add(cb.equal(root.get("solicitante").get("id"), usuarioId));
+                p.add(cb.equal(root.get("empresa").get("id"), u.getEmpresa().getId()));
+            }
             else {
                 if(solicitanteId!=null) p.add(cb.equal(root.get("solicitante").get("id"),solicitanteId));
                 if(apenasMeus) {
@@ -80,8 +83,8 @@ public class ChamadoService {
                 String termo=busca.trim().toLowerCase(java.util.Locale.ROOT);
                 String like="%"+termo.replace("!","!!").replace("%","!%").replace("_","!_")+"%";
                 var texto=cb.or(cb.like(cb.lower(root.get("titulo")),like,'!'),cb.like(cb.lower(root.get("protocolo")),like,'!'));
-                try { texto=cb.or(texto,cb.equal(root.get("id"),Long.parseLong(termo.replaceFirst("^#","")))); }
-                catch(NumberFormatException ignored) { }
+                try { texto=cb.or(texto,cb.equal(root.get("idPublico"),java.util.UUID.fromString(termo))); }
+                catch(IllegalArgumentException ignored) { }
                 p.add(texto);
             }
             return cb.and(p.toArray(jakarta.persistence.criteria.Predicate[]::new));
@@ -97,6 +100,7 @@ public class ChamadoService {
         Usuario autor=buscarUsuarioDoSuporte(usuarioId);
         Usuario tecnico=buscarUsuarioDoSuporte(tecnicoId);
         Chamado c=chamadoRepository.findParaAvaliacao(id).orElseThrow(()->new com.labware.api.exception.ResourceNotFoundException("Chamado não encontrado"));
+        acesso.exigirEdicao(c, autor);
         if(c.getStatus()==StatusChamado.RESOLVIDO || c.getStatus().finalizado())
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Chamado já encerrado");
         registrarHistorico(c,autor,c.getResponsavel()==null?null:c.getResponsavel().getId().toString(),tecnicoId.toString());
@@ -125,7 +129,7 @@ public class ChamadoService {
         Usuario u=buscarUsuario(usuarioId);
         acesso.exigirEmpresaVinculada(u);
         Chamado c=chamadoRepository.findParaAvaliacao(id).orElseThrow(()->new com.labware.api.exception.ResourceNotFoundException("Chamado não encontrado"));
-        acesso.exigir(c,u);
+        acesso.exigirEdicao(c,u);
         if(c.getStatus()!=StatusChamado.RESOLVIDO)
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Somente chamados resolvidos podem ser reabertos; fechado e cancelado são finais");
         mudarStatus(c,u,StatusChamado.EM_ATENDIMENTO);
@@ -223,7 +227,8 @@ public class ChamadoService {
                     ? chamadoRepository.findBySolicitanteIdOrderByAbertoEmDesc(solicitanteIdFiltro)
                     : chamadoRepository.findAll(Sort.by(Sort.Direction.DESC, "abertoEm"));
         } else {
-            chamados = chamadoRepository.findBySolicitanteIdOrderByAbertoEmDesc(usuario.getId());
+            chamados = chamadoRepository.findBySolicitanteIdAndEmpresaIdOrderByAbertoEmDesc(
+                    usuario.getId(), usuario.getEmpresa().getId());
         }
         var classificacoes = buscarClassificacoes(chamados);
         return chamados.stream().map(c -> ChamadoResponse.from(c, classificacoes.get(c.getId()), false)).toList();
@@ -271,11 +276,7 @@ public class ChamadoService {
         Chamado chamado = chamadoRepository.findParaAvaliacao(chamadoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chamado não encontrado"));
         Usuario usuario = buscarUsuario(usuarioId);
-        if (req.novoStatus() == StatusChamado.CANCELADO) {
-            acesso.exigirLeitura(chamado, usuario);
-        } else {
-            acesso.exigir(chamado, usuario);
-        }
+        acesso.exigirEdicao(chamado, usuario);
         StatusChamado atual = chamado.getStatus();
         StatusChamado novo = req.novoStatus();
         if (atual.finalizado()) {
@@ -403,11 +404,7 @@ public class ChamadoService {
     public ChamadoResponse avaliarChamado(Long id, AvaliacaoChamadoRequest dto, Usuario usuarioAutenticado) {
         Chamado chamado = chamadoRepository.findParaAvaliacao(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Chamado não encontrado"));
-        if (usuarioAutenticado.getPerfil() != PerfilUsuario.CLIENTE
-                || !chamado.getSolicitante().getId().equals(usuarioAutenticado.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Somente o cliente solicitante pode avaliar o chamado");
-        }
+        acesso.exigirSolicitante(chamado, usuarioAutenticado);
         if (chamado.getStatus() != StatusChamado.RESOLVIDO && chamado.getStatus() != StatusChamado.FECHADO) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Somente chamados resolvidos ou fechados podem ser avaliados");

@@ -4,7 +4,7 @@ self.addEventListener('push', event => {
   event.waitUntil(self.registration.showNotification(dados.title || 'Labware', {
     body: dados.body || 'Há uma atualização no atendimento.',
     tag: dados.url || 'labware',
-    data: { url: /^\/chamados\/\d+$/.test(dados.url || '') ? dados.url : '/notificacoes' },
+    data: { url: /^\/chamados\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(dados.url || '') ? dados.url : '/notificacoes' },
   }));
 });
 self.addEventListener('install', event => { event.waitUntil(self.skipWaiting()); });
@@ -13,7 +13,7 @@ self.addEventListener('activate', event => { event.waitUntil(self.clients.claim(
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const caminho = event.notification.data?.url;
-  const destino = new URL(/^\/chamados\/\d+$/.test(caminho || '') ? caminho : '/notificacoes', self.location.origin);
+  const destino = new URL(/^\/chamados\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(caminho || '') ? caminho : '/notificacoes', self.location.origin);
   event.waitUntil((async () => {
     const abas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     // Prioriza uma aba já no chamado e evita navegar uma referência descartada.

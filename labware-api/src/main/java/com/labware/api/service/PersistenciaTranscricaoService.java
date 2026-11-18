@@ -28,7 +28,7 @@ public class PersistenciaTranscricaoService {
     public void verificar(Long chamadoId, Long usuarioId, boolean salvarAnexo, boolean salvarMensagem, boolean interna) {
         var chamado = chamados.findById(chamadoId).orElseThrow(() -> new ResourceNotFoundException("Chamado não encontrado"));
         var usuario = usuarios.findById(usuarioId).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
-        acesso.exigir(chamado, usuario);
+        acesso.exigirEdicao(chamado, usuario);
         if (interna && !acesso.ehSuporte(usuario)) throw new AccessDeniedException("Somente o suporte pode criar notas internas");
         if (interna && (!salvarMensagem || salvarAnexo)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

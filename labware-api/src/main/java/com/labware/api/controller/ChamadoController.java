@@ -1,5 +1,8 @@
 package com.labware.api.controller;
 
+import com.labware.api.service.IdentificadorChamado;
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,6 +36,7 @@ import java.util.List;
 
 public class ChamadoController {
 
+    private final IdentificadorChamado identificador;
     private final ChamadoService chamadoService;
 
     @Operation(summary = "Avaliar atendimento (CSAT)", description = "Somente CLIENTE solicitante; status RESOLVIDO ou FECHADO; nota de 1 a 5 e avaliação única. Fecha automaticamente um chamado RESOLVIDO. /avaliar é alias legado.")
@@ -47,10 +51,10 @@ public class ChamadoController {
     })
     @PostMapping({"/{id}/avaliar", "/{id}/avaliacao"})
     @PreAuthorize("hasRole('CLIENTE')")
-    public ChamadoResponse avaliar(@PathVariable Long id,
+    public ChamadoResponse avaliar(@PathVariable UUID id,
                                    @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
                                    @Valid @RequestBody AvaliacaoChamadoRequest dto) {
-        return chamadoService.avaliarChamado(id, dto, UsuarioLogado.id(jwt));
+        return chamadoService.avaliarChamado(identificador.interno(id), dto, UsuarioLogado.id(jwt));
     }
 
     @Operation(summary = "Abrir chamado", description = "Somente CLIENTE vinculado a Empresa. Exige multipart com a parte chamado (JSON) e ao menos um arquivo na parte arquivos. JSON sem anexos retorna 400. Aceita texto ou relato transcrito e duração. Classifica com IA e aplica SLA; em falha da IA usa prioridade MEDIA.")
@@ -121,8 +125,8 @@ public class ChamadoController {
             @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
     })
     @GetMapping("/{id}")
-    public ChamadoResponse buscar(@PathVariable Long id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
-        return chamadoService.buscar(id, UsuarioLogado.id(jwt));
+    public ChamadoResponse buscar(@PathVariable UUID id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+        return chamadoService.buscar(identificador.interno(id), UsuarioLogado.id(jwt));
     }
 
     @GetMapping("/empresa/{empresaId}")
@@ -144,9 +148,9 @@ public class ChamadoController {
     })
     @RequestMapping(value="/{id}/assumir",method={RequestMethod.PATCH,RequestMethod.PUT})
     @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
-    public ChamadoResponse assumir(@PathVariable Long id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+    public ChamadoResponse assumir(@PathVariable UUID id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
 
-        return chamadoService.assumir(id, UsuarioLogado.id(jwt));
+        return chamadoService.assumir(identificador.interno(id), UsuarioLogado.id(jwt));
     }
 
     @Operation(summary = "Alterar status", description = "Somente responsável SUPORTE ou ADMIN. Exige chamado atribuído e transição permitida pelo fluxo. Body: novoStatus.")
@@ -161,11 +165,11 @@ public class ChamadoController {
     })
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('CLIENTE','SUPORTE','ADMIN')")
-    public ChamadoResponse alterarStatus(@PathVariable Long id,
+    public ChamadoResponse alterarStatus(@PathVariable UUID id,
                                          @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
                                          @Valid @RequestBody AlterarStatusRequest request) {
 
-        return chamadoService.alterarStatus(id, UsuarioLogado.id(jwt), request);
+        return chamadoService.alterarStatus(identificador.interno(id), UsuarioLogado.id(jwt), request);
     }
 
     @Operation(summary = "Alterar categoria", description = "Técnico participante ou ADMIN, durante Em Análise. Registra a decisão manual no histórico e preserva a sugestão original da IA.")
@@ -179,20 +183,20 @@ public class ChamadoController {
     })
     @PatchMapping("/{id}/categoria")
     @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
-    public ChamadoResponse alterarCategoria(@PathVariable Long id,
+    public ChamadoResponse alterarCategoria(@PathVariable UUID id,
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody com.labware.api.dto.request.AlterarCategoriaRequest request) {
-        return chamadoService.alterarCategoria(id, UsuarioLogado.id(jwt), request);
+        return chamadoService.alterarCategoria(identificador.interno(id), UsuarioLogado.id(jwt), request);
     }
 
     @Operation(summary = "Alterar prioridade", description = "Técnico participante ou ADMIN, durante Em Análise. Recalcula o prazo de resolução e registra no histórico.")
     @PatchMapping("/{id}/prioridade")
     @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
-    public ChamadoResponse alterarPrioridade(@PathVariable Long id,
+    public ChamadoResponse alterarPrioridade(@PathVariable UUID id,
                                             @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
                                             @Valid @RequestBody AlterarPrioridadeRequest request) {
 
-        return chamadoService.alterarPrioridade(id, UsuarioLogado.id(jwt), request);
+        return chamadoService.alterarPrioridade(identificador.interno(id), UsuarioLogado.id(jwt), request);
     }
 
     @Operation(summary = "Atribuir técnico", description = "SUPORTE/ADMIN. tecnicoId deve identificar SUPORTE ou ADMIN. Não aceita chamado encerrado.")
@@ -206,10 +210,10 @@ public class ChamadoController {
             @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
     })
     @PutMapping("/{id}/atribuir") @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
-    public ChamadoResponse atribuir(@PathVariable Long id,@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+    public ChamadoResponse atribuir(@PathVariable UUID id,@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
                                     @Valid @RequestBody com.labware.api.dto.request.AtribuirChamadoRequest r) {
 
-        return chamadoService.atribuir(id,UsuarioLogado.id(jwt),r.tecnicoId());
+        return chamadoService.atribuir(identificador.interno(id),UsuarioLogado.id(jwt),r.tecnicoId());
     }
     @Operation(summary = "Reabrir chamado", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Aceita somente RESOLVIDO e muda para EM_ATENDIMENTO. Limpa resolução; preserva avaliação, responsável e prazos originais.")
     @ApiResponses({
@@ -221,7 +225,7 @@ public class ChamadoController {
             @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
     })
     @PostMapping("/{id}/reabrir")
-    public ChamadoResponse reabrir(@PathVariable Long id,@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
-        return chamadoService.reabrir(id,UsuarioLogado.id(jwt));
+    public ChamadoResponse reabrir(@PathVariable UUID id,@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+        return chamadoService.reabrir(identificador.interno(id),UsuarioLogado.id(jwt));
     }
 }

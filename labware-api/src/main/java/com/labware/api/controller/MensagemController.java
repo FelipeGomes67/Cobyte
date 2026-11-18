@@ -1,5 +1,8 @@
 package com.labware.api.controller;
 
+import com.labware.api.service.IdentificadorChamado;
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +32,7 @@ import java.util.List;
 
 public class MensagemController {
 
+    private final IdentificadorChamado identificador;
     private final MensagemService mensagemService;
 
     @Operation(summary = "Enviar mensagem", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Notas internas são exclusivas do suporte. anexoId deve pertencer ao mesmo chamado. Mensagem pública do suporte registra primeira resposta para SLA.")
@@ -43,12 +47,12 @@ public class MensagemController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public MensagemResponse enviar(@PathVariable Long chamadoId,
+    public MensagemResponse enviar(@PathVariable UUID chamadoId,
                                    @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
                                    @Valid @RequestBody CriarMensagemRequest request) {
 
 
-        return mensagemService.enviar(chamadoId, UsuarioLogado.id(jwt), request);
+        return mensagemService.enviar(identificador.interno(chamadoId), UsuarioLogado.id(jwt), request);
     }
 
     @Operation(summary = "Listar mensagens", description = "CLIENTE vê somente mensagens públicas dos próprios chamados; SUPORTE/ADMIN também veem notas internas. Ordenação por envio e ID.")
@@ -60,8 +64,8 @@ public class MensagemController {
             @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
     })
     @GetMapping
-    public List<MensagemResponse> listar(@PathVariable Long chamadoId,
+    public List<MensagemResponse> listar(@PathVariable UUID chamadoId,
                                          @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
-        return mensagemService.listar(chamadoId, UsuarioLogado.id(jwt));
+        return mensagemService.listar(identificador.interno(chamadoId), UsuarioLogado.id(jwt));
     }
 }

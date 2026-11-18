@@ -14,7 +14,7 @@ public class AcessoChamadoService {
         return usuario != null && (usuario.getPerfil() == PerfilUsuario.SUPORTE || usuario.getPerfil() == PerfilUsuario.ADMIN);
     }
 
-    /** SUPORTE e ADMIN acessam qualquer chamado; CLIENTE somente os que abriu. */
+    /** Clientes sem empresa ainda aguardam a aprovação do vínculo. */
     public void exigirEmpresaVinculada(Usuario usuario) {
         if (usuario != null && usuario.getPerfil() == PerfilUsuario.CLIENTE && usuario.getEmpresa() == null) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
@@ -25,21 +25,29 @@ public class AcessoChamadoService {
     public void exigirLeitura(Chamado chamado, Usuario usuario) {
         exigirEmpresaVinculada(usuario);
         if (ehSuporte(usuario)) return;
-        if (usuario != null && usuario.getPerfil() == PerfilUsuario.CLIENTE
-                && usuario.getEmpresa() != null && chamado.getEmpresa() != null
-                && usuario.getEmpresa().getId().equals(chamado.getEmpresa().getId())) return;
-        exigir(chamado, usuario);
+        if (!mesmaEmpresa(chamado, usuario)) negar();
     }
 
-    public void exigir(Chamado chamado, Usuario usuario) {
-        exigirEmpresaVinculada(usuario);
-        if (ehSuporte(usuario)) return;
+    public void exigirSolicitante(Chamado chamado, Usuario usuario) {
+        if (!mesmaEmpresa(chamado, usuario) || chamado.getSolicitante() == null
+                || !chamado.getSolicitante().getId().equals(usuario.getId())) negar();
+    }
 
-        if (usuario != null && usuario.getPerfil() == PerfilUsuario.CLIENTE
-                && chamado != null && chamado.getSolicitante() != null
-                && chamado.getSolicitante().getId().equals(usuario.getId())) {
-            return;
+    public void exigirEdicao(Chamado chamado, Usuario usuario) {
+        if (ehSuporte(usuario)) {
+            if (usuario.getPerfil() != PerfilUsuario.ADMIN && !chamado.possuiTecnico(usuario.getId())) negar();
+        } else {
+            exigirSolicitante(chamado, usuario);
         }
+    }
+
+    private boolean mesmaEmpresa(Chamado chamado, Usuario usuario) {
+        return chamado != null && chamado.getEmpresa() != null && usuario != null
+                && usuario.getPerfil() == PerfilUsuario.CLIENTE && usuario.getEmpresa() != null
+                && usuario.getEmpresa().getId().equals(chamado.getEmpresa().getId());
+    }
+
+    private void negar() {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado a este chamado");
     }
 }

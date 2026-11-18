@@ -21,7 +21,7 @@ public class WebPushService {
  @Value("${WEB_PUSH_PUBLIC_KEY:}") private String publica;
  @Value("${WEB_PUSH_PRIVATE_KEY:}") private String privada;
  @Value("${WEB_PUSH_SUBJECT:}") private String assunto;
- public record Evento(Long usuarioId, Long chamadoId) {}
+ public record Evento(Long usuarioId, java.util.UUID chamadoId) {}
  public boolean habilitado() { return !publica.isBlank() && !privada.isBlank() && !assunto.isBlank(); }
  public String chavePublica() { return habilitado() ? publica : ""; }
  private String id(String endpoint) {

@@ -1,5 +1,8 @@
 package com.labware.api.controller;
 
+import com.labware.api.service.IdentificadorChamado;
+import java.util.UUID;
+
 import com.labware.api.config.UsuarioLogado;
 import com.labware.api.dto.response.*;
 import com.labware.api.service.HistoricoCompletoService;
@@ -12,6 +15,7 @@ import jakarta.validation.constraints.*;
 @RestController @RequiredArgsConstructor
 @RequestMapping("/api/chamados/historico")
 public class HistoricoCompletoController {
+    private final IdentificadorChamado identificador;
     private final HistoricoCompletoService service;
     @GetMapping
     public PaginaResponse<ChamadoResponse> listar(@AuthenticationPrincipal Jwt jwt,
@@ -21,7 +25,7 @@ public class HistoricoCompletoController {
         return service.listar(UsuarioLogado.id(jwt),busca,page,size);
     }
     @GetMapping("/{id}")
-    public HistoricoCompletoResponse buscar(@PathVariable Long id,@AuthenticationPrincipal Jwt jwt) {
-        return service.buscar(id,UsuarioLogado.id(jwt));
+    public HistoricoCompletoResponse buscar(@PathVariable UUID id,@AuthenticationPrincipal Jwt jwt) {
+        return service.buscar(identificador.interno(id),UsuarioLogado.id(jwt));
     }
 }

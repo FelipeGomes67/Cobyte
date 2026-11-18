@@ -1,7 +1,28 @@
 package com.labware.api;
 
+import com.labware.api.model.entity.Anexo;
+import com.labware.api.model.entity.Chamado;
+import com.labware.api.model.entity.Empresa;
+import com.labware.api.model.entity.Mensagem;
+import com.labware.api.model.entity.Usuario;
+import com.labware.api.model.enums.PerfilUsuario;
+import com.labware.api.model.enums.StatusChamado;
+import com.labware.api.repository.AnexoRepository;
+import com.labware.api.repository.ChamadoRepository;
+import com.labware.api.repository.EmpresaRepository;
+import com.labware.api.repository.MensagemRepository;
+import com.labware.api.repository.UsuarioRepository;
+import com.labware.api.service.TokenService;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(properties = {
     "labware.jwt.secret=chave-sintetica-exclusiva-de-testes-jwt",
@@ -11,10 +32,125 @@ import org.springframework.boot.test.context.SpringBootTest;
     "spring.datasource.password=",
     "spring.jpa.hibernate.ddl-auto=create-drop"
 })
+@AutoConfigureMockMvc
+@Transactional
 class LabwareApiApplicationTests {
+    @Autowired MockMvc http;
+    @Autowired UsuarioRepository usuarios;
+    @Autowired EmpresaRepository empresas;
+    @Autowired ChamadoRepository chamados;
+    @Autowired AnexoRepository anexos;
+    @Autowired MensagemRepository mensagens;
+    @Autowired TokenService tokens;
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void autorESeuColegaPodemLerMasSomenteAutorPodeAlterar() throws Exception {
+        var empresa = empresa("00000000000001");
+        var autor = usuario("autor", PerfilUsuario.CLIENTE, empresa);
+        var colega = usuario("colega", PerfilUsuario.CLIENTE, empresa);
+        var chamado = chamado(autor, empresa);
+        String rota = "/api/chamados/" + chamado.getIdPublico();
 
+        http.perform(get(rota)).andExpect(status().isUnauthorized());
+        http.perform(get(rota).header("Authorization", bearer(colega)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(chamado.getIdPublico().toString()));
+        long antes = mensagens.count();
+        http.perform(post(rota + "/mensagens").header("Authorization", bearer(colega))
+                .contentType("application/json").content("{\"conteudo\":\"Mensagem de teste\"}"))
+                .andExpect(status().isForbidden());
+        http.perform(patch(rota + "/status").header("Authorization", bearer(colega))
+                .contentType("application/json").content("{\"novoStatus\":\"CANCELADO\",\"motivoCancelamento\":\"Teste\"}"))
+                .andExpect(status().isForbidden());
+        assertEquals(antes, mensagens.count());
+        assertEquals(StatusChamado.ABERTO, chamado.getStatus());
+
+        http.perform(post(rota + "/mensagens").header("Authorization", bearer(autor))
+                .contentType("application/json").content("{\"conteudo\":\"Mensagem de teste\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.chamadoId").value(chamado.getIdPublico().toString()));
+        assertEquals(antes + 1, mensagens.count());
+    }
+
+    @Test
+    void empresaAtualLimitaLeituraEIdentificadorNumericoNaoEPublico() throws Exception {
+        var antiga = empresa("00000000000001");
+        var atual = empresa("00000000000002");
+        var autor = usuario("autor", PerfilUsuario.CLIENTE, antiga);
+        var chamado = chamado(autor, antiga);
+        autor.setEmpresa(atual);
+        usuarios.saveAndFlush(autor);
+        String auth = bearer(autor);
+
+        http.perform(get("/api/chamados/" + chamado.getIdPublico()).header("Authorization", auth))
+                .andExpect(status().isForbidden());
+        http.perform(get("/api/chamados/" + chamado.getId()).header("Authorization", auth))
+                .andExpect(status().isBadRequest());
+        http.perform(get("/api/chamados/empresa/" + antiga.getId()).header("Authorization", auth))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void administracaoExigeAdminESessaoRevogadaRecebe401() throws Exception {
+        var cliente = usuario("cliente", PerfilUsuario.CLIENTE, empresa("00000000000001"));
+        var suporte = usuario("tecnico", PerfilUsuario.SUPORTE, null);
+        var admin = usuario("admin", PerfilUsuario.ADMIN, null);
+        String rota = "/api/admin/usuarios";
+        http.perform(get(rota).header("Authorization", bearer(cliente))).andExpect(status().isForbidden());
+        http.perform(get(rota).header("Authorization", bearer(suporte))).andExpect(status().isForbidden());
+        String tokenAntigo = bearer(admin);
+        http.perform(get(rota).header("Authorization", tokenAntigo)).andExpect(status().isOk());
+        admin.revogarSessoes();
+        usuarios.saveAndFlush(admin);
+        http.perform(get(rota).header("Authorization", tokenAntigo)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void clienteNaoRecebeAnexoDeNotaInterna() throws Exception {
+        var empresa = empresa("00000000000001");
+        var cliente = usuario("cliente", PerfilUsuario.CLIENTE, empresa);
+        var tecnico = usuario("tecnico", PerfilUsuario.SUPORTE, null);
+        var chamado = chamado(cliente, empresa);
+        var anexo = anexos.saveAndFlush(Anexo.builder().chamado(chamado).usuario(tecnico)
+                .nomeArquivo("interno.pdf").tipoConteudo("application/pdf")
+                .caminhoArquivo("arquivo-sintetico").tamanhoBytes(50L).build());
+        mensagens.saveAndFlush(Mensagem.builder().chamado(chamado).usuario(tecnico).anexo(anexo)
+                .conteudo("Nota sintética").visivelApenasSuporte(true).build());
+
+        String rota = "/api/chamados/" + chamado.getIdPublico() + "/anexos";
+        http.perform(get(rota).header("Authorization", bearer(cliente)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        http.perform(get(rota).header("Authorization", bearer(tecnico)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value(anexo.getId().intValue()));
+        http.perform(get("/api/chamados/anexos/" + anexo.getId() + "/download")
+                .header("Authorization", bearer(cliente))).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void limiteDeLoginRetorna429EInformaEspera() throws Exception {
+        String rota = "/api/auth/login";
+        String dados = "{\"email\":\"teste-limite@example.com\",\"senha\":\"senha-sintetica\"}";
+        for (int i = 0; i < 6; i++) {
+            http.perform(post(rota).servletPath(rota).contentType("application/json").content(dados))
+                    .andExpect(status().isUnauthorized());
+        }
+        http.perform(post(rota).servletPath(rota).contentType("application/json").content(dados))
+                .andExpect(status().isTooManyRequests()).andExpect(header().exists("Retry-After"));
+    }
+
+    private String bearer(Usuario usuario) {
+        return "Bearer " + tokens.gerar(usuario).valor();
+    }
+
+    private Empresa empresa(String cnpj) {
+        return empresas.saveAndFlush(Empresa.builder().nome("Empresa de teste").cnpj(cnpj).build());
+    }
+
+    private Usuario usuario(String nome, PerfilUsuario perfil, Empresa empresa) {
+        return usuarios.saveAndFlush(Usuario.builder().nome(nome).email(nome + "@example.com")
+                .senhaHash("valor-sintetico").perfil(perfil).empresa(empresa).build());
+    }
+
+    private Chamado chamado(Usuario autor, Empresa empresa) {
+        return chamados.saveAndFlush(Chamado.builder().protocolo("LAB-TESTE-0001").titulo("Chamado de teste")
+                .descricao("Descrição sintética para validar autorização").solicitante(autor).empresa(empresa).build());
+    }
 }

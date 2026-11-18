@@ -13,4 +13,11 @@ public interface AnexoRepository extends JpaRepository<Anexo, Long> {
     List<Anexo> findTop20ByIdGreaterThanOrderByIdAsc(Long id);
     @EntityGraph(attributePaths = {"chamado", "usuario"})
     List<Anexo> findByChamadoIdOrderByEnviadoEmAscIdAsc(Long chamadoId);
+
+    @org.springframework.data.jpa.repository.Query("""
+            select a from Anexo a where a.chamado.id = :chamadoId and not exists
+            (select m.id from Mensagem m where m.anexo = a and m.visivelApenasSuporte = true)
+            order by a.enviadoEm, a.id
+            """)
+    List<Anexo> listarPublicos(@org.springframework.data.repository.query.Param("chamadoId") Long chamadoId);
 }

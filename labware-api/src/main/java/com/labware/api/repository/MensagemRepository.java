@@ -11,4 +11,5 @@ public interface MensagemRepository extends JpaRepository<Mensagem, Long> {
     List<Mensagem> findByChamadoIdOrderByCriadoEmAscIdAsc(Long chamadoId);
     @EntityGraph(attributePaths = {"usuario", "chamado", "anexo"})
     List<Mensagem> findByChamadoIdAndVisivelApenasSuporteFalseOrderByCriadoEmAscIdAsc(Long chamadoId);
+    boolean existsByAnexoIdAndVisivelApenasSuporteTrue(Long anexoId);
 }

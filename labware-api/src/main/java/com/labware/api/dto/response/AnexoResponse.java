@@ -10,7 +10,7 @@ public record AnexoResponse(
         @Schema(description = "Identificador do recurso.", example = "108")
         Long id,
         @Schema(description = "Identificador do chamado.", example = "108")
-        Long chamadoId,
+        java.util.UUID chamadoId,
         @Schema(description = "Identificador do usuário.", example = "1")
         Long usuarioId,
         @Schema(description = "Nome sanitizado do arquivo.", example = "relato.wav")
@@ -27,7 +27,7 @@ public record AnexoResponse(
         Double duracaoAudioSegundos
 ) {
     public static AnexoResponse from(Anexo a) {
-        return new AnexoResponse(a.getId(), a.getChamado().getId(), a.getUsuario().getId(),
+        return new AnexoResponse(a.getId(), a.getChamado().getIdPublico(), a.getUsuario().getId(),
                 a.getNomeArquivo(), a.getTipoConteudo(), a.getTamanhoBytes(), a.getEnviadoEm(),
                 "/api/chamados/anexos/" + a.getId() + "/download", a.getDuracaoAudioSegundos());
     }
