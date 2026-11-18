@@ -146,10 +146,7 @@ public class ClassificadorIaService {
 
     private ClassificacaoIaResultadoReponse consultarModelo(String titulo, String descricao) {
         String entrada = "Título: " + limitar(titulo, 255) + "\nDescrição: " + limitar(descricao, 6000);
-        var respostaChat = chatClient.prompt()
-                .options(OllamaChatOptions.builder().temperature(0.0).format(schema).numCtx(4096).numPredict(maxTokens))
-                .system(INSTRUCAO)
-                .user(u -> u.text("{relato}").param("relato", entrada)).call().chatResponse();
+        var respostaChat = chamarModelo(entrada);
         if (respostaChat == null || respostaChat.getResult() == null) {
             throw new IllegalArgumentException("IA retornou resposta vazia");
         }
@@ -232,6 +229,18 @@ public class ClassificadorIaService {
         return emergencia(titulo, descricao, "JSON sem campos aproveitáveis");
     }
 
+    private org.springframework.ai.chat.model.ChatResponse chamarModelo(String entrada) {
+        try {
+            return chatClient.prompt()
+                    .options(OllamaChatOptions.builder().temperature(0.0).format(schema).numCtx(4096).numPredict(maxTokens))
+                    .system(INSTRUCAO)
+                    .user(u -> u.text("{relato}").param("relato", entrada)).call().chatResponse();
+        } catch (RuntimeException e) {
+            log.warn("Triagem: falha ao consultar modelo (tipo={})", e.getClass().getSimpleName());
+            throw e;
+        }
+    }
+
     private record RespostaExtraida(JsonNode json, boolean parcial) {}
 
     private RespostaExtraida extrairResposta(String resposta) {
@@ -243,6 +252,8 @@ public class ClassificadorIaService {
             if (!json.isObject()) throw new IllegalArgumentException("JSON não é objeto");
             return new RespostaExtraida(json, false);
         } catch (tools.jackson.core.JacksonException erro) {
+            log.warn("Triagem: JSON inválido na resposta do modelo (tipo={})",
+                    erro.getClass().getSimpleName());
             // Retém somente valores textuais completamente decodificados pelo parser.
             // Uma string interrompida nunca é completada ou inventada.
             var recuperado = mapper.createObjectNode();
