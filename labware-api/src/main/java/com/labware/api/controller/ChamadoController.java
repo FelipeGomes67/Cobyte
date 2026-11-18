@@ -116,7 +116,7 @@ public class ChamadoController {
         return com.labware.api.dto.response.PaginaResponse.from(chamadoService.filtrar(UsuarioLogado.id(jwt),busca,status,prioridade,origemEnum,responsavelId,apenasMeus,solicitanteId,page,size));
     }
 
-    @Operation(summary = "Consultar chamado", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Inclui avaliação, SLA, responsável e flag de mensagens não lidas. Não marca mensagens como lidas.")
+    @Operation(summary = "Consultar chamado", description = "Cliente da empresa do chamado ou SUPORTE/ADMIN. Inclui avaliação, SLA, responsável e flag de mensagens não lidas. Não marca mensagens como lidas.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
@@ -215,7 +215,7 @@ public class ChamadoController {
 
         return chamadoService.atribuir(identificador.interno(id),UsuarioLogado.id(jwt),r.tecnicoId());
     }
-    @Operation(summary = "Reabrir chamado", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Aceita somente RESOLVIDO e muda para EM_ATENDIMENTO. Limpa resolução; preserva avaliação, responsável e prazos originais.")
+    @Operation(summary = "Reabrir chamado", description = "Cliente da empresa do chamado, técnico participante ou ADMIN. Aceita somente RESOLVIDO e muda para EM_ATENDIMENTO. Limpa resolução e preserva avaliação, responsável e prazos originais.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),

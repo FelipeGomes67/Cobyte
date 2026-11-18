@@ -83,10 +83,12 @@ class LabwareApiApplicationTests {
     }
 
     @Test
-    void autorESeuColegaPodemLerMasSomenteAutorPodeAlterar() throws Exception {
+    void colegaDaEmpresaPodeEnviarMensagemECancelarRegistrandoSuaIdentidade() throws Exception {
         var empresa = empresa("00000000000001");
+        var outraEmpresa = empresa("00000000000002");
         var autor = usuario("autor", PerfilUsuario.CLIENTE, empresa);
         var colega = usuario("colega", PerfilUsuario.CLIENTE, empresa);
+        var externo = usuario("externo", PerfilUsuario.CLIENTE, outraEmpresa);
         var chamado = chamado(autor, empresa);
         String rota = "/api/chamados/" + chamado.getIdPublico();
 
@@ -94,19 +96,52 @@ class LabwareApiApplicationTests {
         http.perform(get(rota).header("Authorization", bearer(colega)))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(chamado.getIdPublico().toString()));
         long antes = mensagens.count();
-        http.perform(post(rota + "/mensagens").header("Authorization", bearer(colega))
+        http.perform(post(rota + "/mensagens").header("Authorization", bearer(externo))
                 .contentType("application/json").content("{\"conteudo\":\"Mensagem de teste\"}"))
                 .andExpect(status().isForbidden());
-        http.perform(patch(rota + "/status").header("Authorization", bearer(colega))
-                .contentType("application/json").content("{\"novoStatus\":\"CANCELADO\",\"motivoCancelamento\":\"Teste\"}"))
+        String cancelamento = "{\"novoStatus\":\"CANCELADO\",\"motivoCancelamento\":\"Serviço não necessário\"}";
+        http.perform(patch(rota + "/status").header("Authorization", bearer(externo))
+                .contentType("application/json").content(cancelamento))
                 .andExpect(status().isForbidden());
         assertEquals(antes, mensagens.count());
         assertEquals(StatusChamado.ABERTO, chamado.getStatus());
 
-        http.perform(post(rota + "/mensagens").header("Authorization", bearer(autor))
+        http.perform(post(rota + "/mensagens").header("Authorization", bearer(colega))
                 .contentType("application/json").content("{\"conteudo\":\"Mensagem de teste\"}"))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.chamadoId").value(chamado.getIdPublico().toString()));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.chamadoId").value(chamado.getIdPublico().toString()))
+                .andExpect(jsonPath("$.usuarioId").value(colega.getId().intValue()));
         assertEquals(antes + 1, mensagens.count());
+
+        http.perform(patch(rota + "/prioridade").header("Authorization", bearer(colega))
+                .contentType("application/json").content("{\"novaPrioridade\":\"ALTA\"}"))
+                .andExpect(status().isForbidden());
+        http.perform(patch(rota + "/status").header("Authorization", bearer(colega))
+                .contentType("application/json").content(cancelamento))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELADO"))
+                .andExpect(jsonPath("$.canceladoPorId").value(colega.getId().intValue()))
+                .andExpect(jsonPath("$.solicitanteId").value(autor.getId().intValue()));
+    }
+
+    @Test
+    void colegaPodeConfirmarResolucaoOuReabrirChamadoResolvido() throws Exception {
+        var empresa = empresa("00000000000001");
+        var autor = usuario("autor", PerfilUsuario.CLIENTE, empresa);
+        var colega = usuario("colega", PerfilUsuario.CLIENTE, empresa);
+        var chamado = chamado(autor, empresa);
+        var outro = chamados.saveAndFlush(Chamado.builder().protocolo("LAB-TESTE-0002")
+                .titulo("Outro chamado de teste").descricao("Validação de fechamento")
+                .solicitante(autor).empresa(empresa).status(StatusChamado.RESOLVIDO).build());
+        chamado.setStatus(StatusChamado.RESOLVIDO);
+        chamados.saveAndFlush(chamado);
+        String auth = bearer(colega);
+
+        http.perform(post("/api/chamados/" + chamado.getIdPublico() + "/reabrir").header("Authorization", auth))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("EM_ATENDIMENTO"));
+        http.perform(patch("/api/chamados/" + outro.getIdPublico() + "/status").header("Authorization", auth)
+                .contentType("application/json").content("{\"novoStatus\":\"FECHADO\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("FECHADO"));
     }
 
     @Test

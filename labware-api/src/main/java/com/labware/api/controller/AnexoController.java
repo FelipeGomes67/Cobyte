@@ -32,7 +32,7 @@ public class AnexoController {
     private final IdentificadorChamado identificador;
     private final AnexoService service;
 
-    @Operation(summary = "Enviar anexo", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Arquivo multipart de até 10 MB; retorna metadados e URL de download autenticado.")
+    @Operation(summary = "Enviar anexo", description = "Cliente da empresa do chamado, técnico participante ou ADMIN. Arquivo multipart de até 10 MB; retorna metadados e URL de download autenticado.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
@@ -51,7 +51,7 @@ public class AnexoController {
         return service.enviar(identificador.interno(id), UsuarioLogado.id(jwt), arquivo);
     }
 
-    @Operation(summary = "Listar anexos", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Retorna metadados sem expor caminhos físicos.")
+    @Operation(summary = "Listar anexos", description = "Cliente da empresa do chamado ou SUPORTE/ADMIN. Clientes recebem apenas anexos públicos. Retorna metadados sem expor caminhos físicos.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
@@ -64,7 +64,7 @@ public class AnexoController {
         return service.listar(identificador.interno(id), UsuarioLogado.id(jwt));
     }
 
-    @Operation(summary = "Baixar anexo", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Retorna arquivo binário com Content-Disposition attachment.")
+    @Operation(summary = "Baixar anexo", description = "Cliente da empresa do chamado ou SUPORTE/ADMIN, conforme a visibilidade do anexo. Retorna arquivo binário com Content-Disposition attachment.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Arquivo binário", content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/octet-stream", schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", format = "binary"))),
             @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),

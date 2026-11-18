@@ -287,10 +287,10 @@ public class ChamadoService {
         }
         boolean cliente = usuario.getPerfil() == PerfilUsuario.CLIENTE;
         if (cliente && novo != StatusChamado.CANCELADO && novo != StatusChamado.FECHADO) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solicitante pode cancelar ou confirmar a resolução");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Clientes da empresa podem cancelar ou confirmar a resolução");
         }
         if (novo == StatusChamado.FECHADO && !cliente) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "O fechamento deve ser confirmado pelo solicitante");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "O fechamento deve ser confirmado por um cliente da empresa");
         }
         if (atual != novo && !atual.podeIrPara(novo)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Transição inválida: " + atual.codigo() + " -> " + (novo == null ? "" : novo.codigo()));

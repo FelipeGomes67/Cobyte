@@ -12,10 +12,12 @@ class AcessoChamadoServiceTest {
     private final Usuario autor = Usuario.builder().id(10L).perfil(PerfilUsuario.CLIENTE).empresa(empresa).build();
     private final Chamado chamado = Chamado.builder().id(100L).empresa(empresa).solicitante(autor).build();
 
-    @Test void colegaDaEmpresaPodeLerMasNaoAlterar() {
+    @Test void colegaDaEmpresaPodeLerEAlterarSemSeTornarSolicitante() {
         var colega = Usuario.builder().id(20L).perfil(PerfilUsuario.CLIENTE).empresa(empresa).build();
         assertDoesNotThrow(() -> acesso.exigirLeitura(chamado, colega));
-        assertEquals(403, assertThrows(ResponseStatusException.class, () -> acesso.exigirEdicao(chamado, colega)).getStatusCode().value());
+        assertDoesNotThrow(() -> acesso.exigirEdicao(chamado, colega));
+        assertEquals(403, assertThrows(ResponseStatusException.class,
+                () -> acesso.exigirSolicitante(chamado, colega)).getStatusCode().value());
     }
 
     @Test void outraEmpresaNaoPodeLerNemAlterar() {

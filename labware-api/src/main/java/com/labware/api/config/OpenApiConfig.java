@@ -25,7 +25,7 @@ public class OpenApiConfig {
         ModelConverters.getInstance().readAll(ErroResponse.class).forEach(components::addSchemas);
         components.addResponses("DadosInvalidos", erro("Parâmetros ou corpo inválidos."));
         components.addResponses("NaoAutenticado", erro("JWT ausente/inválido/expirado ou credenciais incorretas."));
-        components.addResponses("AcessoNegado", erro("Perfil sem permissão ou chamado de outro solicitante."));
+        components.addResponses("AcessoNegado", erro("O usuário não tem permissão para esta ação."));
         components.addResponses("NaoEncontrado", erro("Recurso não encontrado."));
         components.addResponses("Conflito", erro("Estado incompatível, avaliação existente ou e-mail duplicado."));
         components.addResponses("ArquivoGrande", erro("Arquivo ultrapassa o limite de upload de 10 MB."));

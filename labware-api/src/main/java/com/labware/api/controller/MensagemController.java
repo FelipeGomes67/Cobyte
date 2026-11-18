@@ -35,7 +35,7 @@ public class MensagemController {
     private final IdentificadorChamado identificador;
     private final MensagemService mensagemService;
 
-    @Operation(summary = "Enviar mensagem", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Notas internas são exclusivas do suporte. anexoId deve pertencer ao mesmo chamado. Mensagem pública do suporte registra primeira resposta para SLA.")
+    @Operation(summary = "Enviar mensagem", description = "Cliente da empresa do chamado ou técnico participante. Notas internas são exclusivas do suporte. anexoId deve pertencer ao mesmo chamado. Mensagem pública do suporte registra primeira resposta para SLA.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),

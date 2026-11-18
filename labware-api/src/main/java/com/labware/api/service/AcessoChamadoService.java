@@ -36,8 +36,8 @@ public class AcessoChamadoService {
     public void exigirEdicao(Chamado chamado, Usuario usuario) {
         if (ehSuporte(usuario)) {
             if (usuario.getPerfil() != PerfilUsuario.ADMIN && !chamado.possuiTecnico(usuario.getId())) negar();
-        } else {
-            exigirSolicitante(chamado, usuario);
+        } else if (!mesmaEmpresa(chamado, usuario)) {
+            negar();
         }
     }
 

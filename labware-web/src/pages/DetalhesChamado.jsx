@@ -363,9 +363,7 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
         <p className="mensagem-erro-conversa" role="alert">{erroEnvio}</p>
       )}
 
-      {clienteLogado && !descricaoPropria ? (
-        <p className="history-message-composer-encerrado">Chamado de outro solicitante. Você pode acompanhar a conversa.</p>
-      ) : suporteSemParticipacao && !chamadoEncerrado ? (
+      {suporteSemParticipacao && !chamadoEncerrado ? (
         <div className="history-message-composer-encerrado" role="status">
           <p>Você pode ler a conversa. Para enviar mensagens, clique em Participar do atendimento.</p>
         </div>
@@ -393,7 +391,7 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
       ) : (
         <div className="history-message-composer-encerrado">
           <p>Este chamado está encerrado e não aceita novas mensagens.</p>
-          {onReabrir && (descricaoPropria || usuario?.perfil !== 'CLIENTE') && (chamado.statusRaw === 'RESOLVIDO' || chamado.status === 'Resolvido') && (
+          {onReabrir && (chamado.statusRaw === 'RESOLVIDO' || chamado.status === 'Resolvido') && (
             <button
               type="button"
               className="secondary-button small-button btn-reabrir"
@@ -430,9 +428,7 @@ function DetalhesEmAtendimento({
   const statusAtivo = ['ABERTO', 'EM_ANALISE', 'EM_ATENDIMENTO', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
   const podeEditar = ehSuporte && jaParticipa && statusAtivo;
   const podeAlterarStatus = podeEditar;
-  const solicitanteId = chamado?.solicitanteId ?? chamado?.ownerId ?? chamado?.solicitante?.id;
-  const ehSolicitante = solicitanteId != null && String(solicitanteId) === String(usuario?.id);
-  const podeCancelar = (ehSuporte ? jaParticipa : ehSolicitante)
+  const podeCancelar = (ehSuporte ? jaParticipa : usuario?.perfil === 'CLIENTE')
     && ['ABERTO', 'EM_ANALISE', 'AGUARDANDO_SOLICITANTE'].includes(codigoAtual);
   const podeAlterarPrioridade = ehSuporte && jaParticipa && codigoAtual === 'EM_ANALISE';
 
@@ -466,7 +462,7 @@ function DetalhesEmAtendimento({
         chamado={chamado}
         aoVoltar={aoVoltar}
         onNovaMensagem={onNovaMensagem}
-        onReabrir={onReabrir}
+        onReabrir={usuario?.perfil === 'CLIENTE' || usuario?.perfil === 'ADMIN' || jaParticipa ? onReabrir : undefined}
         reabrindo={reabrindo}
         onChamadoAtualizado={onChamadoAtualizado}
       />
@@ -845,18 +841,18 @@ function DetalhesEncerrados({ chamado, aoVoltar, onNovaMensagem, onReabrir, reab
 
             <div className="history-info-card">
               <h4>Atendimento</h4>
-              <p style={{ marginBottom: '16px' }}>{resolvido ? 'Solução aplicada. O solicitante pode confirmar o encerramento ou reabrir o atendimento.' : (statusExibido === 'Cancelado' ? 'Este chamado foi cancelado. Confira o motivo abaixo.' : 'Atendimento concluído. Obrigado por contar com nossa equipe!')}</p>
+              <p style={{ marginBottom: '16px' }}>{resolvido ? 'Solução aplicada. Um cliente da empresa pode confirmar o encerramento ou reabrir o atendimento.' : (statusExibido === 'Cancelado' ? 'Este chamado foi cancelado. Confira o motivo abaixo.' : 'Atendimento concluído. Obrigado por contar com nossa equipe!')}</p>
               {chamado.motivoCancelamento && <section className="cancellation-report">
                 <h4>Relatório de cancelamento</h4>
                 <p>{chamado.motivoCancelamento}</p>
                 <small>{chamado.canceladoPorNome} · {formatarDataHoraMensagem(chamado.canceladoEm)}</small>
               </section>}
               {erroFechamento && <p role="alert">{erroFechamento}</p>}
-              {resolvido && usuario?.perfil === 'CLIENTE' && String(usuario.id) === String(chamado.solicitanteId) && <button type="button"
+              {resolvido && usuario?.perfil === 'CLIENTE' && <button type="button"
                 className="primary-button wide-button" disabled={fechando} onClick={confirmarResolucao}>
                 {fechando ? 'Fechando...' : 'Confirmar resolução e fechar'}
               </button>}
-              {onReabrir && resolvido && (usuario?.perfil !== 'CLIENTE' || String(usuario.id) === String(chamado.solicitanteId)) && (
+              {onReabrir && resolvido && (
                 <button
                   type="button"
                   className="primary-button wide-button"

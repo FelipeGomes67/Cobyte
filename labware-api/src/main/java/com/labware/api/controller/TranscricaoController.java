@@ -53,7 +53,7 @@ public class TranscricaoController {
         return transcricao.transcreverAudio(arquivo);
     }
 
-    @Operation(summary = "Transcrever áudio de um chamado", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Pode salvar anexo e/ou mensagem. Nota interna exige SUPORTE/ADMIN, salvarMensagem=true e salvarAnexo=false. Chamado fechado não aceita nova mensagem.")
+    @Operation(summary = "Transcrever áudio de um chamado", description = "Cliente da empresa do chamado, técnico participante ou ADMIN, conforme as permissões de envio. Pode salvar anexo e/ou mensagem. Nota interna exige SUPORTE/ADMIN, salvarMensagem=true e salvarAnexo=false. Chamado fechado não aceita nova mensagem.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
             @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
