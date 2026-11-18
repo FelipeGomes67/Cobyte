@@ -1,4 +1,4 @@
-import { obterVisualChamado } from './chamadoVisual';
+import { obterVisualChamado } from './chamadoVisual.js';
 export const REPORT_CATEGORIES = ['Indisponibilidade', 'Integração', 'Acesso', 'Dúvida', 'Segurança', 'Outros'];
 export const REPORT_PRIORITIES = ['Crítica', 'Alta', 'Média', 'Baixa', 'Melhoria', 'Não aplicável', 'Sem prioridade']
   .map(name => ({ name, color: obterVisualChamado(name, 'prioridade').cor }));
@@ -140,7 +140,7 @@ export function getMonthlyTrend(tickets, now = new Date(), selectedYear = null) 
       }
     }
 
-    const resolvedAt = ticket.status === 'Resolvido' && ticket.resolvedAt
+    const resolvedAt = ['Resolvido', 'Fechado'].includes(ticket.status) && ticket.resolvedAt
       ? getCalendarParts(ticket.resolvedAt)
       : null;
     if (resolvedAt?.year) {

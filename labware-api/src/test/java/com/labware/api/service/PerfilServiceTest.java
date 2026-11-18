@@ -39,30 +39,46 @@ class PerfilServiceTest {
     @Test void empresaDigitadaNaoAlteraVinculoCadastral() {
         var empresa = Empresa.builder().id(10L).nome("Empresa cadastrada").build();
         usuario.setEmpresa(empresa);
-        var resposta = service.atualizar(1L, new AtualizarPerfilRequest("Cliente", "cliente@teste.com", null, " Nova empresa "));
-        assertEquals("Nova empresa", resposta.empresa());
-        assertEquals(10L, resposta.empresaId());
+        var erro = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L,
+                new AtualizarPerfilRequest("Cliente", "cliente@teste.com", null, " Nova empresa ")));
+        assertEquals(403, erro.getStatusCode().value());
         assertSame(empresa, usuario.getEmpresa());
         verifyNoInteractions(empresas);
-        assertEquals("Nova empresa", service.buscar(1L).empresa());
+        verify(usuarios, never()).saveAndFlush(any());
+    }
+
+    @Test void editarNomePreservaEmpresaVinculada() {
+        var empresa = Empresa.builder().id(10L).nome("Empresa cadastrada").build();
+        usuario.setEmpresa(empresa);
+        var resposta = service.atualizar(1L,
+                new AtualizarPerfilRequest("Novo nome", "cliente@teste.com", null, null));
+        assertEquals("Novo nome", usuario.getNome());
+        assertEquals(10L, resposta.empresaId());
+        assertSame(empresa, usuario.getEmpresa());
+        verify(usuarios).saveAndFlush(usuario);
+        verifyNoInteractions(empresas);
     }
 
     @Test void empresaLivreSemCadastroNaoCriaVinculo() {
-        var resposta = service.atualizar(1L, new AtualizarPerfilRequest("Cliente", "cliente@teste.com", null, "Empresa livre"));
-        assertEquals("Empresa livre", resposta.empresa());
-        assertNull(resposta.empresaId());
+        var erro = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L,
+                new AtualizarPerfilRequest("Cliente", "cliente@teste.com", null, "Empresa livre")));
+        assertEquals(403, erro.getStatusCode().value());
+        assertNull(usuario.getEmpresa());
+        verify(usuarios, never()).saveAndFlush(any());
         verifyNoInteractions(empresas);
     }
 
-    @Test void clienteSelecionaEmpresaAtivaSemManterNomeInformativoAntigo() {
+    @Test void clienteNaoPodeVincularEmpresaMesmoAtiva() {
         usuario.setEmpresaInformada("Nome antigo");
         var empresa = Empresa.builder().id(20L).nome("Empresa escolhida").ativa(true).build();
         when(empresas.findById(20L)).thenReturn(Optional.of(empresa));
-        var resposta = service.atualizar(1L, new AtualizarPerfilRequest("Cliente", "cliente@teste.com",
-                null, null, null, null, 20L));
-        assertEquals(20L, resposta.empresaId());
-        assertEquals("Empresa escolhida", resposta.empresa());
-        assertNull(usuario.getEmpresaInformada());
+        var erro = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L,
+                new AtualizarPerfilRequest("Cliente", "cliente@teste.com", null, null, null, null, 20L)));
+        assertEquals(403, erro.getStatusCode().value());
+        assertNull(usuario.getEmpresa());
+        assertEquals("Nome antigo", usuario.getEmpresaInformada());
+        verifyNoInteractions(empresas);
+        verify(usuarios, never()).saveAndFlush(any());
     }
 
     @Test void selecaoDeEmpresaInativaPreservaVinculoAtual() {
@@ -71,7 +87,7 @@ class PerfilServiceTest {
         when(empresas.findById(20L)).thenReturn(Optional.of(Empresa.builder().id(20L).ativa(false).build()));
         var erro = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L,
                 new AtualizarPerfilRequest("Cliente", "cliente@teste.com", null, null, null, null, 20L)));
-        assertEquals(400, erro.getStatusCode().value());
+        assertEquals(403, erro.getStatusCode().value());
         assertSame(atual, usuario.getEmpresa());
     }
 
