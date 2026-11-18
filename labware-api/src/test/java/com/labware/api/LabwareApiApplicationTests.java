@@ -12,15 +12,24 @@ import com.labware.api.repository.ChamadoRepository;
 import com.labware.api.repository.EmpresaRepository;
 import com.labware.api.repository.MensagemRepository;
 import com.labware.api.repository.UsuarioRepository;
+import com.labware.api.service.ClassificadorIaService;
 import com.labware.api.service.TokenService;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -30,7 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "spring.datasource.driver-class-name=org.h2.Driver",
     "spring.datasource.username=sa",
     "spring.datasource.password=",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "labware.uploads.armazenamento=banco"
 })
 @AutoConfigureMockMvc
 @Transactional
@@ -42,6 +52,35 @@ class LabwareApiApplicationTests {
     @Autowired AnexoRepository anexos;
     @Autowired MensagemRepository mensagens;
     @Autowired TokenService tokens;
+    @MockitoBean ClassificadorIaService classificador;
+
+    @Test
+    void aberturaGeraProtocolosAleatoriosDistintosEPreservaOLegado() throws Exception {
+        var empresa = empresa("00000000000001");
+        var autor = usuario("autor", PerfilUsuario.CLIENTE, empresa);
+        var legado = chamado(autor, empresa);
+        var dados = new MockMultipartFile("chamado", "chamado.json", "application/json",
+                "{\"titulo\":\"Teste de abertura\",\"descricao\":\"Relato de teste\"}".getBytes(StandardCharsets.UTF_8));
+        var png = Base64.getDecoder().decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jL1YAAAAASUVORK5CYII=");
+        var arquivo = new MockMultipartFile("arquivos", "evidencia.png", "image/png", png);
+        when(classificador.classificar("Teste de abertura", "Relato de teste")).thenReturn(Optional.empty());
+        String rota = "/api/chamados";
+
+        for (int i = 0; i < 2; i++) {
+            http.perform(multipart(rota).file(dados).file(arquivo).servletPath(rota)
+                            .header("Authorization", bearer(autor)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.protocolo", matchesPattern("^LAB-(?:[A-Z0-9]{4}-){2}[A-Z0-9]{4}$")));
+        }
+
+        var novos = chamados.findBySolicitanteIdAndEmpresaIdOrderByAbertoEmDesc(autor.getId(), empresa.getId())
+                .stream().filter(c -> !c.getId().equals(legado.getId())).toList();
+        assertEquals(2, novos.size());
+        assertNotEquals(novos.get(0).getProtocolo(), novos.get(1).getProtocolo());
+        assertNotEquals(novos.get(0).getIdPublico(), novos.get(1).getIdPublico());
+        assertEquals("LAB-TESTE-0001", chamados.findById(legado.getId()).orElseThrow().getProtocolo());
+    }
 
     @Test
     void autorESeuColegaPodemLerMasSomenteAutorPodeAlterar() throws Exception {

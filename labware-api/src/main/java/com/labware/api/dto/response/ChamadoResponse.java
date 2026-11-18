@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 
 @Schema(description = "Detalhes do chamado com avaliação, SLA e indicador de leitura individual.")
 public record ChamadoResponse(
-        @Schema(description = "Identificador do recurso.", example = "108")
+        @Schema(description = "UUID público do chamado.", example = "9b7146e5-55be-4ae4-9187-cbf8f58c4061")
         java.util.UUID id,
-        @Schema(description = "Código público único do chamado.", example = "LAB-2026-00108")
+        @Schema(description = "Código público para exibição e busca.", example = "LAB-7K4M-Q2TX-9P6R")
         String protocolo,
         @Schema(description = "Título do chamado.", example = "Falha no acesso ao sistema")
         String titulo,

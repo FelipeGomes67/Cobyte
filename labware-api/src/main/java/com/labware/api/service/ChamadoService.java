@@ -27,8 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,6 +37,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class ChamadoService {
+
+    private static final SecureRandom ALEATORIO = new SecureRandom();
+    private static final String ALFABETO_PROTOCOLO = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
     private final ChamadoRepository chamadoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -83,7 +86,7 @@ public class ChamadoService {
                 String termo=busca.trim().toLowerCase(java.util.Locale.ROOT);
                 String like="%"+termo.replace("!","!!").replace("%","!%").replace("_","!_")+"%";
                 var texto=cb.or(cb.like(cb.lower(root.get("titulo")),like,'!'),cb.like(cb.lower(root.get("protocolo")),like,'!'));
-                try { texto=cb.or(texto,cb.equal(root.get("idPublico"),java.util.UUID.fromString(termo))); }
+                try { texto=cb.or(texto,cb.equal(root.get("idPublico"),UUID.fromString(termo))); }
                 catch(IllegalArgumentException ignored) { }
                 p.add(texto);
             }
@@ -438,8 +441,7 @@ public class ChamadoService {
         exigirSolicitanteCliente(solicitante);
 
         Chamado chamado = chamadoRepository.save(Chamado.builder()
-                // protocolo provisório (a coluna é única e obrigatória); o definitivo usa o id
-                .protocolo("TMP-" + UUID.randomUUID().toString().substring(0, 15))
+                .protocolo(gerarProtocolo())
                 .titulo(req.titulo())
                 .descricao(req.descricao())
                 .origem(req.origem()!=null ? req.origem() : com.labware.api.model.enums.OrigemChamado.TEXTO)
@@ -448,10 +450,20 @@ public class ChamadoService {
                 .solicitante(solicitante)
                 .build());
 
-        chamado.setProtocolo(String.format("LAB-%d-%05d", Year.now().getValue(), chamado.getId()));
         registrarHistorico(chamado, solicitante, null, chamado.getStatus().name());
         notificacoes.emitir(solicitante, null, chamado, "ABERTURA", "Chamado registrado", chamado.getDescricao(), solicitante.getNome(), null);
         return chamado.getId();
+    }
+
+    private static String gerarProtocolo() {
+        var protocolo = new StringBuilder("LAB");
+        for (int grupo = 0; grupo < 3; grupo++) {
+            protocolo.append('-');
+            for (int i = 0; i < 4; i++) {
+                protocolo.append(ALFABETO_PROTOCOLO.charAt(ALEATORIO.nextInt(ALFABETO_PROTOCOLO.length())));
+            }
+        }
+        return protocolo.toString();
     }
 
     private void exigirSolicitanteCliente(Usuario solicitante) {
