@@ -1,53 +1,71 @@
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  LoaderCircle,
+  Mail,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  ArrowRight,
+} from "lucide-react";
+import { useAutenticacao } from "../hooks/useAuth";
 
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LoaderCircle, Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { useAutenticacao } from '../hooks/useAuth';
-
-export default function LoginPage({ modo = 'login' }) {
+export default function LoginPage({ modo = "login" }) {
   const navegar = useNavigate();
   const localizacao = useLocation();
   const { autenticar, cadastrar, carregando, erroSessao } = useAutenticacao();
 
-  const [erroLogin, definirErroLogin] = useState('');
-  const [erroCadastro, definirErroCadastro] = useState('');
+  const [erroLogin, definirErroLogin] = useState("");
+  const [erroCadastro, definirErroCadastro] = useState("");
   const [mostrarSenha, definirMostrarSenha] = useState(false);
 
-  const ehCadastro = modo === 'cadastro';
+  const ehCadastro = modo === "cadastro";
 
   async function enviarLogin(evento) {
     evento.preventDefault();
-    definirErroLogin('');
+    definirErroLogin("");
 
     const formulario = new FormData(evento.currentTarget);
 
     try {
-      await autenticar(formulario.get('email'), formulario.get('senha'));
+      await autenticar(formulario.get("email"), formulario.get("senha"));
       const destino = localizacao.state?.from;
 
-      navegar(typeof destino === 'string' && destino.startsWith('/') && !destino.startsWith('//') ? destino : '/dashboard', { replace: true });
+      navegar(
+        typeof destino === "string" &&
+          destino.startsWith("/") &&
+          !destino.startsWith("//")
+          ? destino
+          : "/dashboard",
+        { replace: true },
+      );
     } catch (erro) {
-      definirErroLogin(erro.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');
+      definirErroLogin(
+        erro.message || "Credenciais inválidas. Verifique seu e-mail e senha.",
+      );
     }
   }
 
   async function enviarCadastro(evento) {
     evento.preventDefault();
-    definirErroCadastro('');
+    definirErroCadastro("");
 
     const formulario = new FormData(evento.currentTarget);
 
     try {
       await cadastrar({
-        nome: formulario.get('nome'),
-        email: formulario.get('email'),
-        senha: formulario.get('senha'),
-        empresaInformada: formulario.get('empresaInformada')
+        nome: formulario.get("nome"),
+        email: formulario.get("email"),
+        senha: formulario.get("senha"),
+        empresaInformada: formulario.get("empresaInformada"),
       });
 
-      navegar('/dashboard', { replace: true });
+      navegar("/dashboard", { replace: true });
     } catch (erro) {
-      definirErroCadastro(erro.message || 'Não foi possível concluir o cadastro.');
+      definirErroCadastro(
+        erro.message || "Não foi possível concluir o cadastro.",
+      );
     }
   }
 
@@ -56,7 +74,11 @@ export default function LoginPage({ modo = 'login' }) {
       <div className="conteudo-autenticacao">
         <section className="identidade-marca">
           <div className="logo-marca-conteudo">
-            <img className="logo-marca" src="/cobyte-logo-white.png" alt="CoByte" />
+            <img
+              className="logo-marca"
+              src="/cobyte-logo-white.png"
+              alt="CoByte"
+            />
           </div>
 
           <div className="texto-apresentacao">
@@ -67,37 +89,59 @@ export default function LoginPage({ modo = 'login' }) {
             </h1>
 
             <p>
-              Acompanhe suas solicitações, converse com a equipe e fique por dentro de cada atualização em um só lugar.
+              Acompanhe suas solicitações, converse com a equipe e fique por
+              dentro de cada atualização em um só lugar.
             </p>
           </div>
         </section>
 
         <section className="cartao-autenticacao-conteudo">
-          <form className="cartao-autenticacao" onSubmit={ehCadastro ? enviarCadastro : enviarLogin}>
+          <form
+            className="cartao-autenticacao"
+            onSubmit={ehCadastro ? enviarCadastro : enviarLogin}
+          >
             <div className="cabecalho-autenticacao">
-              <h2>{ehCadastro ? 'Crie sua conta' : 'Acesse sua plataforma'}</h2>
+              <h2>{ehCadastro ? "Crie sua conta" : "Acesse sua plataforma"}</h2>
               <p>
                 {ehCadastro
-                  ? 'Informe sua empresa. O suporte fará a vinculação para liberar seus chamados.'
-                  : 'Entre com suas credenciais para continuar.'}
+                  ? "Informe sua empresa. O suporte fará a vinculação para liberar seus chamados."
+                  : "Entre com suas credenciais para continuar."}
               </p>
             </div>
 
             <div className="campos-autenticacao">
-              {ehCadastro && <div className="campo-autenticacao">
-                <label htmlFor="empresaInformada">Empresa</label>
-                <div className="envoltorio-campo">
-                  <User size={18} className="icone-campo" />
-                  <input id="empresaInformada" name="empresaInformada" type="text" required maxLength={255}
-                    autoComplete="organization" placeholder="Nome da empresa onde trabalha" />
+              {ehCadastro && (
+                <div className="campo-autenticacao">
+                  <label htmlFor="empresaInformada">Empresa</label>
+                  <div className="envoltorio-campo">
+                    <User size={18} className="icone-campo" />
+                    <input
+                      id="empresaInformada"
+                      name="empresaInformada"
+                      type="text"
+                      required
+                      maxLength={255}
+                      autoComplete="organization"
+                      placeholder="Nome da empresa onde trabalha"
+                    />
+                  </div>
                 </div>
-              </div>}
+              )}
               {ehCadastro && (
                 <div className="campo-autenticacao">
                   <label htmlFor="nome">Nome completo</label>
                   <div className="envoltorio-campo">
                     <User size={18} className="icone-campo" />
-                    <input id="nome" name="nome" type="text" placeholder="Ex: João da Silva" required minLength={2} maxLength={255} autoComplete="name" />
+                    <input
+                      id="nome"
+                      name="nome"
+                      type="text"
+                      placeholder="Ex: João da Silva"
+                      required
+                      minLength={2}
+                      maxLength={255}
+                      autoComplete="name"
+                    />
                   </div>
                 </div>
               )}
@@ -106,7 +150,15 @@ export default function LoginPage({ modo = 'login' }) {
                 <label htmlFor="email">E-mail</label>
                 <div className="envoltorio-campo">
                   <Mail size={18} className="icone-campo" />
-                  <input id="email" name="email" type="email" placeholder="Ex: joao@email.com" required maxLength={255} autoComplete={ehCadastro ? 'email' : 'username'} />
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="Ex: joao@email.com"
+                    required
+                    maxLength={255}
+                    autoComplete={ehCadastro ? "email" : "username"}
+                  />
                 </div>
               </div>
 
@@ -114,19 +166,34 @@ export default function LoginPage({ modo = 'login' }) {
                 <label htmlFor="senha">Senha</label>
                 <div className="envoltorio-campo">
                   <Lock size={18} className="icone-campo" />
-                  <input id="senha" name="senha" type={mostrarSenha ? 'text' : 'password'} placeholder="Insira sua senha" required minLength={ehCadastro ? 8 : undefined} maxLength={ehCadastro ? 72 : undefined} autoComplete={ehCadastro ? 'new-password' : 'current-password'} />
+                  <input
+                    id="senha"
+                    name="senha"
+                    type={mostrarSenha ? "text" : "password"}
+                    placeholder="Insira sua senha"
+                    required
+                    minLength={ehCadastro ? 8 : undefined}
+                    maxLength={ehCadastro ? 72 : undefined}
+                    autoComplete={
+                      ehCadastro ? "new-password" : "current-password"
+                    }
+                  />
 
                   <button
                     type="button"
                     className="botao-visualizar-senha"
                     onClick={() => definirMostrarSenha(!mostrarSenha)}
-                    aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                    aria-label={
+                      mostrarSenha ? "Ocultar senha" : "Mostrar senha"
+                    }
                   >
                     {mostrarSenha ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
 
-                {ehCadastro && <span className="dica-senha">Mínimo de 8 caracteres.</span>}
+                {ehCadastro && (
+                  <span className="dica-senha">Mínimo de 8 caracteres.</span>
+                )}
 
                 {!ehCadastro && (
                   <div className="recuperar-senha">
@@ -136,19 +203,35 @@ export default function LoginPage({ modo = 'login' }) {
               </div>
             </div>
 
-            {erroSessao && <p className="mensagem-autenticacao mensagem-erro" role="alert">{erroSessao}</p>}
-            {erroLogin && <p className="mensagem-autenticacao mensagem-erro" role="alert">{erroLogin}</p>}
-            {erroCadastro && <p className="mensagem-autenticacao mensagem-erro" role="alert">{erroCadastro}</p>}
+            {erroSessao && (
+              <p className="mensagem-autenticacao mensagem-erro" role="alert">
+                {erroSessao}
+              </p>
+            )}
+            {erroLogin && (
+              <p className="mensagem-autenticacao mensagem-erro" role="alert">
+                {erroLogin}
+              </p>
+            )}
+            {erroCadastro && (
+              <p className="mensagem-autenticacao mensagem-erro" role="alert">
+                {erroCadastro}
+              </p>
+            )}
 
-            <button className="botao-principal" type="submit" disabled={carregando}>
+            <button
+              className="botao-principal"
+              type="submit"
+              disabled={carregando}
+            >
               {carregando ? (
                 <>
                   <LoaderCircle size={18} className="carregando" />
-                  {ehCadastro ? 'Cadastrando...' : 'Entrando...'}
+                  {ehCadastro ? "Cadastrando..." : "Entrando..."}
                 </>
               ) : (
                 <>
-                  {ehCadastro ? 'Cadastrar' : 'Entrar'}
+                  {ehCadastro ? "Cadastrar" : "Entrar"}
                   <ArrowRight size={16} />
                 </>
               )}
@@ -156,9 +239,15 @@ export default function LoginPage({ modo = 'login' }) {
 
             <div className="rodape-autenticacao">
               <p className="link-autenticacao">
-                {ehCadastro
-                  ? <>Já tem uma conta? <Link to="/login">Faça login</Link></>
-                  : <>Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link></>}
+                {ehCadastro ? (
+                  <>
+                    Já tem uma conta? <Link to="/login">Faça login</Link>
+                  </>
+                ) : (
+                  <>
+                    Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link>
+                  </>
+                )}
               </p>
             </div>
           </form>

@@ -1,5 +1,5 @@
-import ResumoEmpresa from '../components/reports/ResumoEmpresa';
-import ChamadoBadge from '../components/ticket/ChamadoBadge';
+import ResumoEmpresa from "../components/reports/ResumoEmpresa";
+import ChamadoBadge from "../components/ticket/ChamadoBadge";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAutenticacao } from "../hooks/useAuth";
@@ -35,7 +35,10 @@ function Indicadores({ dados }) {
         <strong className="dash-value">{dados.ativos}</strong>
         <ul className="dash-status-summary">
           {dados.status
-            .filter((item) => !["RESOLVIDO", "FECHADO", "CANCELADO"].includes(item.chave))
+            .filter(
+              (item) =>
+                !["RESOLVIDO", "FECHADO", "CANCELADO"].includes(item.chave),
+            )
             .map((item) => (
               <li key={item.chave}>
                 <i style={{ "--cor": item.cor }} aria-hidden="true" />
@@ -226,7 +229,11 @@ function DistribuicaoBarras({
                 <span className="dash-bar-name">{item.nome}</span>
                 <strong>{item.quantidade}</strong>
                 <span className="dash-percentage">
-                  {percentual.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
+                  {percentual.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 1,
+                    maximumFractionDigits: 1,
+                  })}
+                  %
                 </span>
               </div>
               <div
@@ -236,7 +243,7 @@ function DistribuicaoBarras({
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={percentual}
-                aria-valuetext={`${item.quantidade} chamados, ${percentual.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`}
+                aria-valuetext={`${item.quantidade} chamados, ${percentual.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`}
               >
                 <span style={{ width: `${percentual}%` }} />
               </div>
@@ -271,7 +278,8 @@ function GraficoVolume({ dias }) {
     <section className="dash-card dash-volume">
       <div className="dash-volume-heading">
         <h2>
-          <span>Volume Diário: </span>Criados vs Resolvidos <small className="dash-volume-periodo">Últimos 7 dias</small>
+          <span>Volume Diário: </span>Criados vs Resolvidos{" "}
+          <small className="dash-volume-periodo">Últimos 7 dias</small>
         </h2>
         <div className="dash-line-legend">
           <span>
@@ -473,7 +481,10 @@ function ChamadosPrioritarios({ chamados, agora }) {
                       </small>
                     </td>
                     <td data-label="Prioridade">
-                      <ChamadoBadge tipo="prioridade" valor={chamado.priority} />
+                      <ChamadoBadge
+                        tipo="prioridade"
+                        valor={chamado.priority}
+                      />
                     </td>
                     <td className="dash-ticket-status" data-label="Status">
                       <ChamadoBadge valor={status.nome} />
@@ -516,7 +527,11 @@ function ChamadosPrioritarios({ chamados, agora }) {
 
 export default function DashboardPage() {
   const { usuario } = useAutenticacao();
-  const { tickets: chamados, loading: carregando, error: erro } = useTickets('empresa');
+  const {
+    tickets: chamados,
+    loading: carregando,
+    error: erro,
+  } = useTickets("empresa");
   const [agora, definirAgora] = useState(() => Date.now());
   useEffect(() => {
     const intervalo = window.setInterval(() => definirAgora(Date.now()), 1000);
@@ -527,13 +542,16 @@ export default function DashboardPage() {
       ? chamados
       : chamados.filter((chamado) => chamado.ownerId === usuario?.id);
   const dados = calcularDashboard(chamadosUsuario, agora);
-  if (usuario?.perfil === 'CLIENTE') {
-    if (carregando) return <p role="status">Carregando indicadores da empresa...</p>;
+  if (usuario?.perfil === "CLIENTE") {
+    if (carregando)
+      return <p role="status">Carregando indicadores da empresa...</p>;
     if (erro) return <p role="alert">{erro}</p>;
-    if (!usuario.empresaId) return <p>Os indicadores estarão disponíveis após a vinculação da empresa.</p>;
+    if (!usuario.empresaId)
+      return (
+        <p>Os indicadores estarão disponíveis após a vinculação da empresa.</p>
+      );
     return <ResumoEmpresa tickets={chamados} usuario={usuario} />;
   }
-
 
   return (
     <div className="dashboard-page">
@@ -563,7 +581,13 @@ export default function DashboardPage() {
             <DistribuicaoBarras
               contexto="RECORRÊNCIA POR CATEGORIA"
               titulo="Chamados por Categoria"
-              itens={dados.categorias.filter(item => item.quantidade > 0).sort((a, b) => b.quantidade - a.quantidade || a.nome.localeCompare(b.nome, 'pt-BR'))}
+              itens={dados.categorias
+                .filter((item) => item.quantidade > 0)
+                .sort(
+                  (a, b) =>
+                    b.quantidade - a.quantidade ||
+                    a.nome.localeCompare(b.nome, "pt-BR"),
+                )}
               total={dados.total}
               tipo="category"
             />

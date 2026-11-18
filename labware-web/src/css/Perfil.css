@@ -44,11 +44,11 @@
 .btn-cancel {
   height: 30px;
   width: 85px;
-  color: #185DF1;
+  color: #185df1;
   background: var(--bg-card);
   border-radius: 3px;
   font-weight: bold;
-  border: 1px solid #185DF1;
+  border: 1px solid #185df1;
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -65,7 +65,7 @@
   height: 30px;
   width: 85px;
   color: #fff;
-  background: #001D5E;
+  background: #001d5e;
   border-radius: 3px;
   font-weight: bold;
   border: none;
@@ -140,7 +140,9 @@
   color: #1e293b;
   background-color: #fff;
   box-sizing: border-box;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .profile-panel .profile-info .profile-company {
@@ -184,7 +186,9 @@
   -webkit-appearance: none;
   -moz-appearance: none;
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .select-wrapper .select-icon {
@@ -253,7 +257,7 @@
   padding: 20px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 12px
+  border-radius: 12px;
 }
 
 .editor-foto label {
@@ -261,7 +265,7 @@
   flex-direction: column;
   gap: 8px;
   font-size: 14px;
-  color: #334155
+  color: #334155;
 }
 
 .editor-foto-ajustes {
@@ -269,24 +273,24 @@
   flex-wrap: wrap;
   gap: 28px;
   margin-top: 20px;
-  align-items: center
+  align-items: center;
 }
 
 .editor-foto canvas {
   width: 180px;
   height: 180px;
   border-radius: 50%;
-  border: 3px solid #cbd5e1
+  border: 3px solid #cbd5e1;
 }
 
-.editor-foto-ajustes>div {
+.editor-foto-ajustes > div {
   flex: 1;
-  min-width: 200px
+  min-width: 200px;
 }
 
-.editor-foto input[type=range] {
+.editor-foto input[type="range"] {
   width: 100%;
-  margin-bottom: 12px
+  margin-bottom: 12px;
 }
 
 .profile-avaliacoes {
@@ -298,23 +302,23 @@
 .profile-avaliacoes p {
   font-size: 14px;
   color: #475569;
-  margin: 12px 0 20px
+  margin: 12px 0 20px;
 }
 
 .profile-top {
   flex-wrap: wrap;
-  align-items: flex-start
+  align-items: flex-start;
 }
 
 .profile-top .profile-header {
-  padding-top: 18px
+  padding-top: 18px;
 }
 
 .profile-top .editor-foto {
   margin: 0;
   padding: 0;
   border: 0;
-  background: transparent
+  background: transparent;
 }
 
 .avatar-editar {
@@ -326,17 +330,17 @@
   border: 0;
   border-radius: 50%;
   background: #e2e8f0;
-  cursor: pointer
+  cursor: pointer;
 }
 
-.avatar-editar>img,
-.avatar-editar>.avatar {
+.avatar-editar > img,
+.avatar-editar > .avatar {
   display: flex;
   width: 96px;
   height: 96px;
   border-radius: 50%;
   object-fit: cover;
-  margin: 0
+  margin: 0;
 }
 
 .avatar-editar-icone {
@@ -351,16 +355,16 @@
   border-radius: 50%;
   background: #334155;
   color: white;
-  box-shadow: 0 1px 4px #0002
+  box-shadow: 0 1px 4px #0002;
 }
 
 .avatar-editar:hover .avatar-editar-icone {
-  background: #185df1
+  background: #185df1;
 }
 
 .avatar-editar:focus-visible {
   outline: 3px solid #2563eb;
-  outline-offset: 4px
+  outline-offset: 4px;
 }
 
 .profile-top .editor-foto-ajustes {
@@ -368,22 +372,22 @@
   padding: 18px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  background: #f8fafc
+  background: #f8fafc;
 }
 
 .editor-foto canvas.foto-arrastavel {
   touch-action: none;
   cursor: grab;
-  user-select: none
+  user-select: none;
 }
 
 .editor-foto canvas.foto-arrastavel:active {
-  cursor: grabbing
+  cursor: grabbing;
 }
 
 .editor-foto canvas.foto-arrastavel:focus-visible {
   outline: 3px solid #2563eb;
-  outline-offset: 4px
+  outline-offset: 4px;
 }
 
 .profile-avaliacoes.profile-avaliacoes-compacto {
@@ -392,50 +396,80 @@
   justify-content: space-between;
   gap: 18px;
   padding: 16px 22px;
-  margin-top: 16px
+  margin-top: 16px;
 }
 
 .profile-avaliacoes-compacto h2 {
   margin: 0;
   font-family: var(--font-body);
   font-size: 15px;
-  font-weight: 600
+  font-weight: 600;
 }
 
 .profile-avaliacoes-compacto p {
   margin: 6px 0 0;
-  font-size: 13px
+  font-size: 13px;
 }
 
 .profile-avaliacoes-compacto .secondary-button {
   flex-shrink: 0;
   font-size: 12px;
-  padding: 8px 12px
+  padding: 8px 12px;
 }
 
 .profile-nota {
   font-size: 22px;
-  color: #854d0e
+  color: #854d0e;
 }
 
 .profile-nota small {
   font-size: 13px;
   font-weight: 400;
-  color: #64748b
+  color: #64748b;
 }
 
-@media(max-width:600px) {
+@media (max-width: 600px) {
   .profile-avaliacoes.profile-avaliacoes-compacto {
     align-items: flex-start;
     flex-direction: column;
   }
 }
-.profile-panel .avatar-editar>.avatar{display:flex;align-items:center;justify-content:center;text-align:center}
-.profile-panel .profile-info>.profile-actions{grid-column:1/-1;display:flex;justify-content:flex-end;width:100%;margin-top:6px}
+.profile-panel .avatar-editar > .avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.profile-panel .profile-info > .profile-actions {
+  grid-column: 1/-1;
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 6px;
+}
 
-.perfil-lista-avaliacoes{margin-top:16px;padding:20px}
-.perfil-lista-avaliacoes article{padding:16px 0;border-bottom:1px solid #e2e8f0}
-.perfil-lista-avaliacoes article:last-child{border-bottom:0}
-.perfil-lista-avaliacoes strong{display:block;font-size:22px;color:#854d0e;margin-top:10px}
-.perfil-lista-avaliacoes p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
-.perfil-lista-avaliacoes small{color:#64748b}
+.perfil-lista-avaliacoes {
+  margin-top: 16px;
+  padding: 20px;
+}
+.perfil-lista-avaliacoes article {
+  padding: 16px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.perfil-lista-avaliacoes article:last-child {
+  border-bottom: 0;
+}
+.perfil-lista-avaliacoes strong {
+  display: block;
+  font-size: 22px;
+  color: #854d0e;
+  margin-top: 10px;
+}
+.perfil-lista-avaliacoes p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.perfil-lista-avaliacoes small {
+  color: #64748b;
+}

@@ -1,4 +1,3 @@
-
 /* Notificações - Design System Padronizado */
 
 .notificacoes-container {
@@ -22,7 +21,7 @@
 }
 
 .notificacoes-header .notificacoes-main-title {
-  font-family: 'Big Shoulders Text', var(--font-body);
+  font-family: "Big Shoulders Text", var(--font-body);
   font-size: 34px;
   font-weight: 800;
   color: #0c54e0;
@@ -116,7 +115,9 @@
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   background-color: #ffffff;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .item-notificacao:hover {

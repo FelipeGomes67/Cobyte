@@ -12,7 +12,7 @@
   padding: 20px 13px 12px;
   border-right: 1px solid var(--border);
   background: #fff;
-  transition: transform .18s ease;
+  transition: transform 0.18s ease;
 }
 
 .brand {
@@ -44,11 +44,13 @@
   border-radius: 6px;
   color: #283345;
   font-size: 12px;
-  transition: background .16s ease, color .16s ease;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
 }
 
 .nav-link img,
-.nav-link>svg {
+.nav-link > svg {
   flex: 0 0 auto;
   width: 17px;
   height: 17px;
@@ -197,7 +199,7 @@
   border-radius: 7px;
   background: white;
   box-shadow: 0 8px 24px #1d2a3d20;
-  animation: pop-in .14s ease-out;
+  animation: pop-in 0.14s ease-out;
 }
 
 .sidebar-profile-menu {
@@ -330,7 +332,7 @@
   width: 252px;
   padding: 28px 18px 18px;
   color: #1e293b;
-  background: #FFFFFF;
+  background: #ffffff;
   border-right: 1px solid #e7ebf2;
 }
 
@@ -366,7 +368,7 @@
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
-  transition: .18s ease;
+  transition: 0.18s ease;
 }
 
 .nav-link .nav-icon {
@@ -374,7 +376,7 @@
   height: 19px;
   color: #1e293b;
   flex-shrink: 0;
-  transition: color .18s ease;
+  transition: color 0.18s ease;
 }
 
 .nav-link:hover {
@@ -493,7 +495,7 @@
   height: 76px;
   padding: 0 38px;
   border-bottom: 1px solid #e7ebf2;
-  background: rgba(255, 255, 255, .94);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(12px);
 }
 
@@ -511,7 +513,7 @@
 }
 
 .breadcrumb strong::before {
-  content: '/';
+  content: "/";
   margin-right: 12px;
   color: #c2cad5;
 }
@@ -701,7 +703,9 @@
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12), 0 4px 6px rgba(15, 23, 42, 0.04);
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.12),
+    0 4px 6px rgba(15, 23, 42, 0.04);
   overflow: hidden;
   animation: pop-in 0.15s ease-out;
 }
@@ -883,7 +887,7 @@
     z-index: 30;
     width: 260px;
     transform: translateX(-100%);
-    transition: transform .2s ease;
+    transition: transform 0.2s ease;
   }
 
   .sidebar.sidebar-open {
@@ -1029,7 +1033,7 @@
   }
 
   .user-name,
-  .user-trigger>svg:last-child {
+  .user-trigger > svg:last-child {
     display: none;
   }
 
