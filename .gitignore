@@ -14,3 +14,5 @@ AGENTS.md
 !.env.example
 *.key
 *.pfx
+
+/labware-api/db/
