@@ -448,6 +448,8 @@ function DetalhesEmAtendimento({
   const [categoriaPersonalizada, setCategoriaPersonalizada] = useState(chamado?.categoriaPersonalizada || '');
   const categoriaSemAlteracao = categoriaSelecionada === categoriaAtual && (categoriaSelecionada !== 'OUTRA' || categoriaPersonalizada.trim() === (chamado?.categoriaPersonalizada || ''));
   const categoriaInvalida = !categoriaSelecionada || (categoriaSelecionada === 'OUTRA' && categoriaPersonalizada.trim().length < 3);
+  const classificacaoCompleta = Boolean(prioridadeNormalizada &&
+    (categoriaAtual === 'OUTRA' ? chamado?.categoriaPersonalizada?.trim().length >= 3 : categorias[categoriaAtual]));
   const [salvandoCategoria, setSalvandoCategoria] = useState(false);
 
   const [feedbackAtendimento, setFeedbackAtendimento] = useState(null);
@@ -475,6 +477,10 @@ function DetalhesEmAtendimento({
   const handleConfirmarStatus = async (destino = statusSelecionado) => {
     if (!destino || destino === codigoAtual || salvandoStatus) return;
     if (destino === 'CANCELADO' && motivoCancelamento.trim().length < 10) return;
+    if (!classificacaoCompleta && !['EM_ANALISE', 'CANCELADO'].includes(destino)) {
+      setFeedbackAtendimento({ tipo: 'erro', texto: 'Defina e salve a categoria e a prioridade antes de avançar o chamado.' });
+      return;
+    }
     setSalvandoStatus(true);
     setFeedbackAtendimento(null);
     try {
@@ -643,18 +649,20 @@ function DetalhesEmAtendimento({
                   <div className="history-form-stack">
                     {podeAlterarStatus && (
                       <div className="status-fixed-group">
+                        {!classificacaoCompleta && <p className="classificacao-obrigatoria" role="status">Categoria e prioridade são obrigatórias. Salve os dois campos em Em análise antes de avançar.</p>}
                         <SelectStatus
                           statusAtual={codigoAtual}
                           valor={statusSelecionado}
                           aoAlterar={setStatusSelecionado}
                           ocultarCancelamento
+                          classificacaoCompleta={classificacaoCompleta}
                           desabilitado={salvandoStatus}
                         />
                         <button
                           type="button"
                           className="primary-button small-button btn-confirmar-status"
                           onClick={() => handleConfirmarStatus()}
-                          disabled={salvandoStatus || !statusSelecionado || statusSelecionado === codigoAtual}
+                          disabled={salvandoStatus || salvandoPrioridade || salvandoCategoria || !statusSelecionado || statusSelecionado === codigoAtual || (!classificacaoCompleta && !['EM_ANALISE', 'CANCELADO'].includes(statusSelecionado))}
                         >
                           {salvandoStatus ? 'Salvando...' : 'Confirmar Status'}
                         </button>

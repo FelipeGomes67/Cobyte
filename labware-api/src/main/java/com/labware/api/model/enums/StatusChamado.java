@@ -38,7 +38,7 @@ public enum StatusChamado {
         return switch (this) {
             case ABERTO -> destino == EM_ANALISE || destino == CANCELADO;
             case EM_ANALISE -> destino == EM_ATENDIMENTO || destino == AGUARDANDO_CLIENTE || destino == CANCELADO;
-            case EM_ATENDIMENTO -> destino == RESOLVIDO || destino == AGUARDANDO_CLIENTE || destino == EM_ANALISE;
+            case EM_ATENDIMENTO -> destino == RESOLVIDO || destino == AGUARDANDO_CLIENTE;
             case AGUARDANDO_CLIENTE -> destino == EM_ATENDIMENTO || destino == CANCELADO;
             case RESOLVIDO -> destino == FECHADO || destino == EM_ATENDIMENTO;
             case FECHADO, CANCELADO -> false;

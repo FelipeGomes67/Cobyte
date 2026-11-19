@@ -13,7 +13,7 @@ const codigosStatus = {
 const transicoes = {
   ABERTO: ['EM_ANALISE', 'CANCELADO'],
   EM_ANALISE: ['EM_ATENDIMENTO', 'AGUARDANDO_SOLICITANTE', 'CANCELADO'],
-  EM_ATENDIMENTO: ['RESOLVIDO', 'AGUARDANDO_SOLICITANTE', 'EM_ANALISE'],
+  EM_ATENDIMENTO: ['RESOLVIDO', 'AGUARDANDO_SOLICITANTE'],
   AGUARDANDO_SOLICITANTE: ['EM_ATENDIMENTO', 'CANCELADO'],
   RESOLVIDO: ['FECHADO', 'EM_ATENDIMENTO'],
   FECHADO: [],
@@ -37,6 +37,7 @@ export default function SelectStatus({
   desabilitado = false,
   somenteCancelamento = false,
   ocultarCancelamento = false,
+  classificacaoCompleta = true,
 }) {
   const chave = codigosStatus[statusAtual] || String(statusAtual || '').toUpperCase().replace('AGUARDANDO_CLIENTE', 'AGUARDANDO_SOLICITANTE');
   const opcoes = (transicoes[chave] || []).filter(status => (!somenteCancelamento || status === 'CANCELADO') && (!ocultarCancelamento || status !== 'CANCELADO'));
@@ -55,7 +56,7 @@ export default function SelectStatus({
       >
         <option value="">{`Status atual: ${labelAtual}`}</option>
         {opcoes.map(status => (
-          <option key={status} value={status}>
+          <option key={status} value={status} disabled={!classificacaoCompleta && !['EM_ANALISE', 'CANCELADO'].includes(status)}>
             {nomesStatus[status]}
           </option>
         ))}

@@ -342,6 +342,7 @@ public class ChamadoService {
         if (anterior == nova) return toResponse(chamado);
 
         chamado.setPrioridade(nova);
+        classificacaoIaRepository.findByChamadoId(chamadoId).ifPresent(ia -> ia.setPrioridadeFinal(nova));
         if (nova.minutosResolucao() != null && chamado.getAbertoEm() != null) {
             chamado.setPrazoResolucao(chamado.getAbertoEm().plusMinutes(nova.minutosResolucao()).plus(chamado.duracaoPausasEncerradas()));
         } else {
@@ -575,6 +576,7 @@ public class ChamadoService {
     }
 
     private void mudarStatus(Chamado chamado, Usuario usuario, StatusChamado novo, String observacao) {
+        FluxoChamado.validarClassificacao(chamado, novo);
         if (!chamado.getStatus().podeIrPara(novo)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Transição de status não permitida");
         }

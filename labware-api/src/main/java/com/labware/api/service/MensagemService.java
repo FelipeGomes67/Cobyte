@@ -103,6 +103,7 @@ public class MensagemService {
 
         // Cliente respondeu enquanto o suporte aguardava: o chamado volta para atendimento
         if (!ehSuporte && chamado.getStatus() == StatusChamado.AGUARDANDO_CLIENTE) {
+            FluxoChamado.validarClassificacao(chamado, StatusChamado.EM_ATENDIMENTO);
             registrarHistorico(chamado, autor,
                     StatusChamado.AGUARDANDO_CLIENTE.codigo(), StatusChamado.EM_ATENDIMENTO.codigo());
             sla.aoAlterarStatus(chamado, autor, StatusChamado.EM_ATENDIMENTO);
