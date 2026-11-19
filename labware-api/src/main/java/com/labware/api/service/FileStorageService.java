@@ -128,6 +128,25 @@ public class FileStorageService implements ArmazenamentoService {
         }
     }
 
+    public void excluirDiretorioChamado(Long chamadoId) {
+        Path pasta = diretorio(chamadoId);
+        if (!Files.exists(pasta, LinkOption.NOFOLLOW_LINKS)) return;
+        try {
+            verificarDiretorio(pasta);
+            // Uploads são arquivos diretos. Não seguir links nem apagar diretórios arbitrários.
+            try (var itens = Files.list(pasta)) {
+                for (Path arquivo : itens.toList()) {
+                    if (Files.isDirectory(arquivo, LinkOption.NOFOLLOW_LINKS))
+                        throw new IOException("Subdiretório inesperado no armazenamento do chamado");
+                    Files.deleteIfExists(arquivo);
+                }
+            }
+            Files.deleteIfExists(pasta);
+        } catch (IOException ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Falha ao limpar arquivos do chamado", ex);
+        }
+    }
+
     private String chaveBanco(Long chamadoId, String caminho) {
         diretorio(chamadoId);
         String chave = caminho.substring(3);

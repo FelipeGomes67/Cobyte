@@ -18,6 +18,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 @Service @RequiredArgsConstructor @Slf4j
 public class WebPushService {
  private final InscricaoPushRepository inscricoes;
+ private final com.labware.api.repository.ChamadoRepository chamados;
  @Value("${WEB_PUSH_PUBLIC_KEY:}") private String publica;
  @Value("${WEB_PUSH_PRIVATE_KEY:}") private String privada;
  @Value("${WEB_PUSH_SUBJECT:}") private String assunto;
@@ -53,6 +54,7 @@ public class WebPushService {
  @Async @TransactionalEventListener
  public void enviar(Evento evento) {
   if(!habilitado()) return;
+  if(evento.chamadoId() != null && chamados.buscarIdInterno(evento.chamadoId()).isEmpty()) return;
   try {
    Security.addProvider(new BouncyCastleProvider());
    var push=new PushService(publica,privada,assunto);

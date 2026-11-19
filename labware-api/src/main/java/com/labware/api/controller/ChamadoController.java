@@ -38,6 +38,14 @@ public class ChamadoController {
 
     private final IdentificadorChamado identificador;
     private final ChamadoService chamadoService;
+    private final com.labware.api.service.ExclusaoChamadoService exclusao;
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Excluir definitivamente chamado e todos os registros vinculados", description = "Somente ADMIN. Remove mensagens, anexos, notificações, histórico, avaliação, triagem e dados de SLA. Irreversível.")
+    public java.util.Map<String, Object> excluir(@PathVariable UUID id) {
+        return java.util.Map.of("avisos", exclusao.excluir(id));
+    }
 
     @Operation(summary = "Avaliar atendimento (CSAT)", description = "Somente CLIENTE solicitante; status RESOLVIDO ou FECHADO; nota de 1 a 5 e avaliação única. Fecha automaticamente um chamado RESOLVIDO. /avaliar é alias legado.")
     @ApiResponses({

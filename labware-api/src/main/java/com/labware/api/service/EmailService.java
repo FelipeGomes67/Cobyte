@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 public class EmailService {
     private final JavaMailSender mailSender;
+    private final com.labware.api.repository.ChamadoRepository chamados;
 
     @Value("${labware.email.remetente}")
     private String remetente;
@@ -65,6 +66,7 @@ public class EmailService {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void enviar(EmailNotificacao evento) {
+        if (evento.chamadoId() != null && chamados.buscarIdInterno(evento.chamadoId()).isEmpty()) return;
         if (evento.destinatario() == null || evento.destinatario().isBlank()) {
             return;
         }
