@@ -157,3 +157,18 @@
 .web-push-config p {
   font-size: 14px;
 }
+
+.notificacao-dropdown-titulo{display:flex;align-items:center;gap:10px}
+.notificacao-dropdown-icone{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex:0 0 32px;border-radius:50%}
+
+/* Alertas mantêm uma identidade própria na lista e no sino. */
+.item-notificacao.notificacao-critica,
+.notification-dropdown-list article.notificacao-critica {
+  border-left: 4px solid #dc2626;
+  background: #fff1f2;
+}
+.item-notificacao.notificacao-sla,
+.notification-dropdown-list article.notificacao-sla {
+  border-left: 4px solid #d97706;
+  background: #fffbeb;
+}
