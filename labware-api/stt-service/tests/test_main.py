@@ -89,6 +89,24 @@ class SttTest(unittest.TestCase):
                 )
                 self.assertEqual(422, self.enviar().status_code)
 
+    def test_preserva_fala_valida_entre_segmentos_descartados(self):
+        self.modelo.transcribe.return_value = (
+            iter(
+                [
+                    SimpleNamespace(text=" Primeiro ", no_speech_prob=0.2, avg_logprob=-0.3),
+                    SimpleNamespace(text="Ruído", no_speech_prob=0.9, avg_logprob=-0.2),
+                    SimpleNamespace(text="Incerto", no_speech_prob=0.2, avg_logprob=-1.5),
+                    SimpleNamespace(text=" segundo ", no_speech_prob=0.1, avg_logprob=-0.4),
+                ]
+            ),
+            SimpleNamespace(duration=5, language_probability=1),
+        )
+
+        resposta = self.enviar()
+
+        self.assertEqual(200, resposta.status_code)
+        self.assertEqual("Primeiro segundo", resposta.json()["transcricao"])
+
     def test_extensao_invalida(self):
         self.assertEqual(415, self.enviar("arquivo.exe").status_code)
         self.modelo.transcribe.assert_not_called()

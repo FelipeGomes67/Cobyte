@@ -8,6 +8,9 @@ from app.api.schemas import TranscricaoDTO
 from app.config import Settings
 from app.core.logging import logger
 
+NO_SPEECH_THRESHOLD = 0.6
+LOG_PROB_THRESHOLD = -1.0
+
 # Compatibilidade com versões recentes do PyAV (av 14+) onde metadata_errors foi descontinuado
 try:
     import av
@@ -38,12 +41,21 @@ def executar_transcricao(
     inicio = time.monotonic()
     caminho_str = str(caminho_arquivo)
     try:
-        # Chamada mantendo estritamente o caminho do arquivo e language='pt' (removendo argumentos incompatíveis)
-        try:
-            resultado = modelo.transcribe(caminho_str, language="pt")
-        except TypeError as err_kw:
-            logger.warning("STT: modelo.transcribe lançou TypeError (%s). Tentando chamada apenas com o caminho.", err_kw)
-            resultado = modelo.transcribe(caminho_str)
+        resultado = modelo.transcribe(
+            caminho_str,
+            language="pt",
+            beam_size=settings.beam_size,
+            temperature=settings.temperature,
+            vad_filter=True,
+            vad_parameters={
+                "min_speech_duration_ms": 250,
+                "min_silence_duration_ms": 500,
+            },
+            condition_on_previous_text=False,
+            no_speech_threshold=NO_SPEECH_THRESHOLD,
+            log_prob_threshold=LOG_PROB_THRESHOLD,
+            compression_ratio_threshold=2.4,
+        )
 
         duracao = 0.0
         prob_idioma = 1.0
@@ -54,7 +66,16 @@ def executar_transcricao(
             segments, info = resultado
             duracao = float(getattr(info, "duration", 0.0) or 0.0)
             prob_idioma = float(getattr(info, "language_probability", 1.0) or 1.0)
-            texto = " ".join([s.text.strip() for s in segments if hasattr(s, "text") and s.text])
+            trechos = []
+            for segmento in segments:
+                trecho = (getattr(segmento, "text", "") or "").strip()
+                if (
+                    trecho
+                    and getattr(segmento, "no_speech_prob", 0.0) <= NO_SPEECH_THRESHOLD
+                    and getattr(segmento, "avg_logprob", 0.0) >= LOG_PROB_THRESHOLD
+                ):
+                    trechos.append(trecho)
+            texto = " ".join(trechos)
         elif isinstance(resultado, dict):
             texto = str(resultado.get("text", "")).strip()
             duracao = float(resultado.get("duration", 0.0) or 0.0)

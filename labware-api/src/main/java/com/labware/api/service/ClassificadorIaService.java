@@ -69,6 +69,12 @@ public class ClassificadorIaService {
             Falha ao salvar uma prescrição é ERRO_FUNCIONAL; prescrição bloqueada é operação
             clínica importante e indica ALTA, sem presumir paralisação total.
             A palavra urgente isolada não determina prioridade. Dúvida exige pedido de orientação.
+            Diferencie o tipo do incidente da sua gravidade. Uma senha inválida para um usuário
+            é ACESSO/MEDIA; um sistema inteiramente fora do ar é INDISPONIBILIDADE/CRITICA.
+            Uma tela que demora mas conclui a operação é LENTIDAO. Se a operação falha e nunca
+            conclui, classifique pela falha observada. Se a emissão de laudo estiver bloqueada
+            sem evidência de paralisação total ou de impacto em UTI, use ERRO_FUNCIONAL/ALTA.
+            Dê precedência ao bloqueio relatado sobre pedidos de mudança feitos para contorná-lo.
             Quando houver dados suficientes, informacoesInsuficientes=false e informacoesFaltantes vazio.
             """;
     private static final String SCHEMA = """
@@ -187,21 +193,23 @@ public class ClassificadorIaService {
         if (impacto != null && impacto.length() < 10) impacto = null;
         String justificativa = texto(json, "justificativaIa", "justificativa", "motivo");
         var regras = porRegras(titulo, descricao);
-        // Não aceite orientação genérica quando o próprio relato descreve uma falha operacional.
+        boolean ajustadaPorRegras = false;
         if ((categoria == null || categoria == CategoriaChamado.DUVIDA) && regras.categoria() != null
-                && regras.categoria() != CategoriaChamado.DUVIDA) {
+                && regras.categoria() != CategoriaChamado.DUVIDA
+                && regras.categoria() != CategoriaChamado.MELHORIA) {
             categoria = regras.categoria();
-            justificativa = "Categoria identificada pelo relato técnico; confirmar os demais dados pendentes. "
-                    + (justificativa == null ? "" : justificativa);
+            ajustadaPorRegras = true;
         }
         if ((prioridade == null || prioridade == Prioridade.MEDIA)
                 && (regras.prioridade() == Prioridade.ALTA || regras.prioridade() == Prioridade.CRITICA)) {
             prioridade = regras.prioridade();
-            justificativa = "Impacto operacional importante explicitado no relato. "
-                    + (justificativa == null ? "" : justificativa);
+            ajustadaPorRegras = true;
+        }
+        if (ajustadaPorRegras) {
+            justificativa = "A categoria ou a prioridade foi ajustada a partir dos sinais do relato.";
         }
         boolean insuficiente = json.path("informacoesInsuficientes").asBoolean(false);
-        boolean precisaRevisao = insuficiente || prioridade == null || categoria == null || truncada
+        boolean precisaRevisao = insuficiente || ajustadaPorRegras || prioridade == null || categoria == null || truncada
                 || sintoma == null || impacto == null;
         if (precisaRevisao) {
             String faltantes = texto(json, "informacoesFaltantes");
@@ -218,7 +226,7 @@ public class ClassificadorIaService {
         }
         if (prioridade != null || categoria != null || tituloIa != null || sintoma != null || impacto != null || justificativa != null) {
             log.info("Triagem: enriquecida -> parcial; preservando campos válidos");
-            var basica = porRegras(titulo, descricao);
+            var basica = regras;
             return resultado(prioridade == null && !json.has("prioridadeGeradaIa") ? basica.prioridade() : prioridade,
                     categoria == null && !json.has("categoriaGeradaIa") ? basica.categoria() : categoria,
                     justificativa == null ? "Campos ausentes preenchidos por regras locais." : limitar(justificativa, 1600),
@@ -306,24 +314,43 @@ public class ClassificadorIaService {
         if (relato.isBlank()) throw new IllegalArgumentException("Relato vazio");
         Prioridade prioridade = null;
         CategoriaChamado categoria = null;
-        if (relato.matches(".*\\b(sistema|setor|laboratorio) (esta |ficou |inteiro |todo |totalmente )?(parado|fora do ar|indisponivel|inoperante)\\b.*")
-                || relato.matches(".*\\b(parada total|todos os usuarios sem acesso|nenhum usuario consegue acessar)\\b.*")
-                || (relato.matches(".*\\buti\\b.*") && relato.matches(".*\\blaudos?\\b.*")
-                    && relato.matches(".*\\b(bloquead[oa]s?|travados?|nao (sai|saem|emite|emitem))\\b.*"))) {
+        boolean bloqueio = contem(relato, "nao (consig\\w+|funciona\\w*|imprime\\w*|salva\\w*|emite\\w*|abre\\w*|envia\\w*|carrega\\w*|sai\\w*|responde\\w*)"
+                + "|impedid[oa]s?|bloquead[oa]s?|trav(?:a|ou|ando|ad[oa]s?)|parou de"
+                + "|(?:erro|falha) (?:ao|de (?:conexao|comunicacao|processamento|emissao|integracao|gravacao))");
+        boolean paradaGeral = contem(relato, "(sistema|setor|laboratorio)( (esta|ficou|inteiro|todo|totalmente|completamente))* "
+                + "(parado|caiu|fora do ar|indisponivel|inoperante)"
+                + "|parada total|todos os usuarios sem acesso|ninguem (\\w+ ){0,4}"
+                + "(consegue (?:logar|acessar (?:o sistema|o portal))|acessa (?:o sistema|o portal)|loga)"
+                + "|nenhum usuario consegue acessar");
+        boolean laudoUtiBloqueado = contem(relato, "uti") && contem(relato, "laudos?")
+                && contem(relato, "bloquead[oa]s?|travados?|nao (sai|saem|emite|emitem)");
+        boolean erro = bloqueio || contem(relato, "erros?|falh(?:a|ou|ando)|incorret[oa]s?|duplicad[oa]s?|sumiu");
+        boolean lentidao = contem(relato, "lentidao|lent[oa]s?|demora\\w*|carregando (?:infinito|sem parar)");
+        boolean acesso = contem(relato, "acesso|log(?:in|ar)|senhas?|permiss(?:ao|oes)|autenticacao|token expirad[oa]");
+        boolean visual = contem(relato, "ajuste visual|cor do botao|alinhamento|tamanho da fonte|quebra de pagina"
+                + "|fora de formato|caracteres especiais|(?:tela|texto) (?:cortad[oa]|sobreposto)");
+
+        if (paradaGeral || laudoUtiBloqueado) {
             prioridade = Prioridade.CRITICA;
             categoria = CategoriaChamado.INDISPONIBILIDADE;
-        } else if (relato.matches(".*\\b(erro|falha|nao funciona|nao imprime|nao consigo|bloqueado|sem acesso|lentidao|lento)\\b.*")) {
-            categoria = relato.matches(".*\\b(acesso|login|senha|permissao)\\b.*") ? CategoriaChamado.ACESSO
-                    : relato.matches(".*\\b(lentidao|lento)\\b.*") ? CategoriaChamado.LENTIDAO : CategoriaChamado.ERRO_FUNCIONAL;
-            if (relato.matches(".*\\b(laudos?|impressora|faturamento|financeiro|fechamento|integracao|amostras?|prescricao|prescricoes)\\b.*")) prioridade = Prioridade.ALTA;
-        } else if (relato.matches(".*\\b(melhoria|nova funcionalidade|adicionar funcionalidade|sugestao)\\b.*")) {
+        } else if (erro || lentidao || visual || contem(relato, "sem acesso|senha invalida|token expirad[oa]|esqueci (a |minha )?senha")) {
+            categoria = acesso ? CategoriaChamado.ACESSO
+                    : lentidao && !erro ? CategoriaChamado.LENTIDAO : CategoriaChamado.ERRO_FUNCIONAL;
+            boolean operacaoEssencial = contem(relato, "(emitir|liberar|assinar) (os? |os meus? )?laudos?|(?:emissao|liberacao|assinatura) de laudos?"
+                    + "|(?:processar|processamento de) amostras?|(?:salvar|enviar) (a |uma )?prescri(?:cao|coes)"
+                    + "|prescri(?:cao|coes) (?:bloquead[oa]s?|travadas?)|faturamento|fechamento|integracao");
+            if (bloqueio && operacaoEssencial && categoria != CategoriaChamado.ACESSO) {
+                prioridade = Prioridade.ALTA;
+            } else if (visual && !bloqueio && !acesso && !lentidao) {
+                prioridade = Prioridade.BAIXA;
+            } else if (acesso || lentidao || contem(relato, "uma (?:tela|impressora|estacao)|meu computador|so comigo")) {
+                prioridade = Prioridade.MEDIA;
+            }
+        } else if (contem(relato, "melhoria|nova funcionalidade|adicionar funcionalidade|sugestao|"
+                + "(?:solicitacao de|pedido de) (?:inclusao|implementacao)|inclusao do recurso")) {
             prioridade = Prioridade.MELHORIA;
             categoria = CategoriaChamado.MELHORIA;
-        } else if (relato.matches(".*\\b(ajuste visual|cor do botao|alinhamento|tamanho da fonte)\\b.*")) {
-            prioridade = Prioridade.BAIXA;
-            categoria = CategoriaChamado.ERRO_FUNCIONAL;
-        }
-        if (categoria == null && relato.matches(".*\\b(como|duvida|orientacao|onde encontro)\\b.*")) {
+        } else if (contem(relato, "como|duvida|orientacao|onde (?:encontro|vejo|fica)")) {
             categoria = CategoriaChamado.DUVIDA;
         }
         String sintoma = limitar(descricao, 500);
@@ -334,6 +361,10 @@ public class ClassificadorIaService {
                 : "Alcance operacional não confirmado. Validar com o solicitante antes de ampliar a severidade.";
         return resultado(prioridade, categoria, "[Revisão necessária] Regras locais provisórias; análise da IA indisponível ou incompleta. Confirmar abrangência, bloqueio e alternativa disponível.",
                 null, sintoma, impacto, "Emergência");
+    }
+
+    private static boolean contem(String texto, String expressao) {
+        return texto.matches(".*\\b(?:" + expressao + ")\\b.*");
     }
 
     private ClassificacaoIaResultadoReponse resultado(Prioridade prioridade, CategoriaChamado categoria,
