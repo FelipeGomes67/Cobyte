@@ -1,3 +1,5 @@
+import { Pencil, Plus } from 'lucide-react';
+import '../css/ListaChamados.css';
 import EstadoConteudo from "../components/common/EstadoConteudo";
 import { useEffect, useState } from "react";
 import { listarEmpresas } from "../services/perfilService";
@@ -7,6 +9,7 @@ import "../css/Administracao.css";
 
 export default function Administracao({ tipo }) {
   const { usuario } = useAutenticacao();
+  const [novoCadastro, setNovoCadastro] = useState(false);
   const [edicao, setEdicao] = useState(null);
   const [opcoesEmpresas, setOpcoesEmpresas] = useState([]);
   const [erroEmpresas, setErroEmpresas] = useState("");
@@ -52,6 +55,7 @@ export default function Administracao({ tipo }) {
             ...(!empresas && { busca, perfil: perfil || undefined }),
           },
         });
+        if (!Array.isArray(data?.content)) throw new Error("Resposta inválida ao carregar os registros.");
         if (ativo) setEstado({ carregando: false, dados: data, erro: "" });
       } catch (erro) {
         if (ativo)
@@ -75,6 +79,7 @@ export default function Administracao({ tipo }) {
       await api.post("/empresas", { nome: nome.trim(), cnpj: cnpj.trim() });
       setNome("");
       setCnpj("");
+      setNovoCadastro(false);
       setPage(0);
       setVersao((v) => v + 1);
       setAviso("Empresa cadastrada com sucesso.");
@@ -111,21 +116,34 @@ export default function Administracao({ tipo }) {
       setSalvando(false);
     }
   }
+  function fecharModal() {
+    if (salvando) return;
+    setNovoCadastro(false);
+    setEdicao(null);
+    setConfirmando(false);
+    setAviso("");
+  }
   const dados = estado.dados;
   return (
     <div className="admin-page">
-      <header>
-        <p>ADMINISTRAÇÃO</p>
-        <h1>{empresas ? "Empresas" : "Usuários"}</h1>
-        <p>
-          {empresas
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow">Central de Suporte</div>
+          <h1>{empresas ? "Gerenciar empresas" : "Gerenciar usuários"}</h1>
+          <p>{empresas
             ? "Consulte as empresas e cadastre novos vínculos para atendimento."
-            : "Consulte as contas, os perfis de acesso e os vínculos de empresa."}
-        </p>
-      </header>
-      {empresas ? (
-        <form className="admin-card admin-form" onSubmit={cadastrar}>
-          <h2>Cadastrar empresa</h2>
+            : "Consulte as contas, os perfis de acesso e os vínculos de empresa."}</p>
+        </div>
+        {empresas && <button type="button" className="primary-button admin-nova-empresa"
+          disabled={salvando} aria-expanded={novoCadastro} aria-controls="cadastro-empresa"
+          onClick={() => { setAviso(""); setNovoCadastro(true); }}>
+          <Plus size={17} /> Nova empresa
+        </button>}
+      </div>
+      {aviso && !novoCadastro && !edicao && <div className="admin-aviso" role="status">{aviso}</div>}
+      {empresas && novoCadastro && (
+        {aviso && <div className="admin-aviso" role="alert">{aviso}</div>}
+        <form id="cadastro-empresa" className="panel admin-form" onSubmit={cadastrar}>
           <label>
             Nome
             <input
@@ -144,14 +162,15 @@ export default function Administracao({ tipo }) {
               onChange={(e) => setCnpj(e.target.value)}
             />
           </label>
-          <button disabled={salvando}>
+          <button className="primary-button" disabled={salvando}>
             {salvando ? "Salvando..." : "Cadastrar empresa"}
           </button>
-          {aviso && <p role="status">{aviso}</p>}
+          <button type="button" className="secondary-button" disabled={salvando} onClick={fecharModal}>Cancelar</button>
         </form>
-      ) : (
+      )}
+      {!empresas && (
         <section
-          className="admin-card admin-filters"
+          className="chamados-filtros admin-filters"
           aria-label="Filtros de usuários"
         >
           <label>
@@ -183,10 +202,10 @@ export default function Administracao({ tipo }) {
           </label>
         </section>
       )}
-      {!empresas && aviso && <p role="status">{aviso}</p>}
       {edicao && (
-        <form className="admin-card admin-form" onSubmit={salvarUsuario}>
-          <h2>Editar usuário: {edicao.nome}</h2>
+        {aviso && <div className="admin-aviso" role="alert">{aviso}</div>}
+        <form className="panel admin-form" onSubmit={salvarUsuario}>
+          <h2>{edicao.nome}</h2>
           <p>{edicao.email}</p>
           <label>
             Perfil
@@ -242,6 +261,7 @@ export default function Administracao({ tipo }) {
             </p>
           )}
           <button
+            className="primary-button"
             disabled={
               salvando || (edicao.perfil === "CLIENTE" && !!erroEmpresas)
             }
@@ -253,6 +273,7 @@ export default function Administracao({ tipo }) {
                 : "Salvar alterações"}
           </button>
           <button
+            className="secondary-button"
             type="button"
             disabled={salvando}
             onClick={() => {
@@ -266,7 +287,7 @@ export default function Administracao({ tipo }) {
         </form>
       )}
       <section
-        className="admin-card"
+        className="panel tickets-panel admin-list-panel"
         aria-label={empresas ? "Lista de empresas" : "Lista de usuários"}
         aria-busy={estado.carregando}
       >
@@ -283,12 +304,12 @@ export default function Administracao({ tipo }) {
           />
         ) : (
           <>
-            <p>
-              {dados?.totalElements || 0}{" "}
-              {empresas ? "empresas cadastradas" : "usuários encontrados"}
-            </p>
+            <div className="admin-list-heading">
+              <h2>{empresas ? "Empresas cadastradas" : "Usuários cadastrados"}</h2>
+              <span>{dados?.totalElements || 0} {empresas ? "empresas" : "usuários"}</span>
+            </div>
             <div
-              className="admin-table"
+              className="ticket-table-wrap admin-table"
               role="region"
               tabIndex={0}
               aria-label="Registros administrativos; role horizontalmente para ver todas as colunas"
@@ -315,16 +336,16 @@ export default function Administracao({ tipo }) {
                 <tbody>
                   {dados?.content.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.nome}</td>
+                      <td className="admin-registro-nome">{item.nome}</td>
                       {empresas ? (
                         <>
                           <td>{item.cnpj}</td>
-                          <td>{item.ativa ? "Ativa" : "Inativa"}</td>
+                          <td><span className={"admin-badge " + (item.ativa ? "admin-badge-ativa" : "admin-badge-inativa")}>{item.ativa ? "Ativa" : "Inativa"}</span></td>
                         </>
                       ) : (
                         <>
                           <td>{item.email}</td>
-                          <td>{item.perfil}</td>
+                          <td><span className={"admin-badge admin-badge-" + item.perfil?.toLowerCase()}>{({ CLIENTE: "Cliente", SUPORTE: "Suporte", ADMIN: "Administrador" })[item.perfil] || item.perfil}</span></td>
                           <td>
                             {item.empresaNome ||
                               (item.perfil === "CLIENTE"
@@ -336,6 +357,9 @@ export default function Administracao({ tipo }) {
                           </td>
                           <td>
                             <button
+                              type="button"
+                              className="chamado-ver-detalhes admin-editar"
+                              aria-label={"Editar usuário " + item.nome}
                               disabled={salvando}
                               onClick={() => {
                                 setEdicao({
@@ -349,7 +373,7 @@ export default function Administracao({ tipo }) {
                                 setAviso("");
                               }}
                             >
-                              Editar
+                              <Pencil size={13} aria-hidden="true" /> Editar
                             </button>
                           </td>
                         </>
@@ -362,7 +386,9 @@ export default function Administracao({ tipo }) {
             {!dados?.content.length && (
               <EstadoConteudo mensagem="Nenhum registro encontrado para os filtros selecionados." />
             )}
-            <footer className="admin-pagination">
+            <footer className="chamados-rodape">
+              <span>{dados?.totalElements ? "Mostrando " + (page * 20 + 1) + "–" + (page * 20 + dados.content.length) + " de " + dados.totalElements : "Nenhum registro"}</span>
+              <nav className="chamados-paginacao" aria-label={empresas ? "Paginação de empresas" : "Paginação de usuários"}>
               <button
                 disabled={page === 0}
                 onClick={() => setPage((p) => p - 1)}
@@ -378,6 +404,7 @@ export default function Administracao({ tipo }) {
               >
                 Próxima
               </button>
+              </nav>
             </footer>
           </>
         )}

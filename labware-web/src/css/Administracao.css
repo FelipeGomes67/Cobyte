@@ -1,1 +1,72 @@
-.admin-page{max-width:1400px;margin:0 auto;padding:28px;display:grid;gap:20px;color:#13294b}.admin-page header p{color:#526682;margin:8px 0}.admin-page h1{margin:0;font-size:30px}.admin-page h2{font-size:18px;margin:0}.admin-links{display:flex;flex-wrap:wrap;gap:12px}.admin-links a,.admin-page button{border:1px solid #ccd8ea;border-radius:8px;padding:10px 16px;background:#fff;color:#1748b8;font:inherit;text-decoration:none;cursor:pointer}.admin-page button:disabled{opacity:.5;cursor:default}.admin-card{background:#fff;border:1px solid #e0e7f1;border-radius:12px;padding:22px;min-width:0}.admin-filters,.admin-form{display:flex;flex-wrap:wrap;gap:18px;align-items:end}.admin-form h2,.admin-form p{flex-basis:100%}.admin-page label{display:grid;gap:8px;flex:1;min-width:200px}.admin-page input,.admin-page select{font:inherit;min-height:42px;border:1px solid #bccbe0;border-radius:7px;padding:8px 12px;width:100%;box-sizing:border-box;color:#13294b;background:#fff}.admin-table{overflow-x:auto}.admin-table table{width:100%;border-collapse:collapse;text-align:left}.admin-table th{background:#f4f7fc;color:#526682}.admin-table th,.admin-table td{padding:15px 12px;border-bottom:1px solid #e5ebf4;overflow-wrap:anywhere}.admin-pagination{display:flex;justify-content:flex-end;align-items:center;gap:14px;margin-top:20px}.admin-page :focus-visible{outline:3px solid #729fff;outline-offset:3px}@media(max-width:600px){.admin-page{padding:16px}.admin-card{padding:16px}.admin-pagination{flex-wrap:wrap;justify-content:center}.admin-table table{min-width:620px}}
+.admin-page {
+  min-width: 0;
+  color: var(--text);
+}
+.admin-page .page-heading h1 { margin-top: 0; }
+.admin-nova-empresa { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.admin-aviso {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e40af;
+  overflow-wrap: anywhere;
+}
+.admin-filters label {
+  display: grid;
+  gap: 7px;
+  color: #64748b;
+  font-size: 12px;
+}
+.admin-filters label:first-child { flex: 1 1 260px; min-width: 0; }
+.admin-filters label:last-child { flex: 0 1 200px; }
+.admin-filters input, .admin-filters select { width: 100%; box-sizing: border-box; }
+.admin-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 22px;
+  margin-bottom: 18px;
+}
+.admin-form h2 { flex-basis: 100%; margin: 0; font: 600 16px var(--font-body); }
+.admin-form p { flex-basis: 100%; margin: 0; color: #64748b; font-size: 13px; overflow-wrap: anywhere; }
+.admin-form p[role="alert"] { padding: 12px; border-radius: 7px; background: #fffbeb; color: #92400e; }
+.admin-form label { display: grid; gap: 8px; flex: 1 1 230px; min-width: 0; color: #475569; font-size: 12px; }
+.admin-form input, .admin-form select {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 12px;
+  box-sizing: border-box;
+  border: 1px solid #dbe3ef;
+  border-radius: 7px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-size: 13px;
+}
+.admin-page button:disabled { opacity: .5; cursor: default; }
+.admin-page :focus-visible { outline: 2px solid #2563eb; outline-offset: 3px; }
+.admin-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid #e2e8f0; }
+.admin-list-heading h2 { margin: 0; font: 600 15px var(--font-body); color: #263247; }
+.admin-list-heading > span { color: #64748b; font-size: 12px; white-space: nowrap; }
+.admin-table table { width: 100%; border-collapse: collapse; text-align: left; }
+.admin-table td { overflow-wrap: anywhere; }
+.admin-table .admin-registro-nome { font-weight: 550; color: #263247; }
+.admin-editar { display: inline-flex; align-items: center; gap: 6px; border: 0; cursor: pointer; font-family: inherit; }
+.admin-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 9px; font-size: 11px; font-weight: 550; white-space: nowrap; }
+.admin-badge-cliente { background: #dbeafe; color: #1e40af; }
+.admin-badge-suporte { background: #ede9fe; color: #5b21b6; }
+.admin-badge-admin { background: #fef3c7; color: #92400e; }
+.admin-badge-ativa { background: #d1fae5; color: #065f46; }
+.admin-badge-inativa { background: #f1f5f9; color: #475569; }
+@media (max-width: 600px) {
+  .admin-page .page-heading { flex-wrap: wrap; gap: 14px; }
+  .admin-nova-empresa { width: 100%; justify-content: center; }
+  .admin-form { padding: 16px; gap: 14px; }
+  .admin-form label { flex-basis: 100%; }
+  .admin-filters label:last-child { flex: 1 1 100%; }
+  .admin-list-heading { padding: 16px; flex-wrap: wrap; }
+  .admin-table table { min-width: 620px; }
+}
