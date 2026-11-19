@@ -226,3 +226,19 @@
     margin-top: 4px;
   }
 }
+
+.notificacoes-cabecalho-real{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.notificacoes-container .card-notificacoes-wrapper{padding:22px;background:#fff;border:1px solid #e2e8f0;border-radius:12px}
+.notificacoes-container .item-mensagem{font-size:15px;line-height:1.5;margin:4px 0 8px;color:#334155;overflow-wrap:anywhere}
+.notificacoes-container .item-titulo{font-size:16px}
+.notificacoes-container .item-data{color:#526176;font-size:13px}
+.notificacoes-container .notificacao-nao-lida{background:#eff6ff;border-left:3px solid #2563eb}
+.notificacao-acoes{display:flex;flex-wrap:wrap;gap:10px;flex-shrink:0}
+.notificacao-paginacao{display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;margin-top:22px}
+.notificacoes-container button:focus-visible{outline:3px solid #1d4ed8;outline-offset:3px}
+@media(max-width:768px){
+ .notificacoes-container .card-notificacoes-wrapper{padding:14px}
+ .notificacao-acoes{width:100%}
+ .notificacao-acoes>button{flex:1 1 150px;min-height:44px}
+ .notificacoes-container .tab-btn-n{min-height:44px}
+}

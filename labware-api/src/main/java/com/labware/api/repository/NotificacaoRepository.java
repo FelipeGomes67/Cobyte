@@ -3,6 +3,24 @@ import com.labware.api.model.entity.Notificacao;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.domain.*;
 public interface NotificacaoRepository extends JpaRepository<Notificacao,Long> {
+    @Query("""
+            select n from Notificacao n
+            left join n.chamado c
+            left join c.empresa empresaChamado
+            left join n.usuario.empresa empresaUsuario
+            where n.usuario.id = :usuarioId
+              and (:cliente = false or c is null or empresaChamado.id = empresaUsuario.id)
+              and (:filtro = 'todas'
+                   or (:filtro = 'nao-lidas' and n.lida = false)
+                   or (:filtro = 'mensagens' and n.tipo = 'MENSAGEM')
+                   or (:filtro = 'alertas' and n.tipo <> 'MENSAGEM'))
+            order by n.criadoEm desc, n.id desc
+            """)
+    @EntityGraph(attributePaths = "chamado")
+    Page<Notificacao> filtrar(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId,
+                            @org.springframework.data.repository.query.Param("cliente") boolean cliente,
+                            @org.springframework.data.repository.query.Param("filtro") String filtro,
+                            Pageable page);
     @EntityGraph(attributePaths="chamado")
     Page<Notificacao> findByUsuarioIdOrderByCriadoEmDescIdDesc(Long usuarioId,Pageable page);
     @Query("""

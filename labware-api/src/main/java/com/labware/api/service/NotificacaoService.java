@@ -21,11 +21,19 @@ public class NotificacaoService {
 
     @Transactional(readOnly = true)
     public Page<NotificacaoResponse> listar(Long id, int page, int size) {
+        return listar(id, page, size, "todas");
+    }
+
+    @Transactional(readOnly = true)
+    public Page<NotificacaoResponse> listar(Long id, int page, int size, String filtro) {
+        if (!Set.of("todas", "nao-lidas", "mensagens", "alertas").contains(filtro)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "Filtro de notificações inválido");
+        }
         var usuario = usuario(id);
         var pagina = PageRequest.of(page, size);
-        var itens = usuario.getPerfil() == com.labware.api.model.enums.PerfilUsuario.CLIENTE
-                ? notificacoes.listarCliente(id, pagina)
-                : notificacoes.findByUsuarioIdOrderByCriadoEmDescIdDesc(id, pagina);
+        var itens = notificacoes.filtrar(id,
+                usuario.getPerfil() == com.labware.api.model.enums.PerfilUsuario.CLIENTE, filtro, pagina);
         return itens.map(NotificacaoResponse::from);
     }
 

@@ -32,8 +32,9 @@ public class NotificacaoController {
     })
     @GetMapping("/api/notificacoes")
     public com.labware.api.dto.response.PaginaResponse<NotificacaoResponse> listar(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
-                                                                                   @RequestParam(defaultValue="0") @Min(0) int page,@RequestParam(defaultValue="20") @Min(1) @Max(100) int size) {
-        return com.labware.api.dto.response.PaginaResponse.from(service.listar(UsuarioLogado.id(jwt),page,size));
+                                                                                   @RequestParam(defaultValue="0") @Min(0) int page,@RequestParam(defaultValue="20") @Min(1) @Max(100) int size,
+                                                                                   @RequestParam(defaultValue="todas") String filtro) {
+        return com.labware.api.dto.response.PaginaResponse.from(service.listar(UsuarioLogado.id(jwt),page,size,filtro));
     }
     @Operation(summary = "Contar notificações não lidas", description = "Retorna o objeto {naoLidas: quantidade} para o badge do sino.")
     @ApiResponses({
