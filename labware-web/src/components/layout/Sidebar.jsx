@@ -74,7 +74,7 @@ export default function Sidebar({ sidebarRef, mobile, inert, open, onNavigate, u
           active: currentPath === '/meus-chamados',
         },
         {
-          label: 'Histórico',
+          label: 'Histórico de Chamados',
           to: '/historico',
           Icon: History,
           active: currentPath === '/historico',
@@ -126,7 +126,7 @@ export default function Sidebar({ sidebarRef, mobile, inert, open, onNavigate, u
           currentPath !== '/novo-chamado',
       },
       {
-        label: 'Histórico',
+        label: 'Histórico de Chamados',
         to: '/historico',
         Icon: History,
         active: currentPath === '/historico',
