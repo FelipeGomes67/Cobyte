@@ -33,3 +33,8 @@ build/
 .vscode/
 
 .webpush.local.json
+
+# Segredos locais: nunca incluir em commits.
+.env
+.env.*
+!.env.example
