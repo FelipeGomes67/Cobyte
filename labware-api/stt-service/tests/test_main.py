@@ -2,6 +2,7 @@ import io
 import os
 import sys
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -158,17 +159,19 @@ class SttTest(unittest.TestCase):
 class ModeloConfigurationTest(unittest.TestCase):
     def test_cpu_cuda_offline(self):
         for device, compute in [("cpu", "int8"), ("cuda", "float16")]:
-            with self.subTest(device=device):
-                whisper = Mock()
-                settings = Settings(device=device, model_path="")
-                with patch.dict(
-                    sys.modules,
-                    {"faster_whisper": SimpleNamespace(WhisperModel=whisper)},
-                ):
-                    carregar_modelo_service(settings)
-                whisper.assert_called_once_with(
-                    "small", device=device, compute_type=compute, local_files_only=True
-                )
+            for modelo_local in (False, True):
+                with self.subTest(device=device, modelo_local=modelo_local):
+                    whisper = Mock()
+                    settings = Settings(device=device, model_path="")
+                    with patch("app.services.model_loader.Path.is_file", return_value=modelo_local), patch.dict(
+                        sys.modules,
+                        {"faster_whisper": SimpleNamespace(WhisperModel=whisper)},
+                    ):
+                        carregar_modelo_service(settings)
+                    origem = str(Path(__file__).resolve().parents[1] / "models" / "small") if modelo_local else "small"
+                    whisper.assert_called_once_with(
+                        origem, device=device, compute_type=compute, local_files_only=True
+                    )
 
     def test_device_invalido(self):
         with self.assertRaises(RuntimeError):
