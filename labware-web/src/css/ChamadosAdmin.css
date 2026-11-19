@@ -1,0 +1,28 @@
+.chamados-admin { min-width: 0; }
+.chamados-admin-excluir {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #b91c1c;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.chamados-admin-excluir:hover { background: #ffe4e6; border-color: #fca5a5; }
+.chamados-admin-excluir:focus-visible { outline: 2px solid #b91c1c; outline-offset: 3px; }
+.chamados-admin-excluir:disabled { opacity: .5; cursor: wait; }
+.chamados-admin-aviso {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e40af;
+  overflow-wrap: anywhere;
+}
