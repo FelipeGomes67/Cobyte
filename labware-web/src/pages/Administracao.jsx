@@ -1,3 +1,4 @@
+import FormModal from '../components/common/FormModal';
 import { Pencil, Plus } from 'lucide-react';
 import '../css/ListaChamados.css';
 import EstadoConteudo from "../components/common/EstadoConteudo";
@@ -141,7 +142,7 @@ export default function Administracao({ tipo }) {
         </button>}
       </div>
       {aviso && !novoCadastro && !edicao && <div className="admin-aviso" role="status">{aviso}</div>}
-      {empresas && novoCadastro && (
+      <FormModal open={empresas && novoCadastro} title="Nova empresa" busy={salvando} onClose={fecharModal}>
         {aviso && <div className="admin-aviso" role="alert">{aviso}</div>}
         <form id="cadastro-empresa" className="panel admin-form" onSubmit={cadastrar}>
           <label>
@@ -167,7 +168,7 @@ export default function Administracao({ tipo }) {
           </button>
           <button type="button" className="secondary-button" disabled={salvando} onClick={fecharModal}>Cancelar</button>
         </form>
-      )}
+      </FormModal>
       {!empresas && (
         <section
           className="chamados-filtros admin-filters"
@@ -202,9 +203,9 @@ export default function Administracao({ tipo }) {
           </label>
         </section>
       )}
-      {edicao && (
+      <FormModal open={!!edicao} title="Editar usuário" busy={salvando} onClose={fecharModal}>
         {aviso && <div className="admin-aviso" role="alert">{aviso}</div>}
-        <form className="panel admin-form" onSubmit={salvarUsuario}>
+        {edicao && <form className="panel admin-form" onSubmit={salvarUsuario}>
           <h2>{edicao.nome}</h2>
           <p>{edicao.email}</p>
           <label>
@@ -284,8 +285,8 @@ export default function Administracao({ tipo }) {
           >
             Cancelar
           </button>
-        </form>
-      )}
+        </form>}
+      </FormModal>
       <section
         className="panel tickets-panel admin-list-panel"
         aria-label={empresas ? "Lista de empresas" : "Lista de usuários"}

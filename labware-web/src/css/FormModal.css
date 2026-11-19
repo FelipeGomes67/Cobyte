@@ -1,0 +1,55 @@
+.form-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  background: rgb(15 23 42 / 60%);
+  backdrop-filter: blur(3px);
+}
+.form-modal {
+  width: min(100%, 560px);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgb(15 23 42 / 25%);
+}
+.form-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.form-modal-header h2 { margin: 0; font: 600 18px var(--font-body); overflow-wrap: anywhere; }
+.form-modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #475569;
+  cursor: pointer;
+}
+.form-modal-close:hover { background: #e2e8f0; }
+.form-modal .admin-form { margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+.form-modal .admin-form label { flex-basis: 100%; }
+.form-modal .admin-form > .primary-button { margin-left: auto; }
+.form-modal .admin-aviso { margin: 16px 22px 0; }
+@media (max-width: 600px) {
+  .form-modal-backdrop { padding: 12px; }
+  .form-modal { max-height: calc(100dvh - 24px); }
+  .form-modal-header { padding: 16px; }
+  .form-modal .admin-form > button { flex: 1 1 auto; }
+}
