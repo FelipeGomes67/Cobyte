@@ -26,7 +26,7 @@ public class NotificacaoService {
 
     @Transactional(readOnly = true)
     public Page<NotificacaoResponse> listar(Long id, int page, int size, String filtro) {
-        if (!Set.of("todas", "nao-lidas", "mensagens", "alertas").contains(filtro)) {
+        if (!Set.of("todas", "nao-lidas", "mensagens", "chamados", "alertas").contains(filtro)) {
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,
                     "Filtro de notificações inválido");
         }
@@ -39,7 +39,9 @@ public class NotificacaoService {
 
     @Transactional(readOnly = true)
     public long contador(Long id) {
-        return notificacoes.countByUsuarioIdAndLidaFalse(id);
+        var usuario = usuario(id);
+        return notificacoes.contarNaoLidasVisiveis(id,
+                usuario.getPerfil() == com.labware.api.model.enums.PerfilUsuario.CLIENTE);
     }
 
     public void marcarLida(Long id, Long usuarioId) {

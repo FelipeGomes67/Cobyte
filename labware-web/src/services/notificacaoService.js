@@ -10,7 +10,7 @@ export async function consultarNotificacoes(page = 0, size = 20, filtro = 'todas
 }
 export async function marcarNotificacao(id) {
   await api.put(id == null ? '/notificacoes/marcar-todas-lidas' : '/notificacoes/' + id + '/lida');
-  window.dispatchEvent(new Event(EVENTO_NOTIFICACOES));
+  window.dispatchEvent(new CustomEvent(EVENTO_NOTIFICACOES, { detail: { id } }));
 }
 export async function consultarPreferencias() { return (await api.get('/usuarios/me/configuracoes-notificacao')).data; }
 export async function salvarPreferencias(dados) { return (await api.put('/usuarios/me/configuracoes-notificacao', dados)).data; }
