@@ -26,15 +26,16 @@ function diaLocal(valor) {
   return [instante.getFullYear(), String(instante.getMonth() + 1).padStart(2, '0'), String(instante.getDate()).padStart(2, '0')].join('-');
 }
 
-export default function TabelaChamados({ tickets = [], query, onSearch, titulo = 'Solicitações', rotaBase = '/chamados', historico = false, porPrioridade = false, ocultarFiltroResponsavel = false, ocultarEmpresa = false }) {
+export default function TabelaChamados({ tickets = [], query, onSearch, titulo = 'Solicitações', rotaBase = '/chamados', historico = false, porPrioridade = false, ocultarFiltroResponsavel = false, ocultarEmpresa = false, todosStatus = false, renderAcao, vincularCodigo = true, tamanhoPagina = 0 }) {
   const [filtros, setFiltros] = useEstadoUrl('filtros', filtrosIniciais);
+  const [paginaTexto, setPaginaTexto] = useEstadoUrl('pagina', '1');
   const [avancado, setAvancado] = useEstadoUrl('avancado', false);
   const painelId = useId();
   const [, setParametros] = useSearchParams();
   function limparFiltros() {
     setParametros(anteriores => {
       const proximo = new URLSearchParams(anteriores);
-      proximo.delete('busca'); proximo.delete('filtros');
+      proximo.delete('busca'); proximo.delete('filtros'); proximo.delete('pagina');
       return proximo;
     }, { replace: true });
   }
@@ -46,8 +47,8 @@ export default function TabelaChamados({ tickets = [], query, onSearch, titulo =
   const empresas = [...new Set(tickets.map(t => texto(t.empresa)))].sort();
   const totalAvancados = ['empresa', 'inicio', 'fim', 'sla', 'mensagem'].filter(c => filtros[c] && (!ocultarEmpresa || c !== 'empresa')).length;
   const periodoInvalido = filtros.inicio && filtros.fim && filtros.inicio > filtros.fim;
-  const alterar = (campo, valor) => setFiltros(anterior => ({ ...anterior, [campo]: valor }));
-  const status = Object.values(STATUS_VISUAL).filter(item => historico === ['Resolvido', 'Fechado', 'Cancelado'].includes(item.nome));
+  const alterar = (campo, valor) => { setFiltros(anterior => ({ ...anterior, [campo]: valor })); };
+  const status = Object.values(STATUS_VISUAL).filter(item => todosStatus || historico === ['Resolvido', 'Fechado', 'Cancelado'].includes(item.nome));
   const prioridades = [...Object.values(PRIORIDADE_VISUAL), { nome: 'Não aplicável', cor: '#475569' }];
   const cards = porPrioridade ? prioridades : status;
   const responsaveis = [...new Set(tickets.map(t => texto(t.responsavel)))].sort();
@@ -62,12 +63,16 @@ export default function TabelaChamados({ tickets = [], query, onSearch, titulo =
     (!filtros.mensagem || Boolean(t.temNovaMensagem) === (filtros.mensagem === 'sim')) &&
     (!filtros.inicio || diaLocal(historico ? t.canceladoEm || t.resolvidoEm || t.resolvedAt : t.abertoEm || t.createdAt) >= filtros.inicio) &&
     (!filtros.fim || (diaLocal(historico ? t.canceladoEm || t.resolvidoEm || t.resolvedAt : t.abertoEm || t.createdAt) !== '' && diaLocal(historico ? t.canceladoEm || t.resolvidoEm || t.resolvedAt : t.abertoEm || t.createdAt) <= filtros.fim)));
+  const totalPaginas = tamanhoPagina ? Math.max(1, Math.ceil(filtrados.length / tamanhoPagina)) : 1;
+  const pagina = Math.min(totalPaginas, Math.max(1, Number.parseInt(paginaTexto, 10) || 1));
+  const inicio = tamanhoPagina ? (pagina - 1) * tamanhoPagina : 0;
+  const visiveis = tamanhoPagina ? filtrados.slice(inicio, inicio + tamanhoPagina) : filtrados;
   return <div className="lista-chamados">
     <div className="chamados-contadores">{cards.map(item => <article key={item.nome} style={{ '--contador-cor': item.cor }}>
       <span>{item.nome}</span><strong>{tickets.filter(t => (porPrioridade ? t.prioridade || t.priority : t.status) === item.nome).length}</strong>
     </article>)}</div>
     <div className="chamados-filtros">
-      <input aria-label="Buscar chamado" placeholder="Buscar por título ou código #..." value={query} onChange={e => onSearch(e.target.value)} />
+      <input aria-label="Buscar chamado" placeholder="Buscar por título ou código #..." value={query} onChange={e => { onSearch(e.target.value); }} />
       {[['status', 'Status', status.map(s => s.nome)], ['prioridade', 'Prioridade', prioridades.map(p => p.nome)], ['origem', 'Origem', ['Voz', 'Texto']], ['responsavel', 'Responsável', responsaveis]].filter(([campo]) => !ocultarFiltroResponsavel || campo !== 'responsavel').map(([campo, label, opcoes]) =>
         <select key={campo} aria-label={label} value={filtros[campo]} onChange={e => alterar(campo, e.target.value)}>
           <option value="">{label}: todos</option>{opcoes.map(opcao => <option key={opcao}>{opcao}</option>)}
@@ -88,15 +93,22 @@ export default function TabelaChamados({ tickets = [], query, onSearch, titulo =
     </div>
     <section className="panel tickets-panel" aria-label={titulo}><div className="ticket-table-wrap" role="region" tabIndex={0} aria-label="Lista de chamados; role horizontalmente para ver todas as colunas"><table>
       <thead><tr><th scope="col">Código</th><th scope="col">Chamado</th>{!ocultarEmpresa && <th scope="col">Empresa</th>}<th scope="col">Prioridade</th><th scope="col">Origem</th><th scope="col">{historico ? 'Finalizado em' : 'Abertura'}</th><th scope="col">SLA</th><th scope="col">Status</th><th scope="col">Ação</th></tr></thead>
-      <tbody>{filtrados.map(t => <tr key={t.id}>
-        <td><Link to={rotaBase + '/' + encodeURIComponent(t.id)}>{t.protocolo || t.id}</Link></td>
+      <tbody>{visiveis.map(t => <tr key={t.id}>
+        <td>{vincularCodigo ? <Link to={rotaBase + '/' + encodeURIComponent(t.id)}>{t.protocolo || t.id}</Link> : <span className="ticket-id">{t.protocolo || t.id}</span>}</td>
         <td><span className="chamado-titulo-resumido" title={t.titulo || t.title}>{resumirTitulo(t.titulo || t.title)}</span>{!historico && !['Resolvido', 'Fechado', 'Cancelado'].includes(t.status) && t.temNovaMensagem && <small className="chamado-nova-mensagem">Nova mensagem</small>}</td>
         {!ocultarEmpresa && <td>{texto(t.empresa)}</td>}<td><ChamadoBadge tipo="prioridade" valor={t.prioridade || t.priority} /></td>
         <td>{origem(t)}</td><td>{data(historico ? t.canceladoEm || t.resolvidoEm || t.resolvedAt : t.abertoEm || t.createdAt)}</td>
         <td>{t.slaTempoRestanteFormatado || '—'}</td><td><ChamadoBadge valor={t.status} /></td>
-        <td><Link aria-label={"Ver detalhes do chamado " + (t.protocolo || t.id)} className="chamado-ver-detalhes" to={rotaBase + '/' + encodeURIComponent(t.id)}>Ver detalhes</Link></td>
+        <td>{renderAcao ? renderAcao(t) : <Link aria-label={"Ver detalhes do chamado " + (t.protocolo || t.id)} className="chamado-ver-detalhes" to={rotaBase + '/' + encodeURIComponent(t.id)}>Ver detalhes</Link>}</td>
       </tr>)}</tbody>
     </table></div>{!filtrados.length && <div className="empty-state">Nenhum chamado encontrado.</div>}
-    <footer className="chamados-rodape" aria-live="polite">Mostrando {filtrados.length} de {tickets.length} chamados</footer></section>
+    <footer className="chamados-rodape">
+      <span aria-live="polite">Mostrando {filtrados.length ? inicio + 1 : 0}–{inicio + visiveis.length} de {filtrados.length} chamados{filtrados.length !== tickets.length ? ' (' + tickets.length + ' no total)' : ''}</span>
+      {tamanhoPagina > 0 && <nav className="chamados-paginacao" aria-label="Paginação dos chamados">
+        <button type="button" disabled={pagina === 1} onClick={() => setPaginaTexto(String(pagina - 1))}>Anterior</button>
+        <span>Página {pagina} de {totalPaginas}</span>
+        <button type="button" disabled={pagina === totalPaginas} onClick={() => setPaginaTexto(String(pagina + 1))}>Próxima</button>
+      </nav>}
+    </footer></section>
   </div>;
 }

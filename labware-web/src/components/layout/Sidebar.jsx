@@ -32,6 +32,7 @@ export default function Sidebar({ sidebarRef, mobile, inert, open, onNavigate, u
     ? [
         { label: 'Usuários pendentes', to: '/usuarios-pendentes', Icon: Users, active: currentPath === '/usuarios-pendentes' },
         { label: 'Gerenciar usuários', to: '/admin/usuarios', Icon: Users, active: currentPath === '/admin/usuarios' },
+        { label: 'Gerenciar chamados', to: '/admin/chamados', Icon: Ticket, active: currentPath === '/admin/chamados' },
         { label: 'Gerenciar empresas', to: '/admin/empresas', Icon: ClipboardCheck, active: currentPath === '/admin/empresas' },
       ]
     : empresaPendente(user)
@@ -73,7 +74,7 @@ export default function Sidebar({ sidebarRef, mobile, inert, open, onNavigate, u
           active: currentPath === '/meus-chamados',
         },
         {
-          label: 'Histórico de Chamados',
+          label: 'Histórico',
           to: '/historico',
           Icon: History,
           active: currentPath === '/historico',

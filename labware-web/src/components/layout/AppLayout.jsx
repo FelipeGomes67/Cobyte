@@ -14,6 +14,7 @@ import { useAutenticacao } from '../../hooks/useAuth';
 
 const pageNames = {
   '/admin/usuarios': 'Gerenciar usuários',
+  '/admin/chamados': 'Gerenciar chamados',
   '/admin/empresas': 'Gerenciar empresas',
   '/dashboard': 'Dashboard',
   '/chamados': 'Todos Chamados',

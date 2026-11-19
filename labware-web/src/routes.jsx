@@ -1,3 +1,4 @@
+import ChamadosAdmin from './pages/ChamadosAdmin';
 import Administracao from './pages/Administracao';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
@@ -36,7 +37,7 @@ export function ProtectedRoute() {
     return <Navigate to="/login" replace state={{ from: localizacao.pathname }} />;
   }
 
-  if (usuario.perfil === 'ADMIN' && !['/admin/usuarios', '/admin/empresas', '/usuarios-pendentes', '/perfil', '/configuracoes'].includes(localizacao.pathname)) {
+  if (usuario.perfil === 'ADMIN' && !['/admin/usuarios', '/admin/empresas', '/admin/chamados', '/usuarios-pendentes', '/perfil', '/configuracoes'].includes(localizacao.pathname)) {
     return <Navigate to="/admin/usuarios" replace />;
   }
   return <AppLayout />;
@@ -112,6 +113,7 @@ export default function RotasAplicacao() {
           }
         />
         <Route element={<ProtectedRoute />}>
+          <Route path="/admin/chamados" element={<ExigirAdmin><ChamadosAdmin /></ExigirAdmin>} />
           <Route path="/admin/usuarios" element={<ExigirAdmin><Administracao key="usuarios" tipo="usuarios" /></ExigirAdmin>} />
           <Route path="/admin/empresas" element={<ExigirAdmin><Administracao key="empresas" tipo="empresas" /></ExigirAdmin>} />
           <Route path="/usuarios-pendentes" element={<ExigirSuporte><UsuariosPendentes /></ExigirSuporte>} />
