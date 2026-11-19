@@ -562,9 +562,9 @@ public class ChamadoService {
                         log.error("Falha ao registrar histórico de atribuição automática: {}", e.getMessage());
                     }
                     try {
-                        String detalheAuto = "Chamado distribuído automaticamente para atendimento";
+                        String detalheAuto = "Você foi selecionado para este atendimento. Confira o relato e inicie a análise quando estiver pronto.";
                         String prazoAuto = chamado.getPrazoResolucao() != null ? "Prazo estimado de resolução: " + chamado.getPrazoResolucao().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : null;
-                        notificacoes.emitir(suporte, null, chamado, "ATRIBUICAO", "Chamado atribuído automaticamente", detalheAuto, "Sistema LabWare", prazoAuto);
+                        notificacoes.emitir(suporte, null, chamado, "ATRIBUICAO", "Novo chamado para você", detalheAuto, "Sistema LabWare", prazoAuto);
                     } catch (Exception e) {
                         log.error("Falha ao emitir notificação de atribuição automática: {}", e.getMessage());
                     }

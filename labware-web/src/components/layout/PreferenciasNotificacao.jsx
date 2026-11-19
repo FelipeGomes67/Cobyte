@@ -24,7 +24,7 @@ export default function PreferenciasNotificacao() {
     {erro && <p role="alert">{erro}</p>}{sucesso && <p role="status">{sucesso}</p>}
     {!preferencias ? <><p>Carregando preferências...</p>{erro && <button onClick={() => setTentativa(t => t + 1)}>Tentar novamente</button>}</> :
     <form onSubmit={salvar}>
-      {[['novasMensagens', 'Novas mensagens', 'Respostas e atualizações na conversa dos chamados.'], ['alteracoesStatus', 'Abertura e mudanças de status', 'Acompanhe o registro e as etapas do atendimento.'], ['atribuicoes', 'Atribuição de chamados', 'Saiba quando um chamado for atribuído a você.']].map(([chave, nome, descricao]) =>
+      {[['novasMensagens', 'Novas mensagens', 'Respostas e atualizações na conversa dos chamados.'], ['alteracoesStatus', 'Chamados e alertas', 'Abertura, status, prioridade crítica e avisos de SLA próximo do vencimento.'], ['atribuicoes', 'Atribuição de chamados', 'Saiba quando um chamado for atribuído a você.']].map(([chave, nome, descricao]) =>
         <label className="preferencia-linha" key={chave}><span><strong>{nome}</strong><small>{descricao}</small></span><input type="checkbox" checked={preferencias[chave]} disabled={salvando} onChange={e => { setSucesso(''); setPreferencias(p => ({ ...p, [chave]: e.target.checked })); }} /></label>)}
       <button className="primary-button" disabled={salvando}>{salvando ? 'Salvando...' : 'Salvar preferências'}</button>
     </form>}

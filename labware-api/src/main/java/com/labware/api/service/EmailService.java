@@ -127,6 +127,8 @@ public class EmailService {
                 case "STATUS" -> "O status do chamado foi atualizado:";
                 case "PRIORIDADE" -> "A prioridade do chamado foi atualizada:";
                 case "ATRIBUICAO" -> "O chamado abaixo foi atribuído para atendimento:";
+                case "CHAMADO_CRITICO" -> "Atenção: este chamado está com prioridade crítica e exige acompanhamento imediato:";
+                case "SLA_EM_RISCO" -> "O prazo de resolução deste chamado está próximo do vencimento. Confira o tempo restante:";
                 default -> "Há uma nova atualização no chamado abaixo:";
             };
             sb.append(frase).append("\n\n");

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Bell, MessageCircle } from 'lucide-react';
+import { obterVisualNotificacao } from '../utils/notificacaoVisual';
 import { useNotificacoes } from '../hooks/useNotificacoes';
 import { marcarNotificacao, EVENTO_NOTIFICACOES } from '../services/notificacaoService';
 import EstadoConteudo from '../components/common/EstadoConteudo';
@@ -8,12 +8,12 @@ import '../css/Notificacoes.css';
 
 const abas = [
   ['todas', 'Todas'], ['nao-lidas', 'Não lidas'],
-  ['mensagens', 'Mensagens'], ['alertas', 'SLA / Alertas'],
+  ['mensagens', 'Mensagens'], ['chamados', 'Chamados'],
 ];
 
 export default function Notificacoes() {
   const navegar = useNavigate();
-  const [aba, setAba] = useState('nao-lidas');
+  const [aba, setAba] = useState('todas');
   const [page, setPage] = useState(0);
   const dados = useNotificacoes(page, 20, aba);
   const [erro, setErro] = useState('');
@@ -49,7 +49,7 @@ export default function Notificacoes() {
             className={'tab-btn-n ' + (aba === valor ? 'ativa' : '')}
             onClick={() => { setAba(valor); setPage(0); setErro(''); }}>{nome}</button>)}
         </div>
-        <button type="button" className="btn-link-marcar-lidas" disabled={ocupado || !dados.naoLidas}
+        <button type="button" className="btn-link-marcar-lidas" disabled={dados.carregando || ocupado || !dados.naoLidas}
           onClick={() => marcar(null)}>Marcar todas como lidas</button>
       </div>
       {erro && <EstadoConteudo tipo="erro" mensagem={erro} />}
@@ -59,13 +59,12 @@ export default function Notificacoes() {
         : !dados.erro && !dados.content.length ? <EstadoConteudo mensagem="Nenhuma notificação encontrada neste filtro." /> : null}
       <div className="lista-notificacoes-itens">
         {!dados.carregando && dados.content.map(item => {
-          const mensagem = item.tipo === 'MENSAGEM';
-          const sla = String(item.tipo || '').includes('SLA');
-          const Icone = mensagem ? MessageCircle : sla ? AlertTriangle : Bell;
-          return <article key={item.id} className={'item-notificacao ' + (item.lida ? 'notificacao-lida' : 'notificacao-nao-lida')}>
-            <div className={'status-icon-circle ' + (mensagem ? 'info' : sla ? 'erro' : 'alerta')}><Icone size={20} aria-hidden="true" /></div>
+          const visual = obterVisualNotificacao(item);
+          const Icone = visual.Icone;
+          return <article key={item.id} className={'item-notificacao ' + (visual.destaque || '') + ' ' + (item.lida ? 'notificacao-lida' : 'notificacao-nao-lida')}>
+            <div className="status-icon-circle" style={{ color: visual.cor, backgroundColor: visual.fundo }}><Icone size={20} aria-hidden="true" /></div>
             <div className="item-info-conteudo">
-              <p className="item-titulo">{item.titulo}</p><p className="item-mensagem">{item.mensagem}</p>
+              <p className="item-titulo">{visual.titulo}</p><p className="item-mensagem">{visual.mensagem}</p>
               <small className="item-data">{new Date(item.criadoEm).toLocaleString('pt-BR')} · {item.lida ? 'Lida' : 'Não lida'}</small>
             </div>
             <div className="notificacao-acoes">

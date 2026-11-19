@@ -143,7 +143,7 @@ public class NotificacaoService {
         String tituloChamado = chamado != null ? chamado.getTitulo() : null;
         java.util.UUID chamadoId = chamado != null ? chamado.getIdPublico() : null;
 
-        if (chamado != null) eventos.publishEvent(new WebPushService.Evento(destinatario.getId(), chamadoId));
+        if (chamado != null) eventos.publishEvent(new WebPushService.Evento(destinatario.getId(), chamadoId, tipo));
         eventos.publishEvent(new EmailService.EmailNotificacao(
                 destinatario.getEmail(),
                 destinatario.getNome(),

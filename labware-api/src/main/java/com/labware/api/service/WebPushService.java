@@ -21,7 +21,9 @@ public class WebPushService {
  @Value("${WEB_PUSH_PUBLIC_KEY:}") private String publica;
  @Value("${WEB_PUSH_PRIVATE_KEY:}") private String privada;
  @Value("${WEB_PUSH_SUBJECT:}") private String assunto;
- public record Evento(Long usuarioId, java.util.UUID chamadoId) {}
+ public record Evento(Long usuarioId, java.util.UUID chamadoId, String tipo) {
+  public Evento(Long usuarioId, java.util.UUID chamadoId) { this(usuarioId, chamadoId, ""); }
+ }
  public boolean habilitado() { return !publica.isBlank() && !privada.isBlank() && !assunto.isBlank(); }
  public String chavePublica() { return habilitado() ? publica : ""; }
  private String id(String endpoint) {
@@ -59,7 +61,16 @@ public class WebPushService {
    for(var registro:inscricoes.findByUsuarioId(evento.usuarioId())) {
     try {
      // Sem dados pessoais no aviso exibido na tela bloqueada.
-     String payload=new tools.jackson.databind.ObjectMapper().writeValueAsString(Map.of("title","Labware: atualização no atendimento","body","Há uma nova atualização. Acesse o chamado para conferir.","url","/chamados/"+evento.chamadoId()));
+     String titulo = "Labware: atualização no atendimento";
+     String corpo = "Há uma nova atualização. Acesse o chamado para conferir.";
+     if ("CHAMADO_CRITICO".equals(evento.tipo())) {
+      titulo = "Labware: chamado crítico";
+      corpo = "Um atendimento exige atenção imediata. Abra o chamado para conferir.";
+     } else if ("SLA_EM_RISCO".equals(evento.tipo())) {
+      titulo = "Labware: SLA próximo do vencimento";
+      corpo = "Um atendimento tem até 1 hora de SLA restante. Confira o prazo.";
+     }
+     String payload=new tools.jackson.databind.ObjectMapper().writeValueAsString(Map.of("title",titulo,"body",corpo,"url","/chamados/"+evento.chamadoId()));
      try(var resposta=cliente.execute(push.preparePost(new Notification(registro.getEndpoint(),registro.getP256dh(),registro.getAuth(),payload), Encoding.AES128GCM))) {
      int codigo=resposta.getStatusLine().getStatusCode();
      if(codigo==404 || codigo==410) inscricoes.deleteById(registro.getId());

@@ -13,6 +13,18 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ChamadoRepository extends JpaRepository<Chamado, Long>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Chamado> {
+    @Query("""
+            select c.id from Chamado c where c.status in :ativos and
+            ((c.prioridade = com.labware.api.model.enums.Prioridade.CRITICA and c.alertaCriticoEnviadoEm is null)
+             or (c.status <> com.labware.api.model.enums.StatusChamado.AGUARDANDO_CLIENTE
+                   and c.prioridade is not null
+                 and c.prazoResolucao > :agora and c.prazoResolucao <= :limite
+                 and (c.alertaSlaPrazoNotificado is null or c.alertaSlaPrazoNotificado <> c.prazoResolucao)))
+            order by c.id
+            """)
+    List<Long> buscarAlertasPendentes(@Param("ativos") java.util.Collection<com.labware.api.model.enums.StatusChamado> ativos,
+                                    @Param("agora") LocalDateTime agora, @Param("limite") LocalDateTime limite,
+                                    org.springframework.data.domain.Pageable pageable);
     @Query("select new com.labware.api.dto.response.ResumoAvaliacoesResponse(avg(a.notaAvaliacao), count(a)) from Chamado c join c.avaliacao a where c.responsavel.id = :usuarioId or exists (select t.id from c.tecnicos t where t.id = :usuarioId)")
     com.labware.api.dto.response.ResumoAvaliacoesResponse resumirAvaliacoes(@Param("usuarioId") Long usuarioId);
 

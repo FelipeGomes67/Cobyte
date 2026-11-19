@@ -57,6 +57,9 @@ public class Chamado {
     @Column(name = "categoria_personalizada", length = 100)
     private String categoriaPersonalizada;
 
+    private LocalDateTime alertaCriticoEnviadoEm;
+    private LocalDateTime alertaSlaPrazoNotificado;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "empresa_id")
     private Empresa empresa;
