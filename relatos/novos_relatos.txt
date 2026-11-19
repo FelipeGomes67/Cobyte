@@ -1,0 +1,51 @@
+Crítica/1/O sistema caiu para todo o laboratório e ninguém consegue atender.
+Crítica/1/Não consigo liberar o laudo do paciente da UTI porque o botão de assinar desapareceu.
+Crítica/1/Todas as unidades estão sem acesso ao sistema; nenhum atendimento está funcionando.
+Crítica/2/Desde as 8h todos os computadores ficam em conexão recusada. Recepção, coleta e setor técnico estão parados e ninguém consegue entrar no sistema.
+Crítica/2/O exame do paciente da UTI está pronto, mas o sistema dá erro ao assinar o laudo. A equipe médica está aguardando esse resultado e não existe outra forma de liberá-lo.
+Crítica/2/O servidor de banco de dados ficou indisponível para todas as unidades. Nenhuma estação consegue abrir o sistema e o atendimento está totalmente interrompido.
+Crítica/3/Às 7h40 todas as estações da matriz e das duas filiais perderam a conexão com o sistema. Login, cadastro de pacientes, coleta e emissão de laudos estão indisponíveis. A rede local e os outros serviços funcionam, mas todos recebem conexão recusada ao acessar o Labware. Não há estação operante nem alternativa para registrar os atendimentos.
+Crítica/3/O médico solicitou o laudo de um paciente internado na UTI para decidir a conduta imediata. O exame já foi validado, mas clicar em assinar retorna erro 500 e o documento não é liberado. Dois profissionais autorizados tentaram em máquinas diferentes, com o mesmo resultado. Não conseguimos emitir o laudo por outro caminho e a equipe médica está aguardando.
+Crítica/3/Desde a atualização desta manhã o sistema inteiro deixou de responder em todas as unidades. Nenhum usuário consegue autenticar, consultar exames ou cadastrar solicitações. Confirmamos o mesmo comportamento em quatro setores e em outra conexão de internet. Todas as operações dependentes do Labware estão paradas e não existe acesso alternativo.
+Alta/1/O fechamento do faturamento falha e não conseguimos concluir os lotes.
+Alta/1/O cadastro de pedidos não salva em nenhuma máquina da recepção; os outros módulos funcionam.
+Alta/1/Não conseguimos transmitir os resultados ao convênio e não existe envio alternativo.
+Alta/2/Todos os usuários do faturamento recebem lote duplicado ao finalizar o fechamento. A operação não pode ser concluída, mas recepção e setor técnico continuam trabalhando.
+Alta/2/Os pedidos do convênio chegam sem identificação na integração e nenhum deles pode ser importado. A fila aumenta e não temos cadastro manual autorizado para esses pedidos.
+Alta/2/A impressão de etiquetas de coleta falha nas três estações. Já testamos outra impressora, mas nenhuma etiqueta sai pelo sistema e a coleta desse setor está bloqueada.
+Alta/3/Desde as 14h o fechamento do lote do convênio retorna violação de chave ao confirmar. O problema ocorre com três operadores e em duas máquinas. Os lotes estão conferidos, mas nenhum pode ser fechado ou transmitido. Os demais módulos seguem disponíveis. Não temos outro procedimento para finalizar o faturamento e precisamos corrigir a operação.
+Alta/3/A integração recebe os pedidos normalmente, porém todos ficam com erro de identificação do paciente ao importar. Conferimos os dados com o parceiro e as mensagens contêm os identificadores. O bloqueio afeta todos os pedidos desse canal, sem alternativa manual permitida. As solicitações feitas diretamente pela recepção continuam funcionando.
+Alta/3/No cadastro de novos pedidos o botão de confirmar retorna erro 500 em todas as estações da recepção. Testamos com dois usuários autorizados e com pacientes diferentes. Nada é gravado e não há outro caminho para concluir essa etapa. Os exames já cadastrados continuam sendo processados e o restante do laboratório está operando.
+Média/1/Minha senha dá inválida, mas meus colegas conseguem entrar normalmente.
+Média/1/A pesquisa de exames está lenta, mas os resultados aparecem e consigo continuar.
+Média/1/Só a minha conta perdeu o acesso à consulta; as outras contas estão funcionando.
+Média/2/Não consigo entrar com meu usuário desde hoje cedo. Aparece senha inválida e a recuperação não chega ao meu e-mail. Os outros profissionais entram normalmente e o atendimento do setor continua.
+Média/2/A busca por paciente demora cerca de vinte segundos, mas termina e permite abrir o cadastro. Percebi isso na minha estação; não houve falha ao salvar nem interrupção dos atendimentos.
+Média/2/Meu usuário recebe acesso negado ao abrir o histórico de exames. Um colega com a mesma função consegue consultar. Os demais recursos da minha conta funcionam e a equipe continua atendendo.
+Média/3/Hoje às 9h tentei entrar na minha conta e recebi senha inválida. Conferi o teclado e repeti em outro navegador, com o mesmo resultado. Dois colegas conseguem entrar em suas próprias contas e os atendimentos seguem normalmente. Preciso recuperar meu acesso individual; não tenho evidência de indisponibilidade geral.
+Média/3/A consulta de exames passou de aproximadamente dois segundos para quinze segundos na minha estação. Ela sempre termina e consigo abrir os resultados, salvar alterações e seguir trabalhando. Não houve perda de dados nem erro na operação. Ainda não confirmei se outros usuários percebem a mesma lentidão.
+Média/3/Minha conta não tem mais permissão para consultar o histórico do paciente. O sistema mostra acesso negado apenas nessa tela; cadastro e pesquisa funcionam. O responsável do setor conferiu que outro usuário da mesma função mantém o acesso. A equipe consegue continuar o trabalho, mas preciso revisar a permissão individual.
+Baixa/1/O título do relatório está desalinhado, mas os dados e a impressão estão corretos.
+Baixa/1/A cor do ícone ficou diferente; o botão continua funcionando.
+Baixa/1/Tem um erro de escrita no nome da tela, sem afetar o uso.
+Baixa/2/Na tela de consulta o título está alguns pixels fora do alinhamento. Os campos, a pesquisa e os resultados funcionam normalmente. É apenas um ajuste visual.
+Baixa/2/O cabeçalho do relatório apresenta o nome do setor com um espaço duplicado. Valores, identificadores e assinatura estão corretos; não há prejuízo à leitura nem à emissão.
+Baixa/2/O ícone de exportação aparece maior que os outros depois da atualização. Ele continua exportando o arquivo corretamente e não cobre nenhum controle.
+Baixa/3/Na listagem de exames o título da coluna Data está desalinhado em relação aos demais cabeçalhos quando a janela é maximizada. Testei a ordenação e a consulta e tudo funciona. O conteúdo permanece legível, nenhum campo fica oculto e não há interrupção do atendimento. Solicito apenas corrigir o alinhamento.
+Baixa/3/O nome da tela de configurações apresenta uma letra repetida no cabeçalho. A navegação, o salvamento e a recuperação dos dados estão normais. O erro não aparece nos documentos emitidos e não altera informações do paciente. É uma correção de texto na interface.
+Baixa/3/O botão de exportar relatório está com o ícone visualmente maior que os demais na versão atual. A área clicável permanece correta, o botão não sobrepõe campos e o arquivo exportado contém todos os dados esperados. Gostaria apenas de uniformizar o tamanho do ícone com o restante da tela.
+Melhoria/1/Gostaria de favoritar os filtros que uso com frequência.
+Melhoria/1/Seria bom ter tema escuro no sistema.
+Melhoria/1/Quero sugerir um relatório comparativo por unidade.
+Melhoria/2/Hoje ajustamos os mesmos filtros todos os dias e a consulta funciona normalmente. Gostaríamos de salvar combinações como favoritas para reduzir o trabalho repetitivo.
+Melhoria/2/O relatório atual atende ao que precisamos, mas seria útil incluir uma coluna opcional com o setor solicitante. É uma evolução para facilitar a análise, sem falha no processo atual.
+Melhoria/2/Podemos avaliar a criação de um painel com o volume de exames por unidade? Atualmente exportamos os dados corretamente e montamos essa visão em uma planilha.
+Melhoria/3/A equipe usa diariamente a mesma combinação de período, convênio e unidade na consulta de exames. Os filtros existentes funcionam e não há bloqueio ou perda de dados. Propomos permitir salvar uma combinação por usuário, dar um nome a ela e aplicá-la novamente com um clique para reduzir o preenchimento repetitivo.
+Melhoria/3/Gostaríamos de um relatório opcional comparando o volume mensal de exames entre unidades. Os relatórios atuais são emitidos corretamente e conseguimos fazer a comparação por planilha. A proposta é automatizar essa visualização, incluindo seleção de período e exportação, sem alterar o funcionamento das consultas existentes.
+Melhoria/3/Sugerimos oferecer tema escuro como preferência individual de interface. A versão atual funciona, todos os textos são legíveis e nenhum atendimento está impedido. A solicitação busca conforto visual para quem trabalha no turno da noite; a adoção poderia ser opcional e manter as cores de prioridade reconhecíveis.
+A definir/1/Deu problema aqui.
+A definir/1/O relatório está estranho.
+A definir/2/Estou tentando usar o sistema e aparece um erro. Ainda não anotei a mensagem nem confirmei qual etapa falha.
+A definir/2/Não gostei de como ficou a tela depois da atualização. Não sei dizer se algum botão deixou de funcionar.
+A definir/3/Um colega comentou que algo não funcionou no sistema durante a manhã. Não tenho a mensagem de erro, o módulo, o horário exato nem a identificação da operação. Também não foi confirmado se o comportamento se repetiu ou se houve bloqueio do atendimento.
+A definir/3/Recebemos uma reclamação sobre um relatório, mas ainda não sabemos se o problema é no conteúdo, na impressão ou na aparência. Não foram enviados protocolo, captura de tela ou passos para reproduzir. Precisamos levantar esses detalhes antes de concluir a categoria e a prioridade.

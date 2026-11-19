@@ -1,0 +1,20 @@
+RELATOS PARA VALIDAÇÃO MANUAL
+
+novos_relatos.txt
+Formato por linha: Prioridade esperada/Nível de detalhamento/Relato
+
+1 = curto, com informação direta.
+2 = intermediário, com contexto e impacto.
+3 = detalhado, com abrangência, tentativas e alternativas.
+
+São 51 novos relatos: 9 de cada prioridade (Crítica, Alta, Média, Baixa e Melhoria) e 6 com prioridade A definir por falta de evidências.
+A prioridade indicada é a expectativa de avaliação, não uma garantia do resultado da IA.
+Nos casos A definir, os campos sem evidência devem ficar pendentes; não é necessário descartar os campos que puderem ser identificados.
+
+Para testar a triagem, cole somente o relato, depois da segunda barra.
+Não envie a prioridade esperada nem o nível para a IA.
+
+audios_gerados/
+Contém os 220 áudios existentes e a imagem que já estava na pasta.
+Nenhum áudio novo foi sintetizado nesta etapa.
+Os rótulos antigos continuam no arquivo DadosTeste.csv na raiz do projeto; não foram alterados.
