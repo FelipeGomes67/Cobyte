@@ -29,6 +29,10 @@ class ClassificadorIaServiceTest {
             "Como faço para assinar um laudo?, DUVIDA, INDEFINIDA",
             "Solicitação de inclusão de um atalho para assinar laudos, MELHORIA, MELHORIA",
             "Urgente: erro no sistema, ERRO_FUNCIONAL, INDEFINIDA",
+            "O botão de assinar laudo simplesmente sumiu da tela. Preciso liberar o paciente da UTI urgente, ERRO_FUNCIONAL, CRITICA",
+            "O botão de assinar laudo sumiu da tela e não consigo concluir a assinatura, ERRO_FUNCIONAL, ALTA",
+            "Preciso de ajuda sem outros detalhes, INDEFINIDA, INDEFINIDA",
+            "Como assinar laudo de UTI?, DUVIDA, INDEFINIDA",
             "Falha na impressora sem detalhes adicionais, ERRO_FUNCIONAL, INDEFINIDA"
     })
     void classificaPeloImpactoInformado(String descricao, CategoriaChamado categoria, Prioridade prioridade) {
