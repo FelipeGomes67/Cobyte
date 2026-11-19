@@ -132,7 +132,11 @@ class LabwareApiApplicationTests {
         var chamado = chamado(autor, empresa);
         var outro = chamados.saveAndFlush(Chamado.builder().protocolo("LAB-TESTE-0002")
                 .titulo("Outro chamado de teste").descricao("Validação de fechamento")
+                .categoria(com.labware.api.model.enums.CategoriaChamado.ERRO_FUNCIONAL)
+                .prioridade(com.labware.api.model.enums.Prioridade.MEDIA)
                 .solicitante(autor).empresa(empresa).status(StatusChamado.RESOLVIDO).build());
+        chamado.setCategoria(com.labware.api.model.enums.CategoriaChamado.ERRO_FUNCIONAL);
+        chamado.setPrioridade(com.labware.api.model.enums.Prioridade.MEDIA);
         chamado.setStatus(StatusChamado.RESOLVIDO);
         chamados.saveAndFlush(chamado);
         String auth = bearer(colega);

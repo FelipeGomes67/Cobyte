@@ -32,6 +32,7 @@ class AssumirChamadoServiceTest {
         primeiro = Usuario.builder().id(1L).nome("Ana").perfil(PerfilUsuario.SUPORTE).build();
         segundo = Usuario.builder().id(2L).nome("Bruno").perfil(PerfilUsuario.SUPORTE).build();
         chamado = Chamado.builder().id(10L).status(StatusChamado.EM_ATENDIMENTO)
+                .categoria(CategoriaChamado.ERRO_FUNCIONAL).prioridade(Prioridade.MEDIA)
                 .empresa(Empresa.builder().id(1L).nome("Empresa").build())
                 .solicitante(Usuario.builder().id(3L).nome("Cliente").build()).responsavel(primeiro).build();
         when(chamados.findParaAvaliacao(10L)).thenReturn(Optional.of(chamado));
