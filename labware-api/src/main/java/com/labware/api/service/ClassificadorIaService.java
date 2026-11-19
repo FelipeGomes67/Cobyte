@@ -200,8 +200,9 @@ public class ClassificadorIaService {
             categoria = regras.categoria();
             ajustadaPorRegras = true;
         }
-        if ((prioridade == null || prioridade == Prioridade.MEDIA)
-                && (regras.prioridade() == Prioridade.ALTA || regras.prioridade() == Prioridade.CRITICA)) {
+        if ((prioridade == null && regras.prioridade() != null)
+                || (prioridade == Prioridade.MEDIA
+                    && (regras.prioridade() == Prioridade.ALTA || regras.prioridade() == Prioridade.CRITICA))) {
             prioridade = regras.prioridade();
             ajustadaPorRegras = true;
         }
@@ -333,7 +334,8 @@ public class ClassificadorIaService {
         if (paradaGeral || laudoUtiBloqueado) {
             prioridade = Prioridade.CRITICA;
             categoria = CategoriaChamado.INDISPONIBILIDADE;
-        } else if (erro || lentidao || visual || contem(relato, "sem acesso|senha invalida|token expirad[oa]|esqueci (a |minha )?senha")) {
+        } else if (erro || lentidao || visual || contem(relato, "sem acesso|senha invalida|token expirad[oa]|esqueci (a |minha )?senha")
+                || (acesso && contem(relato, "senhas?( \\w+){0,5} invalid[ao]s?|credenciais invalidas|acesso negado"))) {
             categoria = acesso ? CategoriaChamado.ACESSO
                     : lentidao && !erro ? CategoriaChamado.LENTIDAO : CategoriaChamado.ERRO_FUNCIONAL;
             boolean operacaoEssencial = contem(relato, "(emitir|liberar|assinar) (os? |os meus? )?laudos?|(?:emissao|liberacao|assinatura) de laudos?"

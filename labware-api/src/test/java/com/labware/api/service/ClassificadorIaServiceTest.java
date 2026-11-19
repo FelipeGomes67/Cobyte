@@ -23,6 +23,7 @@ class ClassificadorIaServiceTest {
             "O sistema inteiro caiu e nenhum usuário consegue acessar, INDISPONIBILIDADE, CRITICA",
             "Não consigo salvar a prescrição nesta tela, ERRO_FUNCIONAL, ALTA",
             "O token expirado impede meu acesso ao laudo, ACESSO, MEDIA",
+            "Minha senha aparece como inválida apenas para mim e os colegas conseguem acessar, ACESSO, MEDIA",
             "A tela está lenta mas conclui a consulta, LENTIDAO, MEDIA",
             "O PDF tem erro de alinhamento na quebra de página, ERRO_FUNCIONAL, BAIXA",
             "Como faço para assinar um laudo?, DUVIDA, INDEFINIDA",
@@ -38,6 +39,27 @@ class ClassificadorIaServiceTest {
             var resultado = classificador.classificar("", descricao).orElseThrow();
             assertEquals(categoria, resultado.categoria());
             assertEquals(prioridade, resultado.prioridade());
+            assertFalse(resultado.foraDoEscopo());
+        } finally {
+            classificador.encerrar();
+        }
+    }
+
+    @Test
+    void preservaEvidenciaDeAcessoQuandoModeloDeixaCamposNulos() {
+        String json = """
+                {"foraDoEscopo":false,"categoriaGeradaIa":null,"prioridadeGeradaIa":null,
+                 "informacoesInsuficientes":true,"justificativaIa":"Alcance a confirmar."}
+                """;
+        var resposta = new ChatResponse(List.of(new Generation(new AssistantMessage(json))));
+        var classificador = new ClassificadorIaService(ChatClient.builder(prompt -> resposta),
+                new ObjectMapper(), 5000, 768);
+        try {
+            var resultado = classificador.classificar("Acesso",
+                    "Minha senha aparece como inválida apenas para mim. Os colegas conseguem acessar normalmente.").orElseThrow();
+            assertEquals(CategoriaChamado.ACESSO, resultado.categoria());
+            assertEquals(Prioridade.MEDIA, resultado.prioridade());
+            assertTrue(resultado.justificativa().contains("[Revisão necessária]"));
             assertFalse(resultado.foraDoEscopo());
         } finally {
             classificador.encerrar();
