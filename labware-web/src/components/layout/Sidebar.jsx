@@ -80,7 +80,7 @@ export default function Sidebar({ sidebarRef, mobile, inert, open, onNavigate, u
           active: currentPath === '/historico',
         },
         {
-          label: 'Relatório',
+          label: 'Relatórios',
           to: '/relatorios',
           Icon: ClipboardCheck,
           active: currentPath === '/relatorios',
