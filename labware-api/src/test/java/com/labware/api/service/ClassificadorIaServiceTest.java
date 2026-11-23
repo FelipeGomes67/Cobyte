@@ -18,6 +18,54 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClassificadorIaServiceTest {
+    @Test
+    void pedidoDePersonalizacaoNaoViraDefeitoVisual() {
+        String json = """
+                {"foraDoEscopo":false,"informacoesInsuficientes":false,
+                 "categoriaGeradaIa":"MELHORIA","prioridadeGeradaIa":"MELHORIA",
+                 "tituloGeradoIa":"Personalização opcional das cores dos ícones",
+                 "resumoTecnicoIa":{"sintomaObservado":"Usuário solicita escolher a cor do ícone.",
+                    "impactoOperacional":"O botão continua funcionando normalmente."},
+                 "justificativaIa":"Pedido de personalização sem defeito atual."}
+                """;
+        var resposta = new ChatResponse(List.of(new Generation(new AssistantMessage(json))));
+        var classificador = new ClassificadorIaService(ChatClient.builder(prompt -> resposta), new ObjectMapper(), 5000, 768);
+        try {
+            var resultado = classificador.classificar("", "Gostaria de poder escolher a cor do ícone; o botão continua funcionando normalmente.").orElseThrow();
+            assertEquals(CategoriaChamado.MELHORIA, resultado.categoria());
+            assertEquals(Prioridade.MELHORIA, resultado.prioridade());
+        } finally { classificador.encerrar(); }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "A cor do ícone ficou diferente; o botão continua funcionando., BAIXA",
+            "A cor do ícone mudou; o botão funciona normalmente mas não consigo salvar a prescrição., ALTA",
+            "A cor do ícone mudou; o botão funciona normalmente mas o sistema inteiro caiu., CRITICA"
+    })
+    void validaCoerenciaSemRebaixarRelatosComBloqueio(String relato, Prioridade esperada) {
+        String json = """
+                {"foraDoEscopo":false,"informacoesInsuficientes":false,
+                 "categoriaGeradaIa":"ERRO_FUNCIONAL","prioridadeGeradaIa":"ALTA",
+                 "tituloGeradoIa":"Alteração inesperada na aparência do ícone",
+                 "resumoTecnicoIa":{"sintomaObservado":"A cor do ícone foi alterada.",
+                    "impactoOperacional":"O botão continua funcionando normalmente."},
+                 "justificativaIa":"Pode ser considerado uma melhoria para a estética do sistema."}
+                """;
+        var resposta = new ChatResponse(List.of(new Generation(new AssistantMessage(json))));
+        var classificador = new ClassificadorIaService(ChatClient.builder(prompt -> resposta), new ObjectMapper(), 5000, 768);
+        try {
+            var resultado = classificador.classificar("", relato).orElseThrow();
+            assertEquals(esperada, resultado.prioridade());
+            if (esperada == Prioridade.BAIXA) {
+                assertEquals(CategoriaChamado.ERRO_FUNCIONAL, resultado.categoria());
+                assertTrue(resultado.justificativa().contains("[Revisão necessária]"));
+                assertFalse(resultado.justificativa().contains("melhoria para a estética"));
+                assertTrue(resultado.resumoTecnicoIa().impactoOperacional().contains("Funcionamento preservado"));
+            }
+        } finally { classificador.encerrar(); }
+    }
+
     @ParameterizedTest
     @CsvSource(nullValues = "INDEFINIDA", value = {
             "O sistema inteiro caiu e nenhum usuário consegue acessar, INDISPONIBILIDADE, CRITICA",
@@ -26,6 +74,9 @@ class ClassificadorIaServiceTest {
             "Minha senha aparece como inválida apenas para mim e os colegas conseguem acessar, ACESSO, MEDIA",
             "A tela está lenta mas conclui a consulta, LENTIDAO, MEDIA",
             "O PDF tem erro de alinhamento na quebra de página, ERRO_FUNCIONAL, BAIXA",
+            "A cor do ícone ficou diferente; o botão continua funcionando., ERRO_FUNCIONAL, BAIXA",
+            "A cor do ícone mudou mas não consigo salvar a prescrição, ERRO_FUNCIONAL, ALTA",
+            "A cor do ícone mudou e o sistema inteiro caiu, INDISPONIBILIDADE, CRITICA",
             "Como faço para assinar um laudo?, DUVIDA, INDEFINIDA",
             "Solicitação de inclusão de um atalho para assinar laudos, MELHORIA, MELHORIA",
             "Urgente: erro no sistema, ERRO_FUNCIONAL, INDEFINIDA",
