@@ -5,7 +5,8 @@
     display: grid;
     place-items: center;
     padding: 20px;
-    background: #10182880;
+    background: rgb(15 23 42 / 60%);
+    backdrop-filter: blur(3px);
     animation: fade-in .12s ease-out;
 }
 
