@@ -42,6 +42,10 @@ public class ClassificadorIaService {
             MEDIA: dificuldade individual de acesso ou lentidão sem bloqueio essencial.
             BAIXA: ajuste visual com operação preservada. MELHORIA: evolução sem incidente.
             Botão ausente pode impedir a operação; considere a finalidade e o impacto do relato.
+            Aparência alterada com funcionamento explicitamente preservado é BAIXA, nunca ALTA.
+            Defeito visual inesperado é ERRO_FUNCIONAL; pedido de recurso novo é MELHORIA.
+            Não trate correção de aparência como evolução só porque melhora a estética.
+            Havendo também bloqueio real, considere esse bloqueio antes do ajuste visual.
 
             Sem evidência suficiente para um campo, retorne null nele. Não use DUVIDA/MEDIA
             como valores padrão. Preserve os campos identificados. Marque informacoesInsuficientes
@@ -168,6 +172,7 @@ public class ClassificadorIaService {
         String justificativa = texto(json, "justificativaIa", "justificativa", "motivo");
         var regras = porRegras(titulo, descricao);
         boolean ajustadaPorRegras = false;
+        boolean visualSemImpacto = somenteVisualComOperacaoPreservada(titulo, descricao);
         if ((categoria == null || categoria == CategoriaChamado.DUVIDA) && regras.categoria() != null
                 && regras.categoria() != CategoriaChamado.DUVIDA
                 && regras.categoria() != CategoriaChamado.MELHORIA) {
@@ -181,15 +186,25 @@ public class ClassificadorIaService {
             prioridade = regras.prioridade();
             ajustadaPorRegras = true;
         }
+        if (visualSemImpacto && (prioridade != Prioridade.BAIXA || categoria != CategoriaChamado.ERRO_FUNCIONAL)) {
+            log.info("Triagem: classificação incoerente com alteração visual e operação preservada; ajustando para ERRO_FUNCIONAL/BAIXA");
+            prioridade = Prioridade.BAIXA;
+            categoria = CategoriaChamado.ERRO_FUNCIONAL;
+            justificativa = "Alteração visual relatada com funcionamento preservado e sem evidência de bloqueio operacional.";
+            impacto = "Funcionamento preservado conforme o relato; alteração restrita à aparência da interface.";
+            ajustadaPorRegras = true;
+        }
         if (ajustadaPorRegras) {
-            justificativa = "A categoria ou a prioridade foi ajustada a partir dos sinais do relato.";
+            if (!visualSemImpacto) justificativa = "A categoria ou a prioridade foi ajustada a partir dos sinais do relato.";
         }
         boolean insuficiente = json.path("informacoesInsuficientes").asBoolean(false);
         boolean precisaRevisao = insuficiente || ajustadaPorRegras || prioridade == null || categoria == null || truncada
                 || sintoma == null || impacto == null;
         if (precisaRevisao) {
             String faltantes = texto(json, "informacoesFaltantes");
-            justificativa = "[Revisão necessária] " + (faltantes == null
+            justificativa = "[Revisão necessária] " + (visualSemImpacto
+                    ? "Confirmar apenas o ajuste visual identificado; a operação foi relatada como preservada."
+                    : faltantes == null
                     ? "Confirmar operação afetada, abrangência do bloqueio e existência de alternativa." : limitar(faltantes, 400))
                     + " " + (justificativa == null ? "" : justificativa);
         }
@@ -290,9 +305,7 @@ public class ClassificadorIaService {
         if (relato.isBlank()) throw new IllegalArgumentException("Relato vazio");
         Prioridade prioridade = null;
         CategoriaChamado categoria = null;
-        boolean bloqueio = contem(relato, "nao (consig\\w+|funciona\\w*|imprime\\w*|salva\\w*|emite\\w*|abre\\w*|envia\\w*|carrega\\w*|sai\\w*|responde\\w*)"
-                + "|impedid[oa]s?|bloquead[oa]s?|trav(?:a|ou|ando|ad[oa]s?)|parou de"
-                + "|(?:erro|falha) (?:ao|de (?:conexao|comunicacao|processamento|emissao|integracao|gravacao))");
+        boolean bloqueio = possuiBloqueio(relato);
         boolean paradaGeral = contem(relato, "(sistema|setor|laboratorio)( (esta|ficou|inteiro|todo|totalmente|completamente))* "
                 + "(parado|caiu|fora do ar|indisponivel|inoperante)"
                 + "|parada total|todos os usuarios sem acesso|ninguem (\\w+ ){0,4}"
@@ -306,8 +319,7 @@ public class ClassificadorIaService {
         boolean erro = bloqueio || contem(relato, "erros?|falh(?:a|ou|ando)|incorret[oa]s?|duplicad[oa]s?|sumiu");
         boolean lentidao = contem(relato, "lentidao|lent[oa]s?|demora\\w*|carregando (?:infinito|sem parar)");
         boolean acesso = contem(relato, "acesso|log(?:in|ar)|senhas?|permiss(?:ao|oes)|autenticacao|token expirad[oa]");
-        boolean visual = contem(relato, "ajuste visual|cor do botao|alinhamento|tamanho da fonte|quebra de pagina"
-                + "|fora de formato|caracteres especiais|(?:tela|texto) (?:cortad[oa]|sobreposto)");
+        boolean visual = possuiAlteracaoVisual(relato);
 
         if (paradaGeral) {
             prioridade = Prioridade.CRITICA;
@@ -339,7 +351,9 @@ public class ClassificadorIaService {
         String sintoma = limitar(descricao, 500);
         if (sintoma.isBlank()) sintoma = limitar(titulo, 255);
         if (sintoma.isBlank()) sintoma = "Relato insuficiente para identificar o sintoma.";
-        String impacto = prioridade == Prioridade.CRITICA
+        String impacto = somenteVisualComOperacaoPreservada(titulo, descricao)
+                ? "Funcionamento preservado conforme o relato; alteração restrita à aparência da interface."
+                : prioridade == Prioridade.CRITICA
                 ? "Relato contém indicação de paralisação ou bloqueio crítico; confirmar alcance com o solicitante."
                 : "Alcance operacional não confirmado. Validar com o solicitante antes de ampliar a severidade.";
         return resultado(prioridade, categoria, "[Revisão necessária] Regras locais provisórias; análise da IA indisponível ou incompleta. Confirmar abrangência, bloqueio e alternativa disponível.",
@@ -348,6 +362,36 @@ public class ClassificadorIaService {
 
     private static boolean contem(String texto, String expressao) {
         return texto.matches(".*\\b(?:" + expressao + ")\\b.*");
+    }
+
+    private static boolean possuiAlteracaoVisual(String relato) {
+        return contem(relato, "ajuste visual|(?:cor|cores) (?:d[oa]s? )?(?:botao|botoes|icones?|texto)"
+                + "|alinhamento|desalinhad[oa]s?|tamanho (?:da fonte|do icone)|icone (?:visual(?:mente)? )?(?:maior|menor)"
+                + "|erro de (?:escrita|texto)|letra repetida|espaco duplicado|quebra de pagina"
+                + "|fora de formato|caracteres especiais|(?:tela|texto) (?:cortad[oa]|sobreposto)");
+    }
+
+    private static boolean possuiBloqueio(String relato) {
+        return contem(relato, "nao (consig\\w+|funciona\\w*|imprime\\w*|salva\\w*|emite\\w*|abre\\w*|envia\\w*|carrega\\w*|sai\\w*|responde\\w*|permite|e possivel)"
+                + "|impedid[oa]s?|impede|impedindo|bloquead[oa]s?|trav(?:a|ou|ando|ad[oa]s?)|parou de"
+                + "|(?:erro|falha) (?:ao|de (?:conexao|comunicacao|processamento|emissao|integracao|gravacao))"
+                + "|(?:botao|opcao|funcao|assinatura)( \\w+){0,6} (?:sumiu|desapareceu|ausente)"
+                + "|(?:sumiu|desapareceu)( \\w+){0,6} (?:botao|opcao|funcao|assinatura)"
+                + "|(?:sistema|laboratorio|setor)( \\w+){0,3} (?:caiu|fora do ar|inoperante)");
+    }
+
+    private static boolean somenteVisualComOperacaoPreservada(String titulo, String descricao) {
+        String relato = normalizar(limitar(titulo, 255) + " " + limitar(descricao, 12000));
+        // Personalização solicitada é evolução; aparência inesperada é defeito visual.
+        boolean personalizacao = contem(relato, "(?:gostaria|queria) de (?:poder|mudar|alterar|personalizar)"
+                + "|permitir (?:escolher|personalizar)|opcao de (?:escolher|personalizar)");
+        boolean defeitoVisual = contem(relato, "ficou diferente|mudou sozinho|desalinhad[oa]|erro de (?:escrita|texto)|letra repetida");
+        return (!personalizacao || defeitoVisual) && possuiAlteracaoVisual(relato) && !possuiBloqueio(relato)
+                && !contem(relato, "sem acesso|senha invalida|acesso negado|lentidao|lento|lenta|dados incorretos|valor incorreto")
+                && contem(relato, "continua(?:m)?( \\w+){0,3} funcionando|funciona(?:m)?( \\w+){0,3} (?:normalmente|corretamente)"
+                    + "|funcionamento preservado|operacao preservada|sem (?:afetar|impacto funcional|prejuizo)"
+                    + "|nao (?:afeta|altera)( \\w+){0,4} (?:funcionamento|funcionalidade|operacao|uso)"
+                    + "|(?:dados|valores)( \\w+){0,4} corretos|nao ha interrupcao");
     }
 
     private ClassificacaoIaResultadoReponse resultado(Prioridade prioridade, CategoriaChamado categoria,
