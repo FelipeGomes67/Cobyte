@@ -26,7 +26,7 @@ Média/3/Hoje às 9h tentei entrar na minha conta e recebi senha inválida. Conf
 Média/3/A consulta de exames passou de aproximadamente dois segundos para quinze segundos na minha estação. Ela sempre termina e consigo abrir os resultados, salvar alterações e seguir trabalhando. Não houve perda de dados nem erro na operação. Ainda não confirmei se outros usuários percebem a mesma lentidão.
 Média/3/Minha conta não tem mais permissão para consultar o histórico do paciente. O sistema mostra acesso negado apenas nessa tela; cadastro e pesquisa funcionam. O responsável do setor conferiu que outro usuário da mesma função mantém o acesso. A equipe consegue continuar o trabalho, mas preciso revisar a permissão individual.
 Baixa/1/O título do relatório está desalinhado, mas os dados e a impressão estão corretos.
-Baixa/1/A cor do ícone ficou diferente; o botão continua funcionando.
+Baixa/1/N do ícone ficou diferente; o botão continua funcionando.
 Baixa/1/Tem um erro de escrita no nome da tela, sem afetar o uso.
 Baixa/2/Na tela de consulta o título está alguns pixels fora do alinhamento. Os campos, a pesquisa e os resultados funcionam normalmente. É apenas um ajuste visual.
 Baixa/2/O cabeçalho do relatório apresenta o nome do setor com um espaço duplicado. Valores, identificadores e assinatura estão corretos; não há prejuízo à leitura nem à emissão.
