@@ -121,5 +121,5 @@ button:disabled{cursor:not-allowed}
  .profile-panel .profile-header p{overflow-wrap:anywhere}
  .profile-panel .profile-info .profile-company{white-space:normal;overflow:visible;min-height:44px;height:auto;padding:10px 12px;overflow-wrap:anywhere}
  .editor-foto .editor-foto-ajustes{justify-content:center}
- .sidebar .brand{padding-right:36px}
+ .sidebar .brand{padding-left:36px;padding-right:36px}
 }

@@ -348,7 +348,7 @@
   width: 142px;
   max-height: 48px;
   object-fit: contain;
-  object-position: left center;
+  object-position: center;
 }
 
 .side-nav {
