@@ -257,8 +257,8 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
 
     // 1. Validação individual: cada arquivo até 10 MB
     for (const f of novosArquivos) {
-      if (!/\.(png|jpe?g|gif|webp|pdf|txt|docx?)$/i.test(f.name)) {
-        setErroGeral('Formato não permitido. Use PNG, JPG, GIF, WEBP, PDF, TXT, DOC ou DOCX.');
+      if (!/\.(png|jpe?g|webp|pdf)$/i.test(f.name)) {
+        setErroGeral('Formato não permitido. Use PNG, JPG, WEBP ou PDF.');
         return;
       }
       if (f.size > MAX_ARQUIVO_BYTES) {
@@ -523,7 +523,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           <input
             type="file"
             ref={cameraInputRef}
-            accept="image/png,image/jpeg,image/gif,image/webp"
+            accept="image/png,image/jpeg,image/webp"
             capture="environment"
             onChange={handleFileSelect}
             disabled={desabilitarGeral}
@@ -532,7 +532,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           <input
             type="file"
             ref={fileInputRef}
-            accept=".png,.jpg,.jpeg,.gif,.webp,.pdf,.txt,.doc,.docx"
+            accept=".png,.jpg,.jpeg,.webp,.pdf"
             onChange={handleFileSelect}
             disabled={desabilitarGeral}
             style={{ display: 'none' }}
@@ -569,7 +569,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
               </button>
             </div>
             <span className="dica-formatos">
-              PNG, JPG, GIF, WEBP, PDF, TXT, DOC ou DOCX (máx. 10 MB cada e 10 MB no total)
+              PNG, JPG, WEBP ou PDF (máx. 10 MB cada e 10 MB no total)
             </span>
           </div>
 

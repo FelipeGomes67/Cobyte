@@ -47,7 +47,7 @@ public class PersistenciaTranscricaoService {
         if (salvarMensagem && dto.transcricao().isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Não foi detectada fala para salvar como mensagem");
         }
-        Long anexoId = salvarAnexo ? anexos.enviar(chamadoId, usuarioId, arquivo).id() : null;
+        Long anexoId = salvarAnexo ? anexos.enviarAudio(chamadoId, usuarioId, arquivo).id() : null;
         if (anexoId != null) anexoRepository.findById(anexoId).orElseThrow().setDuracaoAudioSegundos(dto.duracaoSegundos());
         if (salvarMensagem) {
             mensagens.enviarTranscricao(chamadoId, usuarioId, new CriarMensagemRequest(dto.transcricao(), interna, anexoId));

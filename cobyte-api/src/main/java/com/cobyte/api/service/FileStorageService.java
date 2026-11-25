@@ -36,6 +36,15 @@ public class FileStorageService implements ArmazenamentoService {
 
     @Override
     public Arquivo salvar(Long chamadoId, MultipartFile arquivo) {
+        return salvarValidado(chamadoId, arquivo, false);
+    }
+
+    @Override
+    public Arquivo salvarAudio(Long chamadoId, MultipartFile arquivo) {
+        return salvarValidado(chamadoId, arquivo, true);
+    }
+
+    private Arquivo salvarValidado(Long chamadoId, MultipartFile arquivo, boolean somenteAudio) {
         if (arquivo == null || arquivo.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo vazio ou ausente");
         }
@@ -47,7 +56,7 @@ public class FileStorageService implements ArmazenamentoService {
                 byte[] dados = entrada.readNBytes((int) tamanhoMaximo + 1);
                 validarTamanho(dados.length);
                 if (dados.length == 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo vazio");
-                String tipo = TipoArquivoPermitido.identificar(nome, dados, false);
+                String tipo = TipoArquivoPermitido.identificar(nome, dados, somenteAudio);
                 String chave = "anexos/" + chamadoId + "/" + UUID.randomUUID();
                 compartilhados.salvar(chave, dados);
                 return new Arquivo(nome, tipo, "db:" + chave, dados.length);
@@ -68,7 +77,7 @@ public class FileStorageService implements ArmazenamentoService {
                 byte[] dados = entrada.readNBytes((int) tamanhoMaximo + 1);
                 validarTamanho(dados.length);
                 if (dados.length == 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo vazio");
-                tipo = TipoArquivoPermitido.identificar(nome, dados, false);
+                tipo = TipoArquivoPermitido.identificar(nome, dados, somenteAudio);
                 saida.write(dados);
             } catch (IOException | RuntimeException ex) {
                 try { Files.deleteIfExists(destino); } catch (IOException limpeza) { ex.addSuppressed(limpeza); }

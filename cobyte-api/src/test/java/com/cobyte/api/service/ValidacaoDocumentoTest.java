@@ -27,8 +27,8 @@ class ValidacaoDocumentoTest {
 
     @Test void uploadTxtIgnoraMimeForjadoMasRejeitaBinarioEExecutavel() {
         var armazenamento = new FileStorageService(diretorio.toString(), 1024);
-        var salvo = armazenamento.salvar(1L, new MockMultipartFile("arquivo", "relato.txt", "application/x-msdownload", "texto".getBytes(StandardCharsets.UTF_8)));
-        assertEquals("text/plain", salvo.tipoConteudo());
+        assertThrows(ResponseStatusException.class, () -> armazenamento.salvar(1L,
+                new MockMultipartFile("arquivo", "relato.txt", "application/x-msdownload", "texto".getBytes(StandardCharsets.UTF_8))));
         assertThrows(ResponseStatusException.class, () -> armazenamento.salvar(1L,
                 new MockMultipartFile("arquivo", "falso.txt", "text/plain", new byte[] {77, 90, 0})));
         byte[] binarioAposCabecalho = new byte[64];
@@ -49,14 +49,14 @@ class ValidacaoDocumentoTest {
 
     @Test void armazenamentoLocalValidaDocxCompletoAntesDeGravar() throws Exception {
         var armazenamento = new FileStorageService(diretorio.toString(), 1024 * 1024);
-        var salvo = armazenamento.salvar(1L, new MockMultipartFile("arquivo", "relato.docx", "application/zip", zip(partesDocx())));
-        assertEquals("application/vnd.openxmlformats-officedocument.wordprocessingml.document", salvo.tipoConteudo());
+        assertThrows(ResponseStatusException.class, () -> armazenamento.salvar(1L,
+                new MockMultipartFile("arquivo", "relato.docx", "application/zip", zip(partesDocx()))));
         var partes = partesDocx();
         partes.put("word/vbaProject.bin", new byte[] {1});
         assertThrows(ResponseStatusException.class, () -> armazenamento.salvar(1L,
                 new MockMultipartFile("arquivo", "macro.docx", "application/zip", zip(partes))));
         try (var arquivos = java.nio.file.Files.list(diretorio.resolve("1"))) {
-            assertEquals(1, arquivos.count(), "Upload rejeitado não deve deixar arquivo no disco");
+            assertEquals(0, arquivos.count(), "Upload rejeitado não deve deixar arquivo no disco");
         }
     }
 
@@ -81,6 +81,35 @@ class ValidacaoDocumentoTest {
         assertTrue(ValidacaoDocumento.docx(zip(partes)));
         partes.put("word/_rels/document.xml.rels", relacao("hyperlink", "file:///arquivo", true));
         assertFalse(ValidacaoDocumento.docx(zip(partes)));
+    }
+
+    @Test void rejeitaCamposPerigososMesmoFragmentadosOuCodificadosEmXml() throws Exception {
+        for (String comando : new String[] {"DDEAUTO", "DDE", "INCLUDETEXT", "INCLUDEPICTURE", "LINK"}) {
+            var partes = partesDocx();
+            String primeiro = comando.substring(0, 2);
+            String restante = comando.substring(2);
+            String campo = "<w:r><w:fldChar w:fldCharType='begin'/></w:r>"
+                    + "<w:r><w:instrText> " + primeiro + "</w:instrText></w:r>"
+                    + "<w:r><w:instrText>" + restante + " marcador </w:instrText></w:r>"
+                    + "<w:r><w:fldChar w:fldCharType='end'/></w:r>";
+            partes.put("word/document.xml", documentoComCampo(campo));
+            assertFalse(ValidacaoDocumento.docx(zip(partes)), comando + " fragmentado");
+        }
+        var partes = partesDocx();
+        partes.put("word/document.xml", documentoComCampo("<w:fldSimple w:instr='&#68;DEAUTO marcador'/>"));
+        assertFalse(ValidacaoDocumento.docx(zip(partes)), "Entidade numérica XML também deve ser verificada");
+    }
+
+    @Test void permiteCamposNormaisDePaginacaoEmDocx() throws Exception {
+        var partes = partesDocx();
+        partes.put("word/document.xml", documentoComCampo("<w:r><w:instrText> PAGE </w:instrText></w:r>"
+                + "<w:fldSimple w:instr='NUMPAGES'/><w:r><w:t>Relatório normal</w:t></w:r>"));
+        assertTrue(ValidacaoDocumento.docx(zip(partes)));
+    }
+
+    private byte[] documentoComCampo(String campo) {
+        return ("<w:document xmlns:w='http://schemas.openxmlformats.org/wordprocessingml/2006/main'>"
+                + "<w:body><w:p>" + campo + "</w:p></w:body></w:document>").getBytes(StandardCharsets.UTF_8);
     }
 
     @Test void rejeitaExpansaoExcessivaEConteudoEmDiretorioZip() throws Exception {

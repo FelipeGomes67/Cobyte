@@ -90,6 +90,9 @@ final class ValidacaoDocumento {
                 if (minusculo.endsWith(".xml") || minusculo.endsWith(".rels")) {
                     Document xml = lerXml(conteudo);
                     var elementos = xml.getElementsByTagName("*");
+                    // O Word pode dividir uma única instrução entre vários runs instrText.
+                    // Verificar fragmentos isolados permite contornar a política (DD + EAUTO).
+                    var instrucoes = new StringBuilder();
                     for (int i = 0; i < elementos.getLength(); i++) {
                         var el = (org.w3c.dom.Element) elementos.item(i);
                         String conteudoTipo = el.getAttribute("ContentType").toLowerCase(Locale.ROOT);
@@ -106,12 +109,14 @@ final class ValidacaoDocumento {
                                     && el.getAttribute("Target").equals("word/document.xml")
                                     && !"External".equalsIgnoreCase(el.getAttribute("TargetMode"))) relacaoPrincipal = true;
                         }
-                        if (("instrText".equals(el.getLocalName()) || "fldSimple".equals(el.getLocalName()))
-                                && (el.getTextContent() + el.getAttributeNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "instr"))
-                                .toUpperCase(Locale.ROOT).matches("(?s).*\\b(DDEAUTO|DDE|INCLUDETEXT|INCLUDEPICTURE|LINK)\\b.*")) return false;
+                        if ("instrText".equals(el.getLocalName())) instrucoes.append(el.getTextContent());
+                        if ("fldSimple".equals(el.getLocalName())) instrucoes.append(' ')
+                                .append(el.getAttributeNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "instr")).append(' ');
                         if (nome.equals("[Content_Types].xml") && el.getAttribute("PartName").equals("/word/document.xml")
                                 && conteudoTipo.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml")) tipos = true;
                     }
+                    if (instrucoes.toString().toUpperCase(Locale.ROOT)
+                            .matches("(?s).*\\b(DDEAUTO|DDE|INCLUDETEXT|INCLUDEPICTURE|LINK)\\b.*")) return false;
                     if (nome.equals("word/document.xml")) documento = "document".equals(xml.getDocumentElement().getLocalName())
                             && "http://schemas.openxmlformats.org/wordprocessingml/2006/main".equals(xml.getDocumentElement().getNamespaceURI());
                 }

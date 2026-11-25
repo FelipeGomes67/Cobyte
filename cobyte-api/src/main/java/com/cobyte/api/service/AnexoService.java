@@ -33,10 +33,19 @@ public class AnexoService {
 
     @Transactional
     public AnexoResponse enviar(Long chamadoId, Long usuarioId, MultipartFile arquivo) {
+        return enviarValidado(chamadoId, usuarioId, arquivo, false);
+    }
+
+    @Transactional
+    public AnexoResponse enviarAudio(Long chamadoId, Long usuarioId, MultipartFile arquivo) {
+        return enviarValidado(chamadoId, usuarioId, arquivo, true);
+    }
+
+    private AnexoResponse enviarValidado(Long chamadoId, Long usuarioId, MultipartFile arquivo, boolean somenteAudio) {
         Chamado chamado = buscarChamado(chamadoId);
         Usuario usuario = buscarUsuario(usuarioId);
         acesso.exigirEdicao(chamado, usuario);
-        var salvo = armazenamento.salvar(chamadoId, arquivo);
+        var salvo = somenteAudio ? armazenamento.salvarAudio(chamadoId, arquivo) : armazenamento.salvar(chamadoId, arquivo);
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override

@@ -11,6 +11,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class FileStorageServiceTest {
     @TempDir Path diretorio;
 
+    @Test void audioSomentePodeSerSalvoPeloFluxoEspecifico() {
+        var armazenamento = new FileStorageService(diretorio.toString(), 1024);
+        var audio = new MockMultipartFile("arquivo", "audio.wav", "audio/wav", new byte[] {82,73,70,70,0,0,0,0,87,65,86,69});
+        assertThrows(ResponseStatusException.class, () -> armazenamento.salvar(1L, audio));
+        assertEquals("audio/wav", armazenamento.salvarAudio(1L, audio).tipoConteudo());
+        var falso = new MockMultipartFile("arquivo", "audio.wav", "audio/wav", "%PDF-1.7".getBytes(StandardCharsets.UTF_8));
+        assertThrows(ResponseStatusException.class, () -> armazenamento.salvarAudio(1L, falso));
+    }
+
     @Test
     void rejeitaConteudoIncompativelMesmoComTipoDeclaradoPermitido() {
         var armazenamento = new FileStorageService(diretorio.toString(), 1024);

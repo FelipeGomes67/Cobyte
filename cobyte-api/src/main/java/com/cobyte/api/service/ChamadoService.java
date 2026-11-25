@@ -178,7 +178,7 @@ public class ChamadoService {
         Long chamadoId = tx.execute(status -> {
             Long id = criarChamado(solicitanteId, req);
             arquivos.forEach(arquivo -> anexos.enviar(id, solicitanteId, arquivo));
-            if (audio != null) anexos.enviar(id, solicitanteId, audio);
+            if (audio != null) anexos.enviarAudio(id, solicitanteId, audio);
             return id;
         });
 
