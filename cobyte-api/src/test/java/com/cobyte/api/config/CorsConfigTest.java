@@ -8,6 +8,29 @@ import org.springframework.web.cors.DefaultCorsProcessor;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CorsConfigTest {
+    @Test void permiteCabecalhoDoNgrokApenasParaOrigemAutorizada() throws Exception {
+        var source = new SecurityConfig(null, null, null)
+                .corsConfigurationSource(List.of("https://cobyte-beige.vercel.app"));
+        for (String origem : List.of("https://cobyte-beige.vercel.app", "https://outro-app.vercel.app")) {
+            var request = new MockHttpServletRequest("OPTIONS", "/api/usuarios/me");
+            request.addHeader("Origin", origem);
+            request.addHeader("Access-Control-Request-Method", "GET");
+            request.addHeader("Access-Control-Request-Headers", "authorization, ngrok-skip-browser-warning");
+            var response = new MockHttpServletResponse();
+            boolean permitido = origem.equals("https://cobyte-beige.vercel.app");
+            assertEquals(permitido, new DefaultCorsProcessor()
+                    .processRequest(source.getCorsConfiguration(request), request, response));
+            if (permitido) {
+                assertEquals(origem, response.getHeader("Access-Control-Allow-Origin"));
+                assertTrue(response.getHeader("Access-Control-Allow-Headers")
+                        .toLowerCase().contains("ngrok-skip-browser-warning"));
+            } else {
+                assertEquals(403, response.getStatus());
+                assertNull(response.getHeader("Access-Control-Allow-Origin"));
+            }
+        }
+    }
+
     @Test void preflightAceitaVercelLocalhostEOrigemAdicionalComCredenciais() throws Exception {
         var config = new SecurityConfig(null, null, null);
         for (String origem : List.of("https://cobyte.vercel.app", "https://cobyte-preview-123.vercel.app",

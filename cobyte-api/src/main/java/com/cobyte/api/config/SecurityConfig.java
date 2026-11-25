@@ -101,7 +101,7 @@ public class SecurityConfig {
         }
         config.setAllowCredentials(true);
         config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "ngrok-skip-browser-warning"));
         config.setExposedHeaders(List.of("Retry-After"));
         config.setMaxAge(3600L);
 

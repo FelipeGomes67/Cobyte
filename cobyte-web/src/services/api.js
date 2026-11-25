@@ -6,6 +6,7 @@ export const EVENTO_SESSAO_EXPIRADA = 'cobyte-sessao-expirada';
 // Na Vercel, aponta para o túnel HTTPS; localmente, usa a API na porta 8080.
 const baseEnv = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 export const API_BASE_URL = baseEnv.trim().replace(/\/+$/, '');
+const usaNgrok = /\.(?:ngrok-free\.(?:dev|app)|ngrok\.app)$/i.test(new URL(API_BASE_URL).hostname);
 
 export function obterToken() {
   return localStorage.getItem(CHAVE_TOKEN);
@@ -28,6 +29,7 @@ export const api = axios.create({
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
+    ...(usaNgrok ? { 'ngrok-skip-browser-warning': '1' } : {}),
   },
 });
 
