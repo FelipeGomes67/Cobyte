@@ -30,6 +30,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
   const audioPlayerRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const galeriaInputRef = useRef(null);
   const audioFileInputRef = useRef(null);
 
   useEffect(() => {
@@ -531,6 +532,15 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           />
           <input
             type="file"
+            ref={galeriaInputRef}
+            accept="image/png,image/jpeg,image/webp"
+            multiple
+            onChange={handleFileSelect}
+            disabled={desabilitarGeral}
+            style={{ display: 'none' }}
+          />
+          <input
+            type="file"
             ref={fileInputRef}
             accept=".png,.jpg,.jpeg,.webp,.pdf"
             onChange={handleFileSelect}
@@ -558,6 +568,14 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 disabled={desabilitarGeral}
               >
                 <img src="/icons/Camera.svg" alt="Câmera" /> Tirar Foto
+              </button>
+              <button
+                type="button"
+                className="btn-upload-opcao"
+                onClick={() => galeriaInputRef.current?.click()}
+                disabled={desabilitarGeral}
+              >
+                <img src="/icons/Galeria.svg" alt="" /> Galeria
               </button>
               <button
                 type="button"
