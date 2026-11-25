@@ -31,6 +31,9 @@ if errorlevel 1 (
   if errorlevel 1 exit /b 1
 )
 
+".venv\Scripts\python.exe" iniciar.py --validar
+if errorlevel 1 exit /b 1
+
 if not defined STT_MODEL_PATH (
   ".venv\Scripts\python.exe" preparar_modelo.py
   if errorlevel 1 exit /b 1
@@ -62,7 +65,7 @@ if defined MAILPIT_PATH (
 
 if "%STT_DEVICE%"=="" set "STT_DEVICE=cpu"
 echo Iniciando STT Service em http://127.0.0.1:8000...
-".venv\Scripts\python.exe" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
+".venv\Scripts\python.exe" iniciar.py
 exit /b %errorlevel%
 
 :modelo_invalido

@@ -7,9 +7,9 @@ Serviço local de Speech-to-Text (FastAPI + Faster-Whisper).
 
 ## Como Rodar
 
-Configure `STT_INTERNAL_API_KEY` no ambiente antes de iniciar o serviço e use o mesmo valor no `.env` da API Java. Gere um segredo aleatório com pelo menos 32 bytes. O serviço verifica o cabeçalho `X-Internal-Api-Key` inclusive nas rotas de documentação e health, antes de ler o corpo do upload.
+Configure `STT_INTERNAL_API_KEY` uma única vez no arquivo `cobyte-api/.env`, com pelo menos 32 bytes aleatórios. O `iniciar.cmd` carrega essa chave automaticamente, usando o mesmo valor da API Java, inclusive depois de reiniciar o computador. O serviço verifica o cabeçalho `X-Internal-Api-Key` inclusive nas rotas de documentação e health, antes de ler o corpo do upload.
 
-No PowerShell, use `$env:STT_INTERNAL_API_KEY = 'SEU_SEGREDO_PRIVADO'`. O arquivo `.env.example` é apenas referência e não é carregado automaticamente. Nunca coloque a chave em variáveis `VITE_*`.
+O inicializador lê apenas `STT_INTERNAL_API_KEY` do `.env` da API, nos formatos `NOME=valor` ou `NOME: valor`, com aspas opcionais. Não executa o conteúdo do arquivo nem importa as credenciais do banco. A chave do arquivo tem precedência sobre a do terminal. Quando não houver essa configuração no arquivo, mantém o suporte à variável de ambiente. O `.env.example` do STT continua sendo apenas referência para as demais variáveis. Nunca coloque a chave em variáveis `VITE_*`.
 
 Por padrão, o serviço recusa inicializar sem uma chave. Para desenvolvimento estritamente local, `STT_ALLOW_LOCAL_WITHOUT_KEY=true` permite ausência de chave apenas com `STT_HOST` e cliente em loopback. Não use essa exceção em rede ou por túnel. O upload tem limite de 10 MB, limite de corpo multipart e verificação da assinatura do áudio antes da transcrição.
 
