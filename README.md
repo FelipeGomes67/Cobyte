@@ -44,13 +44,14 @@ Cobyte/
 │   ├── src/main/resources/application.yml
 │   ├── src/test/
 │   ├── stt-service/
-│   ├── docs/schema_labware_completo.sql
 │   ├── iniciar-api.cmd
 │   └── iniciar-api.ps1
 ├── labware-web/
 │   ├── src/
 │   ├── public/
 │   └── package.json
+├── bancoDeDados/
+│   └── labware.sql
 └── relatos/
     ├── audios_gerados/
     ├── DadosTeste.csv
@@ -223,7 +224,7 @@ Para links de notificações e e-mails em outro endereço, configure `FRONTEND_U
 
 O modo `local` usa as pastas configuradas por `UPLOADS_DIRETORIO` e `UPLOADS_DIRETORIO_FOTOS`. Compartilhar apenas o banco não replica esses arquivos entre computadores.
 
-Atualmente, o projeto utiliza `spring.jpa.hibernate.ddl-auto=update` e o Flyway está desabilitado. O schema SQL em [labware-api/docs/schema_labware_completo.sql](labware-api/docs/schema_labware_completo.sql) é uma referência completa para criação em banco vazio; não é uma migração para aplicar sobre um banco existente nem é executado automaticamente.
+O projeto utiliza `spring.jpa.hibernate.ddl-auto=update` e o Flyway está desabilitado. Para criar um banco `labware` novo e vazio, execute [bancoDeDados/labware.sql](bancoDeDados/labware.sql) com `psql -v ON_ERROR_STOP=1 -d postgres -f bancoDeDados/labware.sql` em uma instância PostgreSQL na qual o usuário tenha permissão para criar bancos.
 
 ## Regras do atendimento
 
