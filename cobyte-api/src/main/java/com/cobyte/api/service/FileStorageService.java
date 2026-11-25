@@ -65,19 +65,11 @@ public class FileStorageService implements ArmazenamentoService {
             // CREATE_NEW impede sobrescrita. O nome recebido nunca compoe o caminho fisico.
             try (var entrada = arquivo.getInputStream();
                  var saida = Files.newOutputStream(destino, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
-                byte[] cabecalho = entrada.readNBytes(16);
-                validarTamanho(cabecalho.length);
-                if (cabecalho.length == 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo vazio");
-                tipo = TipoArquivoPermitido.identificar(nome, cabecalho, false);
-                saida.write(cabecalho);
-                long total = cabecalho.length;
-                byte[] buffer = new byte[8192];
-                int lidos;
-                while ((lidos = entrada.read(buffer)) != -1) {
-                    total += lidos;
-                    validarTamanho(total);
-                    saida.write(buffer, 0, lidos);
-                }
+                byte[] dados = entrada.readNBytes((int) tamanhoMaximo + 1);
+                validarTamanho(dados.length);
+                if (dados.length == 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo vazio");
+                tipo = TipoArquivoPermitido.identificar(nome, dados, false);
+                saida.write(dados);
             } catch (IOException | RuntimeException ex) {
                 try { Files.deleteIfExists(destino); } catch (IOException limpeza) { ex.addSuppressed(limpeza); }
                 throw ex;

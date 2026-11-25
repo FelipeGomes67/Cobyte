@@ -11,6 +11,10 @@ final class TipoArquivoPermitido {
     static String identificar(String nome, byte[] cabecalho, boolean somenteAudio) {
         String extensao = nome.substring(nome.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
         String tipo = switch (extensao) {
+            case "txt" -> ValidacaoDocumento.texto(cabecalho) ? "text/plain" : null;
+            case "doc" -> ValidacaoDocumento.doc(cabecalho) ? "application/msword" : null;
+            case "docx" -> ValidacaoDocumento.docx(cabecalho)
+                    ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : null;
             case "wav" -> texto(cabecalho, 0, "RIFF") && texto(cabecalho, 8, "WAVE") ? "audio/wav" : null;
             case "ogg" -> texto(cabecalho, 0, "OggS") ? "audio/ogg" : null;
             case "flac" -> texto(cabecalho, 0, "fLaC") ? "audio/flac" : null;
