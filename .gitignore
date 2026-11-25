@@ -17,3 +17,8 @@ AGENTS.md
 
 # Cache local do Vite
 .vite/
+
+# Cache gerado pelo Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
