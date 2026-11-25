@@ -21,7 +21,7 @@ class ClassificadorIaServiceTest {
     @Test
     void pedidoDePersonalizacaoNaoViraDefeitoVisual() {
         String json = """
-                {"foraDoEscopo":false,"informacoesInsuficientes":false,
+                {"foraDoEscopo":false,"informacoesInsuficientes":false,"informacoesFaltantes":"","motivoCancelamento":"",
                  "categoriaGeradaIa":"MELHORIA","prioridadeGeradaIa":"MELHORIA",
                  "tituloGeradoIa":"Personalização opcional das cores dos ícones",
                  "resumoTecnicoIa":{"sintomaObservado":"Usuário solicita escolher a cor do ícone.",
@@ -45,7 +45,7 @@ class ClassificadorIaServiceTest {
     })
     void validaCoerenciaSemRebaixarRelatosComBloqueio(String relato, Prioridade esperada) {
         String json = """
-                {"foraDoEscopo":false,"informacoesInsuficientes":false,
+                {"foraDoEscopo":false,"informacoesInsuficientes":false,"informacoesFaltantes":"","motivoCancelamento":"",
                  "categoriaGeradaIa":"ERRO_FUNCIONAL","prioridadeGeradaIa":"ALTA",
                  "tituloGeradoIa":"Alteração inesperada na aparência do ícone",
                  "resumoTecnicoIa":{"sintomaObservado":"A cor do ícone foi alterada.",
@@ -126,6 +126,8 @@ class ClassificadorIaServiceTest {
         String json = """
                 {
                   "informacoesInsuficientes": false,
+                  "informacoesFaltantes": "",
+                  "motivoCancelamento": "",
                   "foraDoEscopo": false,
                   "categoriaGeradaIa": "DUVIDA",
                   "prioridadeGeradaIa": "MEDIA",
