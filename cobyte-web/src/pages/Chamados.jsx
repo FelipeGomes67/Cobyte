@@ -3,11 +3,8 @@ import EstadoConteudo from "../components/common/EstadoConteudo";
 import { useEstadoUrl } from "../hooks/useEstadoUrl";
 import { useTickets } from "../hooks/useTickets";
 import { useNavigate } from "react-router-dom";
-import { Headset } from "lucide-react";
 import { useAutenticacao } from "../hooks/useAuth";
 import TabelaChamados from "../components/ticket/TabelaChamados";
-
-const emailSuporte = import.meta.env.VITE_EMAIL_SUPORTE?.trim();
 
 function Heading({ title, description, action }) {
   return (
@@ -101,12 +98,6 @@ export function TicketsPage({ mode }) {
           rotaBase="/chamados"
         />
       )}
-      <div className="list-note">
-        <Headset size={17} /> Precisa de ajuda?{" "}
-        {emailSuporte
-          ? <a href={`mailto:${emailSuporte}`}>Fale com o suporte Cobyte</a>
-          : <span>Fale com a equipe de suporte da sua empresa.</span>}
-      </div>
     </>
   );
 }
