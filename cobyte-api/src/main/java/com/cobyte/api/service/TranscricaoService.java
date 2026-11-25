@@ -28,7 +28,8 @@ public class TranscricaoService {
     @Autowired
     public TranscricaoService(@Value("${cobyte.stt.url}") String url,
                               @Value("${cobyte.stt.timeout-segundos:120}") int timeout,
-                              @Value("${cobyte.uploads.tamanho-maximo-bytes:10485760}") long maxBytes) {
+                              @Value("${cobyte.uploads.tamanho-maximo-bytes:10485760}") long maxBytes,
+                              @Value("${STT_INTERNAL_API_KEY:}") String chaveInterna) {
         if (timeout <= 0 || maxBytes <= 0 || maxBytes >= Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Limites STT inválidos");
         }
@@ -41,13 +42,21 @@ public class TranscricaoService {
         };
         factory.setConnectTimeout(Duration.ofSeconds(10));
         factory.setReadTimeout(Duration.ofSeconds(timeout));
-        this.client = RestClient.builder().baseUrl(url).requestFactory(factory).build();
+        if (chaveInterna.isBlank() && !Set.of("localhost", "127.0.0.1", "::1", "[::1]").contains(java.net.URI.create(url).getHost()))
+            throw new IllegalArgumentException("STT remoto exige chave interna");
+        this.client = autenticar(RestClient.builder().baseUrl(url).requestFactory(factory), chaveInterna).build();
         this.maxBytes = maxBytes;
     }
 
     TranscricaoService(RestClient client, long maxBytes) {
         this.client = client;
         this.maxBytes = maxBytes;
+    }
+
+    static RestClient.Builder autenticar(RestClient.Builder builder, String chave) {
+        if (!chave.isBlank() && chave.getBytes(java.nio.charset.StandardCharsets.UTF_8).length < 32)
+            throw new IllegalArgumentException("STT_INTERNAL_API_KEY deve ter pelo menos 32 bytes");
+        return chave.isBlank() ? builder : builder.defaultHeader("X-Internal-Api-Key", chave);
     }
 
     public TranscricaoResponse transcreverAudio(MultipartFile arquivo) {

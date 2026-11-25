@@ -59,6 +59,20 @@ def save_temp_audio(
         if total_bytes == 0:
             raise HTTPException(status_code=400, detail="Arquivo de áudio vazio")
 
+        with open(temp_path, "rb") as entrada:
+            cabecalho = entrada.read(16)
+        assinaturas = {
+            ".wav": cabecalho.startswith(b"RIFF") and cabecalho[8:12] == b"WAVE",
+            ".ogg": cabecalho.startswith(b"OggS"),
+            ".flac": cabecalho.startswith(b"fLaC"),
+            ".m4a": cabecalho[4:8] == b"ftyp",
+            ".mp3": cabecalho.startswith(b"ID3") or (
+                len(cabecalho) >= 4 and cabecalho[0] == 0xff and cabecalho[1] & 0xe6 == 0xe2
+            ),
+        }
+        if not assinaturas.get(extensao, False):
+            raise HTTPException(status_code=400, detail="Conteúdo incompatível com o formato de áudio")
+
         yield (temp_path, total_bytes)
     finally:
         try:

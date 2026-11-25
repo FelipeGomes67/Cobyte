@@ -8,6 +8,7 @@ from app.api.routes import router
 from app.config import get_settings
 from app.core.concurrency import ConcurrencyManager
 from app.core.logging import logger
+from app.core.security import InternalSecurityMiddleware
 from app.services.model_loader import carregar_modelo
 
 
@@ -49,6 +50,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app_instance.include_router(router)
+    app_instance.add_middleware(InternalSecurityMiddleware, application=app_instance)
     return app_instance
 
 

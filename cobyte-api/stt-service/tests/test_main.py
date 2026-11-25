@@ -7,13 +7,17 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from fastapi.testclient import TestClient
-import main
+CHAVE_TESTE = "chave-interna-sintetica-exclusiva-dos-testes"
+with patch.dict(os.environ, {"STT_INTERNAL_API_KEY": CHAVE_TESTE}):
+    import main
 from app.config import Settings
 from app.services.model_loader import carregar_modelo as carregar_modelo_service
 
 
 class SttTest(unittest.TestCase):
     def setUp(self):
+        self.patch_config = patch.dict(os.environ, {"STT_INTERNAL_API_KEY": CHAVE_TESTE})
+        self.patch_config.start()
         self.modelo = Mock()
         self.modelo.transcribe.return_value = (
             iter([SimpleNamespace(text=" Olá "), SimpleNamespace(text=" mundo ")]),
@@ -21,14 +25,15 @@ class SttTest(unittest.TestCase):
         )
         self.patch_modelo = patch("main.carregar_modelo", return_value=self.modelo)
         self.patch_modelo.start()
-        self.client = TestClient(main.app)
+        self.client = TestClient(main.app, headers={"X-Internal-Api-Key": CHAVE_TESTE})
         self.client.__enter__()
 
     def tearDown(self):
         self.client.__exit__(None, None, None)
         self.patch_modelo.stop()
+        self.patch_config.stop()
 
-    def enviar(self, nome="audio.wav", conteudo=b"audio"):
+    def enviar(self, nome="audio.wav", conteudo=b"RIFF\x24\0\0\0WAVEfmt "):
         return self.client.post(
             "/transcrever",
             files={"arquivo": (nome, io.BytesIO(conteudo), "audio/wav")},
@@ -155,8 +160,44 @@ class SttTest(unittest.TestCase):
         self.assertEqual(422, self.enviar().status_code)
         self.assertFalse(os.path.exists(self.modelo.transcribe.call_args.args[0]))
 
+    def test_chave_interna_ausente_ou_incorreta_nao_processa_upload(self):
+        self.client.headers.pop("X-Internal-Api-Key")
+        self.assertEqual(401, self.enviar().status_code)
+        self.client.headers["X-Internal-Api-Key"] = "errada"
+        self.assertEqual(401, self.enviar().status_code)
+        self.modelo.transcribe.assert_not_called()
+
+    def test_extensao_correta_com_conteudo_falso_nao_chega_ao_whisper(self):
+        self.assertEqual(400, self.enviar(conteudo=b"<script>nao e audio</script>").status_code)
+        self.modelo.transcribe.assert_not_called()
+
+    def test_limita_corpo_antes_do_parser_inclusive_sem_content_length(self):
+        from dataclasses import replace
+        main.app.state.settings = replace(main.app.state.settings, max_bytes=128)
+        for conteudo in (b"x" * 70000, iter([b"x" * 70000])):
+            resposta = self.client.post("/transcrever", content=conteudo,
+                headers={"Content-Type": "multipart/form-data; boundary=teste"})
+            self.assertEqual(413, resposta.status_code)
+        self.modelo.transcribe.assert_not_called()
+
+    def test_erro_inesperado_nao_expoe_detalhes_internos(self):
+        with patch("app.api.routes.validate_extension", side_effect=RuntimeError("senha-interna-nao-expor")):
+            resposta = self.enviar()
+            self.assertEqual(500, resposta.status_code)
+            self.assertNotIn("senha-interna", resposta.text)
+            self.assertNotIn("RuntimeError", resposta.text)
+
 
 class ModeloConfigurationTest(unittest.TestCase):
+    def test_sem_chave_somente_dev_explicito_em_loopback(self):
+        Settings(internal_api_key="", allow_local_without_key=True, host="127.0.0.1").validate()
+        for host in ("0.0.0.0", "192.168.1.2"):
+            with self.assertRaises(RuntimeError):
+                Settings(internal_api_key="", allow_local_without_key=True, host=host).validate()
+        with self.assertRaises(RuntimeError):
+            Settings(internal_api_key="", allow_local_without_key=False).validate()
+        with self.assertRaises(RuntimeError):
+            Settings(internal_api_key="curta").validate()
     def test_cpu_cuda_offline(self):
         for device, compute in [("cpu", "int8"), ("cuda", "float16")]:
             for modelo_local in (False, True):

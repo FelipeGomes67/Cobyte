@@ -67,5 +67,5 @@ def transcrever(
         traceback.print_exc()
         logger.error("Erro no processamento da rota /transcrever: %s", e)
         raise HTTPException(
-            status_code=500, detail=f"Erro interno de transcrição: {type(e).__name__} - {e}"
+            status_code=500, detail="Não foi possível processar o áudio"
         ) from None

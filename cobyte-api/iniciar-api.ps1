@@ -25,6 +25,10 @@ WEB_PUSH_SUBJECT:
 OLLAMA_BASE_URL: http://localhost:11434
 OLLAMA_MODEL: llama3.2
 STT_SERVICE_URL: http://localhost:8000
+# Mesma chave privada (minimo 32 bytes) no processo Python do STT.
+STT_INTERNAL_API_KEY:
+CORS_ALLOWED_ORIGINS: http://localhost:5173
+FRONTEND_URL: http://localhost:5173
 UPLOADS_ARMAZENAMENTO: banco
 '@ | Set-Content -LiteralPath $ArquivoEnv -Encoding UTF8
             throw 'Criei o arquivo .env privado ao lado deste script. Preencha DB_URL, DB_USERNAME, DB_PASSWORD e JWT_SECRET e execute novamente.'
