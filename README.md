@@ -51,10 +51,10 @@ Cobyte/
 │   ├── src/
 │   ├── public/
 │   └── package.json
-├── relatos/
-│   ├── audios_gerados/
-│   └── novos_relatos.txt
-└── DadosTeste.csv
+└── relatos/
+    ├── audios_gerados/
+    ├── DadosTeste.csv
+    └── novos_relatos.txt
 ```
 
 O frontend usa a API para autenticação, chamados e transcrição. A API acessa o PostgreSQL, o Ollama e o serviço Python. Os arquivos em `relatos/` são material de teste manual; não são necessários para executar a aplicação.
