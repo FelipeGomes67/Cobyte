@@ -1,0 +1,81 @@
+springdoc:
+  api-docs:
+    path: /api-docs
+    version: OPENAPI_3_0
+  swagger-ui:
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+  override-with-generic-response: false
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+  packages-to-scan: com.cobyte.api.controller
+
+cobyte:
+  email:
+    frontend-url: ${FRONTEND_URL:http://localhost:5173}
+    remetente: ${MAIL_FROM:noreply@cobyte.local}
+    fila-habilitada: ${MAIL_QUEUE_ENABLED:true}
+    intervalo-ms: ${MAIL_QUEUE_INTERVAL_MS:10000}
+    max-tentativas: ${MAIL_MAX_ATTEMPTS:8}
+  stt:
+    url: ${STT_SERVICE_URL:http://localhost:8000}
+    timeout-segundos: ${STT_TIMEOUT_SEGUNDOS:120}
+  uploads:
+    armazenamento: ${UPLOADS_ARMAZENAMENTO:banco}
+    diretorio: ${UPLOADS_DIRETORIO:./uploads/chamados}
+    diretorio-fotos: ${UPLOADS_DIRETORIO_FOTOS:./uploads/fotos}
+    tamanho-maximo-bytes: 10485760
+  jwt:
+    secret: ${JWT_SECRET}
+    expiracao-minutos: ${JWT_EXPIRACAO_MINUTOS:120}
+  ia:
+    timeout-ms: ${IA_TIMEOUT_MS:30000}
+    max-tokens: ${IA_MAX_TOKENS:768}
+    http-connect-timeout-ms: ${IA_HTTP_CONNECT_TIMEOUT_MS:2000}
+    http-read-timeout-ms: ${IA_HTTP_READ_TIMEOUT_MS:25000}
+
+spring:
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS_ENABLE:false}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+  flyway:
+    enabled: false
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+  application:
+    name: cobyte-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cobyte}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+  ai:
+    retry:
+      max-attempts: 1
+      backoff:
+        initial-interval: 500ms
+        multiplier: 2
+        max-interval: 2s
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: ${OLLAMA_MODEL:llama3.2}
+          temperature: 0.1
+          format: json

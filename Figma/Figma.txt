@@ -1,0 +1,8 @@
+Design do Cobyte no Figma
+
+https://www.figma.com/design/NGShwSqG9rAvPVCdkNFdRs/CoByte?node-id=1531-2886&t=cvE20rxWMkHZyqrz-1
+
+Esta pasta reúne os materiais de design do projeto. Coloque aqui:
+- O link do arquivo principal ou de telas específicas.
+- Exportações de telas, ícones e outros recursos usados na aplicação.
+- Anotações sobre componentes, fluxos e as versões das telas.

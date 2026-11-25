@@ -1,4 +1,4 @@
-# CoBYTE — Labware
+# Cobyte
 
 Sistema de gestão de chamados de suporte para ambientes de laboratório. Reúne abertura por texto ou áudio, triagem por IA local, atendimento com chat, controle de SLA, notificações e avaliação do atendimento.
 
@@ -39,19 +39,21 @@ O cliente não altera a própria empresa no perfil. O cadastro público cria con
 
 ```text
 Cobyte/
-├── labware-api/
-│   ├── src/main/java/com/labware/api/
+├── cobyte-api/
+│   ├── src/main/java/com/cobyte/api/
 │   ├── src/main/resources/application.yml
 │   ├── src/test/
 │   ├── stt-service/
 │   ├── iniciar-api.cmd
 │   └── iniciar-api.ps1
-├── labware-web/
+├── cobyte-web/
 │   ├── src/
 │   ├── public/
 │   └── package.json
 ├── bancoDeDados/
-│   └── labware.sql
+│   └── cobyte.sql
+├── Figma/
+│   └── Figma.txt
 └── relatos/
     ├── audios_gerados/
     ├── DadosTeste.csv
@@ -98,7 +100,7 @@ A triagem possui timeout e fallback por regras. Uma resposta preenchida pela IA 
 ### 2. Preparar e iniciar a transcrição
 
 ```powershell
-cd labware-api/stt-service
+cd cobyte-api/stt-service
 .\iniciar.cmd
 ```
 
@@ -128,16 +130,16 @@ A transcrição carrega o modelo localmente, sem baixá-lo durante as requisiç�
 ### 3. Configurar e iniciar a API
 
 ```powershell
-cd labware-api
+cd cobyte-api
 .\iniciar-api.cmd
 ```
 
-Na primeira execução sem configuração, o inicializador cria `labware-api/.env` e encerra pedindo o preenchimento dos dados. Edite esse arquivo e execute o comando novamente.
+Na primeira execução sem configuração, o inicializador cria `cobyte-api/.env` e encerra pedindo o preenchimento dos dados. Edite esse arquivo e execute o comando novamente.
 
 O formato aceito pelo inicializador é `NOME: valor` ou `NOME=valor`. Exemplo com valores fictícios:
 
 ```dotenv
-DB_URL: jdbc:postgresql://localhost:5432/labware
+DB_URL: jdbc:postgresql://localhost:5432/cobyte
 DB_USERNAME: postgres
 DB_PASSWORD: SUA_SENHA_DO_BANCO
 JWT_SECRET: SUBSTITUA_POR_UMA_CHAVE_ALEATORIA_DE_NO_MINIMO_32_BYTES
@@ -172,7 +174,7 @@ O inicializador usa a própria pasta para localizar os arquivos, sem depender de
 
 #### Executar pelo IntelliJ IDEA
 
-Abra o módulo `labware-api` como projeto Maven, selecione o JDK e execute `com.labware.api.LabwareApiApplication`.
+Abra o módulo `cobyte-api` como projeto Maven, selecione o JDK e execute `com.cobyte.api.CobyteApiApplication`.
 
 Configure as variáveis em **Run/Debug Configurations → Environment variables**. Os nomes são os mesmos do exemplo acima, mas os valores devem ser preenchidos no formato esperado pelo IntelliJ.
 
@@ -181,18 +183,20 @@ O Spring Boot não lê automaticamente o `.env` pelo inicializador quando a apli
 ### 4. Iniciar o frontend
 
 ```powershell
-cd labware-web
+cd cobyte-web
 npm ci
 npm run dev
 ```
 
-O frontend usa `http://localhost:8080` como endereço padrão da API. Para outro endereço, crie `labware-web/.env.local` com:
+O frontend usa `http://localhost:8080` como endereço padrão da API. Para outro endereço, crie `cobyte-web/.env.local` com:
 
 ```dotenv
 VITE_API_URL=http://localhost:8080
 ```
 
 Para liberar outra origem do frontend, configure `CORS_ALLOWED_ORIGINS` na API com as URLs autorizadas separadas por vírgula.
+
+Se publicar na Vercel, use `cobyte-web` como **Root Directory**. Para exibir um link de contato, configure `VITE_EMAIL_SUPORTE` com o endereço público da equipe.
 
 Informe a URL base sem `/api`. Reinicie o Vite após alterar o arquivo. Variáveis `VITE_*` são públicas e incorporadas no build; nunca coloque senhas, segredo JWT ou chave privada de push nelas.
 
@@ -224,7 +228,7 @@ Para links de notificações e e-mails em outro endereço, configure `FRONTEND_U
 
 O modo `local` usa as pastas configuradas por `UPLOADS_DIRETORIO` e `UPLOADS_DIRETORIO_FOTOS`. Compartilhar apenas o banco não replica esses arquivos entre computadores.
 
-O projeto utiliza `spring.jpa.hibernate.ddl-auto=update` e o Flyway está desabilitado. Para criar um banco `labware` novo e vazio, execute [bancoDeDados/labware.sql](bancoDeDados/labware.sql) com `psql -v ON_ERROR_STOP=1 -d postgres -f bancoDeDados/labware.sql` em uma instância PostgreSQL na qual o usuário tenha permissão para criar bancos.
+O arquivo [bancoDeDados/cobyte.sql](bancoDeDados/cobyte.sql) documenta o banco e suas tabelas em SQL puro. Ele é apenas uma referência. A configuração da aplicação usa `DB_URL`, `spring.jpa.hibernate.ddl-auto=update` e mantém o Flyway desabilitado.
 
 ## Regras do atendimento
 
@@ -241,13 +245,13 @@ A API verifica as permissões; ocultar um botão no frontend não substitui a au
 
 ## Validação do código
 
-Na pasta `labware-api`:
+Na pasta `cobyte-api`:
 
 ```powershell
 .\mvnw.cmd compile -DskipTests
 ```
 
-Na pasta `labware-web`:
+Na pasta `cobyte-web`:
 
 ```powershell
 npm run lint
@@ -257,13 +261,13 @@ npm run build
 Para executar as suítes de teste, separadamente:
 
 ```powershell
-# Dentro de labware-api
+# Dentro de cobyte-api
 .\mvnw.cmd test
 
-# Dentro de labware-web
+# Dentro de cobyte-web
 npm test
 
-# Dentro de labware-api/stt-service, com as dependências de desenvolvimento
+# Dentro de cobyte-api/stt-service, com as dependências de desenvolvimento
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .\.venv\Scripts\python.exe -m pytest
 ```
@@ -284,4 +288,4 @@ Os testes de integração Java configuram H2 em memória. Os testes locais não 
 | Frontend não alcança a API | Confira `VITE_API_URL`, a porta da API e as origens CORS autorizadas. |
 | Microfone não funciona pelo IP do celular | A gravação precisa de um contexto seguro. O HTTP local do computador e o acesso por IP no celular têm comportamentos diferentes; use HTTPS com certificado confiável para esse acesso. |
 
-Para testar somente no computador, utilize os endereços `localhost` acima. O comando `npm run dev:rede` expõe o frontend na rede, mas também exige que o celular consiga alcançar a API e que a origem esteja autorizada no CORS. O modo `npm run dev:https` depende dos certificados locais esperados em `labware-web/.certs/` e usa a porta 5174.
+Para testar somente no computador, utilize os endereços `localhost` acima. O comando `npm run dev:rede` expõe o frontend na rede, mas também exige que o celular consiga alcançar a API e que a origem esteja autorizada no CORS. O modo `npm run dev:https` depende dos certificados locais esperados em `cobyte-web/.certs/` e usa a porta 5174.

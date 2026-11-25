@@ -1,0 +1,239 @@
+package com.cobyte.api.controller;
+
+import com.cobyte.api.service.IdentificadorChamado;
+import java.util.UUID;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+
+
+import com.cobyte.api.config.UsuarioLogado;
+import com.cobyte.api.dto.response.ChamadoResponse;
+import com.cobyte.api.dto.request.AbrirChamadoRequest;
+import com.cobyte.api.dto.request.AlterarPrioridadeRequest;
+import com.cobyte.api.dto.request.AlterarStatusRequest;
+import com.cobyte.api.dto.request.AvaliacaoChamadoRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
+import com.cobyte.api.service.ChamadoService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Tag(name = "Chamados", description = "Abertura, busca, atendimento e avaliação de chamados.")
+@RestController
+@RequestMapping("/api/chamados")
+@RequiredArgsConstructor
+
+public class ChamadoController {
+
+    private final IdentificadorChamado identificador;
+    private final ChamadoService chamadoService;
+    private final com.cobyte.api.service.ExclusaoChamadoService exclusao;
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Excluir definitivamente chamado e todos os registros vinculados", description = "Somente ADMIN. Remove mensagens, anexos, notificações, histórico, avaliação, triagem e dados de SLA. Irreversível.")
+    public java.util.Map<String, Object> excluir(@PathVariable UUID id) {
+        return java.util.Map.of("avisos", exclusao.excluir(id));
+    }
+
+    @Operation(summary = "Avaliar atendimento (CSAT)", description = "Somente CLIENTE solicitante; status RESOLVIDO ou FECHADO; nota de 1 a 5 e avaliação única. Fecha automaticamente um chamado RESOLVIDO. /avaliar é alias legado.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
+            @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
+            @ApiResponse(responseCode = "403", ref = "#/components/responses/AcessoNegado"),
+            @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
+            @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflito"),
+            @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
+    })
+    @PostMapping({"/{id}/avaliar", "/{id}/avaliacao"})
+    @PreAuthorize("hasRole('CLIENTE')")
+    public ChamadoResponse avaliar(@PathVariable UUID id,
+                                   @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+                                   @Valid @RequestBody AvaliacaoChamadoRequest dto) {
+        return chamadoService.avaliarChamado(identificador.interno(id), dto, UsuarioLogado.id(jwt));
+    }
+
+    @Operation(summary = "Abrir chamado", description = "Somente CLIENTE vinculado a Empresa. Exige multipart com a parte chamado (JSON) e ao menos um arquivo na parte arquivos. JSON sem anexos retorna 400. Aceita texto ou relato transcrito e duração. Classifica com IA e aplica SLA; em falha da IA usa prioridade MEDIA.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
+            @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
+            @ApiResponse(responseCode = "403", ref = "#/components/responses/AcessoNegado"),
+            @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
+            @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflito"),
+            @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
+    })
+    @PostMapping(consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public ChamadoResponse abrir(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+                                 @Valid @RequestBody AbrirChamadoRequest request) {
+        return chamadoService.abrir(UsuarioLogado.id(jwt), request);
+    }
+
+    @PostMapping(consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Abrir chamado com anexos", description = "Parte chamado: JSON; partes arquivos: imagens ou documentos obrigatórios. A IA recebe somente título e descrição.")
+    public ChamadoResponse abrirComAnexos(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+                                          @Valid @RequestPart("chamado") AbrirChamadoRequest request,
+                                          @RequestPart(value = "arquivos", required = false) List<org.springframework.web.multipart.MultipartFile> arquivos,
+                                          @RequestPart(value = "audio", required = false) org.springframework.web.multipart.MultipartFile audio) {
+        return chamadoService.abrir(UsuarioLogado.id(jwt), request, arquivos, audio);
+    }
+
+    /** CLIENTE: só os próprios (o filtro é ignorado). SUPORTE/ADMIN: todos, com filtro opcional. */
+    @Operation(summary = "Listar chamados com filtros", description = "Página com content e metadados. CLIENTE vê somente seus chamados. SUPORTE/ADMIN combinam os filtros; apenasMeus restringe ao próprio responsável. Ordenação por abertura e ID decrescentes.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
+            @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
+            @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
+            @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
+    })
+    @GetMapping({"", "/meus"})
+    public com.cobyte.api.dto.response.PaginaResponse<ChamadoResponse> listar(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+                                                                               @Parameter(description = "Filtro por solicitante, aplicado somente para SUPORTE/ADMIN.", example = "1")
+                                                                               @RequestParam(required=false) Long solicitanteId,
+                                                                               @Parameter(description = "Título, protocolo ou ID numérico com # opcional. Em URL, codifique # como %23.", example = "#108")
+                                                                               @RequestParam(required=false) @jakarta.validation.constraints.Size(max=255) String busca,
+                                                                               @RequestParam(required=false) com.cobyte.api.model.enums.StatusChamado status,
+                                                                               @RequestParam(required=false) com.cobyte.api.model.enums.Prioridade prioridade,
+                                                                               @Parameter(description = "Origem do chamado; aceita nomes antigos e aliases do frontend.",
+                                                                                       schema = @io.swagger.v3.oas.annotations.media.Schema(allowableValues = {"TEXTO", "VOZ", "PORTAL_TEXTO", "AUDIO_VOZ"}))
+                                                                               @RequestParam(required=false) String origem,
+                                                                               @Parameter(description = "ID do técnico responsável.", example = "2")
+                                                                               @RequestParam(required=false) Long responsavelId,
+                                                                               @Parameter(description = "Para suporte, restringe aos chamados atribuídos a si. CLIENTE sempre vê somente seus chamados.")
+                                                                               @RequestParam(defaultValue="false") boolean apenasMeus,
+                                                                               @RequestParam(defaultValue="0") @jakarta.validation.constraints.Min(0) int page,
+                                                                               @RequestParam(defaultValue="20") @jakarta.validation.constraints.Min(1) @jakarta.validation.constraints.Max(100) int size) {
+        com.cobyte.api.model.enums.OrigemChamado origemEnum=null;
+        if(origem!=null) try { origemEnum=com.cobyte.api.model.enums.OrigemChamado.parse(origem); }
+        catch(IllegalArgumentException e) { throw new org.springframework.web.server.ResponseStatusException(HttpStatus.BAD_REQUEST,"Origem inválida"); }
+        return com.cobyte.api.dto.response.PaginaResponse.from(chamadoService.filtrar(UsuarioLogado.id(jwt),busca,status,prioridade,origemEnum,responsavelId,apenasMeus,solicitanteId,page,size));
+    }
+
+    @Operation(summary = "Consultar chamado", description = "Cliente da empresa do chamado ou SUPORTE/ADMIN. Inclui avaliação, SLA, responsável e flag de mensagens não lidas. Não marca mensagens como lidas.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
+            @ApiResponse(responseCode = "403", ref = "#/components/responses/AcessoNegado"),
+            @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
+            @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
+    })
+    @GetMapping("/{id}")
+    public ChamadoResponse buscar(@PathVariable UUID id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+        return chamadoService.buscar(identificador.interno(id), UsuarioLogado.id(jwt));
+    }
+
+    @GetMapping("/empresa/{empresaId}")
+    @PreAuthorize("hasRole('CLIENTE')")
+    @Operation(summary = "Chamados da empresa", description = "Somente CLIENTE. O ID deve corresponder à empresa vinculada ao usuário autenticado. Inclui chamados de outros solicitantes da mesma empresa.")
+    public List<ChamadoResponse> listarDaEmpresa(@PathVariable Long empresaId,
+            @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+        return chamadoService.listarDaEmpresa(UsuarioLogado.id(jwt), empresaId);
+    }
+
+    @Operation(summary = "Assumir chamado", description = "SUPORTE/ADMIN. Adiciona o usuário logado à equipe sem remover outros técnicos. Não duplica vínculos. Chamado ABERTO passa para EM_ANALISE. Não aceita chamado encerrado.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
+            @ApiResponse(responseCode = "403", ref = "#/components/responses/AcessoNegado"),
+            @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
+            @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflito"),
+            @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
+    })
+    @RequestMapping(value="/{id}/assumir",method={RequestMethod.PATCH,RequestMethod.PUT})
+    @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
+    public ChamadoResponse assumir(@PathVariable UUID id, @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+
+        return chamadoService.assumir(identificador.interno(id), UsuarioLogado.id(jwt));
+    }
+
+    @Operation(summary = "Alterar status", description = "Somente responsável SUPORTE ou ADMIN. Exige chamado atribuído e transição permitida pelo fluxo. Body: novoStatus.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
+            @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
+            @ApiResponse(responseCode = "403", ref = "#/components/responses/AcessoNegado"),
+            @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
+            @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflito"),
+            @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
+    })
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('CLIENTE','SUPORTE','ADMIN')")
+    public ChamadoResponse alterarStatus(@PathVariable UUID id,
+                                         @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+                                         @Valid @RequestBody AlterarStatusRequest request) {
+
+        return chamadoService.alterarStatus(identificador.interno(id), UsuarioLogado.id(jwt), request);
+    }
+
+    @Operation(summary = "Alterar categoria", description = "Técnico participante ou ADMIN, durante Em Análise. Registra a decisão manual no histórico e preserva a sugestão original da IA.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
+            @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
+            @ApiResponse(responseCode = "403", ref = "#/components/responses/AcessoNegado"),
+            @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
+            @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
+    })
+    @PatchMapping("/{id}/categoria")
+    @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
+    public ChamadoResponse alterarCategoria(@PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody com.cobyte.api.dto.request.AlterarCategoriaRequest request) {
+        return chamadoService.alterarCategoria(identificador.interno(id), UsuarioLogado.id(jwt), request);
+    }
+
+    @Operation(summary = "Alterar prioridade", description = "Técnico participante ou ADMIN, durante Em Análise. Recalcula o prazo de resolução e registra no histórico.")
+    @PatchMapping("/{id}/prioridade")
+    @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
+    public ChamadoResponse alterarPrioridade(@PathVariable UUID id,
+                                            @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+                                            @Valid @RequestBody AlterarPrioridadeRequest request) {
+
+        return chamadoService.alterarPrioridade(identificador.interno(id), UsuarioLogado.id(jwt), request);
+    }
+
+    @Operation(summary = "Atribuir técnico", description = "SUPORTE/ADMIN. tecnicoId deve identificar SUPORTE ou ADMIN. Não aceita chamado encerrado.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "400", ref = "#/components/responses/DadosInvalidos"),
+            @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
+            @ApiResponse(responseCode = "403", ref = "#/components/responses/AcessoNegado"),
+            @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
+            @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflito"),
+            @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
+    })
+    @PutMapping("/{id}/atribuir") @PreAuthorize("hasAnyRole('SUPORTE','ADMIN')")
+    public ChamadoResponse atribuir(@PathVariable UUID id,@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt,
+                                    @Valid @RequestBody com.cobyte.api.dto.request.AtribuirChamadoRequest r) {
+
+        return chamadoService.atribuir(identificador.interno(id),UsuarioLogado.id(jwt),r.tecnicoId());
+    }
+    @Operation(summary = "Reabrir chamado", description = "Cliente da empresa do chamado, técnico participante ou ADMIN. Aceita somente RESOLVIDO e muda para EM_ATENDIMENTO. Limpa resolução e preserva avaliação, responsável e prazos originais.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Operação realizada com sucesso"),
+            @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
+            @ApiResponse(responseCode = "403", ref = "#/components/responses/AcessoNegado"),
+            @ApiResponse(responseCode = "404", ref = "#/components/responses/NaoEncontrado"),
+            @ApiResponse(responseCode = "409", ref = "#/components/responses/Conflito"),
+            @ApiResponse(responseCode = "500", ref = "#/components/responses/ErroInterno")
+    })
+    @PostMapping("/{id}/reabrir")
+    public ChamadoResponse reabrir(@PathVariable UUID id,@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+        return chamadoService.reabrir(identificador.interno(id),UsuarioLogado.id(jwt));
+    }
+}

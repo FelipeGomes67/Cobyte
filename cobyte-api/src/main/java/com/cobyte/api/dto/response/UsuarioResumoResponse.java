@@ -1,0 +1,31 @@
+package com.cobyte.api.dto.response;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import com.cobyte.api.model.entity.Usuario;
+import com.cobyte.api.model.enums.PerfilUsuario;
+
+@Schema(description = "Resumo seguro do usuário autenticado.")
+public record UsuarioResumoResponse(
+        @Schema(description = "Identificador do recurso.", example = "108")
+        Long id,
+        @Schema(description = "Nome do usuário.", example = "Maria Silva")
+        String nome,
+        @Schema(description = "E-mail do usuário, único sem distinção de caixa.", example = "maria@exemplo.com")
+        String email,
+        @Schema(description = "Perfil de acesso: CLIENTE, SUPORTE ou ADMIN.", example = "CLIENTE")
+        PerfilUsuario perfil,
+        @Schema(description = "Nome oficial da empresa vinculada; nulo enquanto o vínculo está pendente.", example = "Laboratório Exemplo")
+        String empresa,
+        Long empresaId,
+        String empresaNome,
+        String empresaInformada
+) {
+
+    public static UsuarioResumoResponse from(Usuario u) {
+        return new UsuarioResumoResponse(u.getId(), u.getNome(), u.getEmail(), u.getPerfil(),
+                u.getEmpresa() != null ? u.getEmpresa().getNome() : null,
+                u.getEmpresa() != null ? u.getEmpresa().getId() : null,
+                u.getEmpresa() != null ? u.getEmpresa().getNome() : null, u.getEmpresaInformada());
+    }
+}

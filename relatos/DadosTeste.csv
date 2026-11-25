@@ -6,7 +6,7 @@ id;texto_entrada;prioridade
 5;"Moço não consigo ver minha biopsia. Diz q o token expirou mas eu acabei de pedir, pelo amor d Deus to desesperada.";Média
 6;"A impressora Zebra de etiquetas desconfigurou do nada, não imprime o codigo de barras. Recepcao travada!";Alta
 7;"Amostra do paciente Joao da silva sumiu do historico!! A filha dele ta aqui gritando na recepcao, onde foi parar???";Média
-8;"A maquina de hematologia parou de enviar os resultados pro LABWARE. Nao vou digitar 200 hemogramas na mao ne?!";Alta
+8;"A maquina de hematologia parou de enviar os resultados pro COBYTE. Nao vou digitar 200 hemogramas na mao ne?!";Alta
 9;"Meu email de recuperacao de senha não chega de jeito nenhum, plantão lotado e eu sem acesso aos laudos!!";Média
 10;"A tela de relatorio financeiro ta cortada, nao consigo ver o total do mes e ja tentei em 3 computadores.";Baixa
 11;"Gerei o PDF do exame da minha mae e veio todo em branco!! como vou levar isso no medico hj a tarde??";Média
@@ -62,7 +62,7 @@ id;texto_entrada;prioridade
 61;"Ta demorando 1 minuto pra abrir cada tela. Socorro a recepçao ta um caos de tao cheio!";Alta
 62;"O acesso dos estagiarios caiu todo, ninguem consegue bipar amostra na bancada 2.";Alta
 63;"Laudo com quebra de pagina errada, a minha assinatura ta saindo numa pagina em branco no final.";Baixa
-64;"A catraca do refeitorio parou de ler o cracha via sistema labware, ngm consegue almocar!";Baixa
+64;"A catraca do refeitorio parou de ler o cracha via sistema cobyte, ngm consegue almocar!";Baixa
 65;"Toda vez q tento entrar da 'usuário nao encontrado'. to digitando meu CPF certo.";Média
 66;"O css da pagina de relatorios quebrou, tudo fora de formato, arruma ai por favor.";Baixa
 67;"O icone de imprimir sumiu! os pacientes tudo pedindo via impressa e nao tenho como dar!";Média
@@ -85,11 +85,11 @@ id;texto_entrada;prioridade
 84;"Certificado SSL do portal de laudos venceu. navegadores estao bloqueando o acesso dos pacientes!";Alta
 85;"Alguem socorre a gnt, a base ta caindo de 5 em 5 minutos, o plantonista ja ta xingando a gente.";Crítica
 86;"Não tem como colocar os valores de referencia novos, da msg de erro de campo bloqueado.";Média
-87;"To no meu celular tentando logar no labware e da tela branca depois q digito a senha.";Média
+87;"To no meu celular tentando logar no cobyte e da tela branca depois q digito a senha.";Média
 88;"O nome do convenio ta saindo por cima do valor total no pdf da nota, ficou inelegivel.";Baixa
 89;"Me disseram q o exame de sangue ficava pronto hj 14h, e ainda consta como pendente de coleta!! mas ja colhi!";Média
 90;"A interfaceamento HL7 com o equipamento Sysmex parou de processar ACK, as filas de msg tao enchendo.";Alta
-91;"Acabou a luz e quando voltou o leitor de cartao q puxa do labware nao reconhece mais nada.";Média
+91;"Acabou a luz e quando voltou o leitor de cartao q puxa do cobyte nao reconhece mais nada.";Média
 92;"O servidor principal ta off e o de contigencia tbm nao entra! to ligando e ngm de vcs atende!!";Crítica
 93;"A fonte do laudo alterou sozinha pra uma letra minuscula q nao da pra ler nem com lupa.";Baixa
 94;"Recuperacao de senha do portal corporativo bloqueada com erro 403. resolve ai pfv.";Média
@@ -98,7 +98,7 @@ id;texto_entrada;prioridade
 97;"Gente na tela principal de triagem os nomes dos pacientes tão embaraçados, um por cima do outro!!";Baixa
 98;"Bloqueou meu perfil dizendo q é feriado bancario, sendo q hoje é segunda normal!! deixa eu logar!!";Média
 99;"A validacao cruzada nao deixa eu assinar um laudo de um paciente de obito, arruma o status de validacao!!";Média
-100;"Impressora padrao nao quer setar pro formato de fatura de jeito nenhum, desconfigurou pelo labware.";Média
+100;"Impressora padrao nao quer setar pro formato de fatura de jeito nenhum, desconfigurou pelo cobyte.";Média
 101;"Minha senha expirou bem na hora que estou cadastrando uma gestante em trabalho de parto, destrava meu acesso agora!";Alta
 102;"A base de dados do LIMS desconectou do nada, perdi a leitura de 150 tubos de sorologia, socorro!!";Crítica
 103;"A janela de laudo congelou e não deixa eu salvar o diagnóstico da tomografia, o paciente tá aguardando transferência!";Crítica
