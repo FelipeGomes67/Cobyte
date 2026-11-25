@@ -14,9 +14,8 @@
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 10% 20%, #0d3880 0%, #03102d 60%),
-    radial-gradient(circle at 90% 80%, #0d4ed8 0%, #03102d 50%);
-  background-blend-mode: screen;
+    radial-gradient(ellipse at 100% 0%, rgb(27 42 144 / 45%), transparent 75%),
+    linear-gradient(90deg, #062052 0%, #08235c 28%, #143d95 50%, #2264d9 76%, #266be2 100%);
   font-family: var(--font-body);
 }
 
