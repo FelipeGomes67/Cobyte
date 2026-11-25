@@ -377,13 +377,13 @@ export async function enviarMensagem(chamadoId, texto) {
   }
 }
 
-/** Baixa o arquivo do anexo com autorização Bearer no navegador. */
-export async function baixarArquivoAnexo(anexoId, nomeArquivo) {
+/** Carrega o anexo pela rota autenticada, para download ou visualização. */
+export async function obterArquivoAnexo(anexoId, signal) {
   const token = obterToken();
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   let response;
   try {
-    response = await api.get('/chamados/anexos/' + anexoId + '/download', { responseType: 'blob', headers });
+    response = await api.get('/chamados/anexos/' + anexoId + '/download', { responseType: 'blob', headers, signal });
   } catch (erro) {
     let detalhe;
     try {
@@ -395,7 +395,12 @@ export async function baixarArquivoAnexo(anexoId, nomeArquivo) {
       : detalhe?.message || detalhe?.mensagem || detalhe?.detail || 'Não foi possível baixar o arquivo. Tente novamente.';
     throw new Error(mensagem, { cause: erro });
   }
-  const blob = new Blob([response.data], { type: response.headers['content-type'] });
+  return new Blob([response.data], { type: response.headers['content-type'] });
+}
+
+/** Baixa o arquivo do anexo com autorização Bearer no navegador. */
+export async function baixarArquivoAnexo(anexoId, nomeArquivo) {
+  const blob = await obterArquivoAnexo(anexoId);
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

@@ -2,6 +2,7 @@ import EstadoConteudo from '../components/common/EstadoConteudo';
 import AvaliacaoAtendimento from '../components/ticket/AvaliacaoAtendimento';
 import AvatarUsuario from '../components/layout/AvatarUsuario';
 import ChamadoBadge from '../components/ticket/ChamadoBadge';
+import PreviaAnexo from '../components/ticket/PreviaAnexo';
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -182,6 +183,12 @@ function PainelIa({ chamado }) {
 }
 
 function SecaoAnexos({ anexos }) {
+  const [anexosAbertos, definirAnexosAbertos] = useState([]);
+  function alternarPrevia(id) {
+    definirAnexosAbertos(atuais => atuais.includes(id)
+      ? atuais.filter(aberto => aberto !== id)
+      : [...atuais, id]);
+  }
   const [baixando, setBaixando] = useState(null);
   const [erroDownload, setErroDownload] = useState('');
   async function baixar(anexo) {
@@ -201,8 +208,13 @@ function SecaoAnexos({ anexos }) {
         <div className="evidence-list">
           {lista.map((anexo, idx) => {
             const ehImagem = anexo.tipoMime?.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(anexo.nomeArquivo);
-            const ehAudio = anexo.tipoMime?.startsWith('audio/') || /\.(wav|mp3|ogg|m4a|flac)$/i.test(anexo.nomeArquivo);
+            const permitePrevia = /^(image\/(png|jpeg|gif|webp|bmp|avif))$/i.test(anexo.tipoMime || '') || /\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(anexo.nomeArquivo || '');
+            const ehAudio = anexo.tipoMime?.startsWith('audio/') || /\.(wav|mp3|ogg|oga|m4a|flac|aac|weba|webm|opus)$/i.test(anexo.nomeArquivo);
             const ehPdf = anexo.tipoMime?.includes('pdf') || /\.pdf$/i.test(anexo.nomeArquivo);
+            const ehTexto = anexo.tipoMime?.split(';')[0] === 'text/plain' || /\.txt$/i.test(anexo.nomeArquivo);
+            const tipoPrevia = ehAudio ? 'audio' : ehPdf ? 'pdf' : ehTexto ? 'texto' : permitePrevia ? 'imagem' : null;
+            const nomePrevia = ehAudio ? 'áudio' : ehPdf ? 'PDF' : ehTexto ? 'texto' : 'imagem';
+            const previaAberta = anexosAbertos.includes(anexo.id);
 
             const Icone = ehImagem ? Image : ehAudio ? Volume2 : ehPdf ? FileText : File;
             const tamanhoFormatado = (() => {
@@ -214,7 +226,8 @@ function SecaoAnexos({ anexos }) {
             })();
 
             return (
-              <div key={anexo.id || idx} className="evidence-item">
+              <div key={anexo.id ?? idx} className="evidence-entry">
+                <div className="evidence-item">
                 <div className="evidence-info">
                   <Icone size={15} className="icone-anexo" />
                   <span className="evidence-text" title={anexo.nomeArquivo}>
@@ -222,6 +235,16 @@ function SecaoAnexos({ anexos }) {
                   </span>
                   {tamanhoFormatado && <span className="evidence-size">{tamanhoFormatado}</span>}
                 </div>
+                <div className="evidence-actions">
+                {tipoPrevia && (
+                  <button type="button" className="secondary-button small-button"
+                    aria-expanded={previaAberta}
+                    aria-label={`${previaAberta ? 'Ocultar' : ehAudio ? 'Ouvir' : 'Exibir'} ${nomePrevia}: ${anexo.nomeArquivo}`}
+                    onClick={() => alternarPrevia(anexo.id)}>
+                    {ehAudio ? <Volume2 size={12} /> : ehPdf || ehTexto ? <FileText size={12} /> : <Image size={12} />}
+                    {`${previaAberta ? 'Ocultar' : ehAudio ? 'Ouvir' : 'Exibir'} ${nomePrevia}`}
+                  </button>
+                )}
                 <button
                   type="button"
                   className="secondary-button small-button"
@@ -231,6 +254,9 @@ function SecaoAnexos({ anexos }) {
                 >
                   <Download size={12} /> {baixando === anexo.id ? 'Baixando...' : 'Baixar'}
                 </button>
+                </div>
+                </div>
+                {tipoPrevia && previaAberta && <PreviaAnexo key={`${anexo.id}-${tipoPrevia}`} anexo={anexo} tipo={tipoPrevia} />}
               </div>
             );
           })}
