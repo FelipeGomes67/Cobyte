@@ -12,12 +12,52 @@ import org.springframework.ai.chat.model.Generation;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClassificadorIaServiceTest {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "67, 67",
+            "123, 456",
+            "!!!, ???",
+            "67, 🔧",
+            "SEM_TITULO, 67"
+    }, nullValues = "SEM_TITULO")
+    void cancelaRelatoSemConteudoDescritivoSemConsultarModelo(String titulo, String descricao) {
+        var chamadas = new AtomicInteger();
+        var classificador = new ClassificadorIaService(ChatClient.builder(prompt -> {
+            chamadas.incrementAndGet();
+            throw new IllegalStateException("Modelo indisponível");
+        }), new ObjectMapper(), 5000, 768);
+        try {
+            var resultado = classificador.classificar(titulo, descricao).orElseThrow();
+            assertTrue(resultado.foraDoEscopo());
+            assertTrue(resultado.motivoCancelamento().contains("apenas números ou símbolos"));
+            assertNull(resultado.categoria());
+            assertNull(resultado.prioridade());
+            assertEquals(0, chamadas.get());
+        } finally { classificador.encerrar(); }
+    }
+
+    @Test
+    void contingenciaTambemCancelaRelatoSemConteudoDescritivo() {
+        var classificador = new ClassificadorIaService(ChatClient.builder(prompt -> {
+            throw new IllegalStateException("Modelo indisponível");
+        }), new ObjectMapper(), 5000, 768);
+        try {
+            var resultado = classificador.emergencia("67", "67", "tempo limite da IA");
+            assertTrue(resultado.foraDoEscopo());
+            assertNull(resultado.categoria());
+            assertNull(resultado.prioridade());
+            assertTrue(resultado.motivoCancelamento().length() >= 10);
+        } finally { classificador.encerrar(); }
+    }
+
     @Test
     void pedidoDePersonalizacaoNaoViraDefeitoVisual() {
         String json = """
@@ -83,6 +123,8 @@ class ClassificadorIaServiceTest {
             "O botão de assinar laudo simplesmente sumiu da tela. Preciso liberar o paciente da UTI urgente, ERRO_FUNCIONAL, CRITICA",
             "O botão de assinar laudo sumiu da tela e não consigo concluir a assinatura, ERRO_FUNCIONAL, ALTA",
             "Preciso de ajuda sem outros detalhes, INDEFINIDA, INDEFINIDA",
+            "Erro 67 ao salvar prescrição, ERRO_FUNCIONAL, INDEFINIDA",
+            "Erro 500, ERRO_FUNCIONAL, INDEFINIDA",
             "Como assinar laudo de UTI?, DUVIDA, INDEFINIDA",
             "Falha na impressora sem detalhes adicionais, ERRO_FUNCIONAL, INDEFINIDA"
     })
