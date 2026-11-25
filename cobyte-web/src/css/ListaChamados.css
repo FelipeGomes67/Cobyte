@@ -1,3 +1,15 @@
+.ticket-table-wrap .chamado-codigo {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.chamado-linha-clicavel { cursor: pointer; }
+.chamado-linha-clicavel:hover { background: #eff6ff; }
+.chamado-linha-clicavel:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
 .chamados-contadores {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

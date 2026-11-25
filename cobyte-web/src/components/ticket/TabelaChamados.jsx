@@ -1,7 +1,7 @@
 import { useEstadoUrl } from '../../hooks/useEstadoUrl';
 import { correspondeFiltroSla } from '../../utils/sla';
 import { useEffect, useId, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import ChamadoBadge from './ChamadoBadge';
 import { PRIORIDADE_VISUAL, STATUS_VISUAL } from '../../utils/chamadoVisual';
 import '../../css/ListaChamados.css';
@@ -27,6 +27,7 @@ function diaLocal(valor) {
 }
 
 export default function TabelaChamados({ tickets = [], query, onSearch, titulo = 'Solicitações', rotaBase = '/chamados', historico = false, porPrioridade = false, ocultarFiltroResponsavel = false, ocultarEmpresa = false, todosStatus = false, renderAcao, vincularCodigo = true, tamanhoPagina = 0 }) {
+  const navegar = useNavigate();
   const [filtros, setFiltros] = useEstadoUrl('filtros', filtrosIniciais);
   const [paginaTexto, setPaginaTexto] = useEstadoUrl('pagina', '1');
   const [avancado, setAvancado] = useEstadoUrl('avancado', false);
@@ -93,8 +94,18 @@ export default function TabelaChamados({ tickets = [], query, onSearch, titulo =
     </div>
     <section className="panel tickets-panel" aria-label={titulo}><div className="ticket-table-wrap" role="region" tabIndex={0} aria-label="Lista de chamados; role horizontalmente para ver todas as colunas"><table>
       <thead><tr><th scope="col">Código</th><th scope="col">Chamado</th>{!ocultarEmpresa && <th scope="col">Empresa</th>}<th scope="col">Prioridade</th><th scope="col">Origem</th><th scope="col">{historico ? 'Finalizado em' : 'Abertura'}</th><th scope="col">SLA</th><th scope="col">Status</th><th scope="col">Ação</th></tr></thead>
-      <tbody>{visiveis.map(t => <tr key={t.id}>
-        <td>{vincularCodigo ? <Link to={rotaBase + '/' + encodeURIComponent(t.id)}>{t.protocolo || t.id}</Link> : <span className="ticket-id">{t.protocolo || t.id}</span>}</td>
+      <tbody>{visiveis.map(t => <tr key={t.id} className="chamado-linha-clicavel" tabIndex={0}
+        aria-label={'Abrir chamado ' + (t.protocolo || t.id)}
+        onClick={evento => {
+          if (evento.target.closest('a, button, input, select, textarea')) return;
+          navegar(rotaBase + '/' + encodeURIComponent(t.id));
+        }}
+        onKeyDown={evento => {
+          if (evento.target !== evento.currentTarget || !['Enter', ' '].includes(evento.key)) return;
+          evento.preventDefault();
+          navegar(rotaBase + '/' + encodeURIComponent(t.id));
+        }}>
+        <td>{vincularCodigo ? <Link className="chamado-codigo" to={rotaBase + '/' + encodeURIComponent(t.id)}>{t.protocolo || t.id}</Link> : <span className="ticket-id chamado-codigo">{t.protocolo || t.id}</span>}</td>
         <td><span className="chamado-titulo-resumido" title={t.titulo || t.title}>{resumirTitulo(t.titulo || t.title)}</span>{!historico && !['Resolvido', 'Fechado', 'Cancelado'].includes(t.status) && t.temNovaMensagem && <small className="chamado-nova-mensagem">Nova mensagem</small>}</td>
         {!ocultarEmpresa && <td>{texto(t.empresa)}</td>}<td><ChamadoBadge tipo="prioridade" valor={t.prioridade || t.priority} /></td>
         <td>{origem(t)}</td><td>{data(historico ? t.canceladoEm || t.resolvidoEm || t.resolvedAt : t.abertoEm || t.createdAt)}</td>
