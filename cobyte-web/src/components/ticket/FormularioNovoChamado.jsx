@@ -581,7 +581,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                     <img src="/icons/file.svg" alt="Arquivo" />
                   </div>
                   <div className="info-anexo">
-                    <strong>{f.name}</strong> <small>{formatFileSize(f.size)}</small>
+                    <strong title={f.name}>{f.name}</strong> <small>{formatFileSize(f.size)}</small>
                   </div>
                   <button
                     type="button"
@@ -589,6 +589,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                     onClick={() => setArquivos(arquivos.filter((_, idx) => idx !== i))}
                     disabled={desabilitarGeral}
                     title={`Remover ${f.name}`}
+                    aria-label={`Remover ${f.name}`}
                   >
                     ✕
                   </button>
