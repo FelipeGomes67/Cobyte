@@ -42,8 +42,21 @@ public interface NotificacaoRepository extends JpaRepository<Notificacao,Long> {
     @EntityGraph(attributePaths = "chamado")
     Page<Notificacao> listarCliente(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId,
                                    Pageable page);
+    @Query("""
+            select n from Notificacao n left join n.chamado c
+            where n.id=:id and n.usuario.id=:usuarioId
+              and (n.usuario.perfil <> com.cobyte.api.model.enums.PerfilUsuario.CLIENTE
+                   or c is null or c.empresa.id=n.usuario.empresa.id)
+            """)
     java.util.Optional<Notificacao> findByIdAndUsuarioId(Long id,Long usuarioId);
     long countByUsuarioIdAndLidaFalse(Long usuarioId);
-    @Modifying @Query("update Notificacao n set n.lida=true where n.usuario.id=:usuarioId and n.lida=false")
+    @Modifying @Query("""
+            update Notificacao n set n.lida=true where n.usuario.id=:usuarioId and n.lida=false
+              and (n.chamado is null or exists (
+                  select c.id from Chamado c, Usuario u
+                  where c.id=n.chamado.id and u.id=:usuarioId
+                    and (u.perfil <> com.cobyte.api.model.enums.PerfilUsuario.CLIENTE or c.empresa.id=u.empresa.id)
+              ))
+            """)
     int marcarTodas(Long usuarioId);
 }

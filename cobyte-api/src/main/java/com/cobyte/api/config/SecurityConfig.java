@@ -43,6 +43,9 @@ public class SecurityConfig {
                                 "/api-docs", "/api-docs.yaml", "/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/cadastrar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/*/foto").permitAll()
+                        // Quarentena permite somente consultar/editar a própria conta.
+                        .requestMatchers("/api/auth/me", "/api/usuarios/me", "/api/usuarios/me/senha",
+                                "/api/usuarios/me/foto", "/api/usuarios/alterar-senha").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/dashboard/**", "/api/relatorios/**", "/api/metricas/**").hasAnyRole("SUPORTE", "ADMIN")
                         // endpoints antigos de laboratório
@@ -52,7 +55,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH,
                                 "/api/chamados/*/assumir")
                         .hasAnyRole("SUPORTE", "ADMIN")
-                        .anyRequest().authenticated()
+                        .anyRequest().hasAnyRole("CLIENTE", "SUPORTE", "ADMIN")
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
@@ -82,7 +85,10 @@ public class SecurityConfig {
             if (!usuario.versaoSessaoAtual().equals(jwt.getClaimAsString("versaoSessao"))) {
                 throw new org.springframework.security.oauth2.server.resource.InvalidBearerTokenException("Sessão revogada");
             }
-            return List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + usuario.getPerfil().name()));
+            boolean pendente = usuario.getPerfil() == com.cobyte.api.model.enums.PerfilUsuario.CLIENTE
+                    && usuario.getEmpresa() == null;
+            return List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                    "ROLE_" + (pendente ? "PENDENTE" : usuario.getPerfil().name())));
         });
         return converter;
     }
@@ -91,14 +97,18 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(
             @Value("${cobyte.cors.origens}") List<String> origens) {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
         var origensConfiguradas = origens.stream().map(String::trim).filter(origem -> !origem.isEmpty()).toList();
-        if (origensConfiguradas.isEmpty()) {
-            config.addAllowedOriginPattern("https://*.vercel.app");
-        } else {
-            if (origensConfiguradas.contains("*")) throw new IllegalArgumentException("Informe origens CORS específicas");
-            origensConfiguradas.forEach(config::addAllowedOriginPattern);
+        for (String origem : origensConfiguradas) {
+            java.net.URI uri;
+            try { uri = java.net.URI.create(origem); }
+            catch (IllegalArgumentException erro) { throw new IllegalArgumentException("Origem CORS inválida"); }
+            if (origem.contains("*") || !List.of("http", "https").contains(uri.getScheme())
+                    || uri.getHost() == null || uri.getUserInfo() != null || uri.getQuery() != null
+                    || uri.getFragment() != null || (uri.getPath() != null && !uri.getPath().isEmpty())) {
+                throw new IllegalArgumentException("CORS exige origens HTTP/HTTPS exatas, sem caminhos ou curingas");
+            }
         }
+        config.setAllowedOriginPatterns(origensConfiguradas);
         config.setAllowCredentials(true);
         config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "ngrok-skip-browser-warning"));

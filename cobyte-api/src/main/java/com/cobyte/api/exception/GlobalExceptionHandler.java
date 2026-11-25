@@ -43,7 +43,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             Exception ex, Object body, HttpHeaders headers,
             HttpStatusCode status, WebRequest request) {
 
-        String mensagem = (ex instanceof ErrorResponse er && er.getBody().getDetail() != null)
+        String mensagem = !status.is5xxServerError() && (ex instanceof ErrorResponse er && er.getBody().getDetail() != null)
                 ? er.getBody().getDetail()
                 : textoPadrao(status);
 

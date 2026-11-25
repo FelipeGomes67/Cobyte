@@ -35,8 +35,7 @@ class CorsConfigTest {
         var config = new SecurityConfig(null, null, null);
         for (String origem : List.of("https://cobyte.vercel.app", "https://cobyte-preview-123.vercel.app",
                 "http://localhost:5173", "http://127.0.0.1:5174", "https://suporte.exemplo.com")) {
-            var source = config.corsConfigurationSource(origem.endsWith(".vercel.app")
-                    ? List.of() : List.of("", " https://suporte.exemplo.com "));
+            var source = config.corsConfigurationSource(List.of("", " " + origem + " "));
             for (String metodo : List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")) {
                 var request = new MockHttpServletRequest("OPTIONS", "/api/chamados");
                 request.addHeader("Origin", origem);
@@ -65,5 +64,20 @@ class CorsConfigTest {
         assertNotNull(config);
         assertEquals("https://cobyte.vercel.app", config.checkOrigin("https://cobyte.vercel.app"));
         assertNull(config.checkOrigin("https://outro-app.vercel.app"));
+    }
+
+    @Test void semConfiguracaoNenhumaOrigemRecebePermissao() {
+        var config = new SecurityConfig(null, null, null).corsConfigurationSource(List.of())
+                .getCorsConfiguration(new MockHttpServletRequest("OPTIONS", "/api/chamados"));
+        assertNotNull(config);
+        assertNull(config.checkOrigin("https://cobyte.vercel.app"));
+        assertNull(config.checkOrigin("http://localhost:5173"));
+    }
+
+    @Test void rejeitaCuringasCaminhosEProtocolosInvalidos() {
+        for (String origem : List.of("*", "https://*.vercel.app", "https://site.com/login", "https://site.com/", "javascript:alert(1)", "https://usuario@site.com")) {
+            assertThrows(IllegalArgumentException.class, () -> new SecurityConfig(null, null, null)
+                    .corsConfigurationSource(List.of(origem)), origem);
+        }
     }
 }
