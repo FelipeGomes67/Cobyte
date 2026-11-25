@@ -51,8 +51,135 @@ class CobyteApiApplicationTests {
     @Autowired ChamadoRepository chamados;
     @Autowired AnexoRepository anexos;
     @Autowired MensagemRepository mensagens;
+    @Autowired com.cobyte.api.repository.NotificacaoRepository notificacoes;
     @Autowired TokenService tokens;
     @MockitoBean ClassificadorIaService classificador;
+    @MockitoBean com.cobyte.api.service.TranscricaoService transcritor;
+
+    @Test
+    void pdfComSqlEScriptPermaneceDadoSemExecutarNoBanco() throws Exception {
+        var empresa = empresa("00000000000001");
+        var autor = usuario("autor", PerfilUsuario.CLIENTE, empresa);
+        var colega = usuario("colega", PerfilUsuario.CLIENTE, empresa);
+        var externo = usuario("externo", PerfilUsuario.CLIENTE, empresa("00000000000002"));
+        var chamado = chamado(autor, empresa);
+        long usuariosAntes = usuarios.count(), chamadosAntes = chamados.count();
+        byte[] conteudo = ("%PDF-1.7\n'; DROP TABLE usuario; --\n<script>window.__teste=true</script>\n"
+                + "<img src=x onerror=alert('teste')>\nSELECT * FROM usuario WHERE '1'='1';")
+                .getBytes(StandardCharsets.UTF_8);
+        var arquivo = new MockMultipartFile("arquivo", "relato'; DELETE FROM usuario;--.pdf", "application/pdf", conteudo);
+        String rota = "/api/chamados/" + chamado.getIdPublico() + "/anexos";
+        var resultado = http.perform(multipart(rota).file(arquivo).header("Authorization", bearer(autor)))
+                .andExpect(status().isCreated()).andReturn();
+        assertEquals(usuariosAntes, usuarios.count());
+        assertEquals(chamadosAntes, chamados.count());
+        var anexo = anexos.findByChamadoIdOrderByEnviadoEmAscIdAsc(chamado.getId()).get(0);
+        String download = "/api/chamados/anexos/" + anexo.getId() + "/download";
+        http.perform(get(download)).andExpect(status().isUnauthorized());
+        http.perform(get(download).header("Authorization", bearer(externo))).andExpect(status().isForbidden());
+        http.perform(get(download).header("Authorization", bearer(colega)))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/octet-stream"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.startsWith("attachment;")))
+                .andExpect(content().bytes(conteudo));
+        assertEquals(usuariosAntes, usuarios.count());
+        assertEquals(chamadosAntes, chamados.count());
+        org.junit.jupiter.api.Assertions.assertFalse(resultado.getResponse().getContentAsString().contains("db:anexos/"));
+    }
+
+    @Test
+    void uploadSemLoginOuPorOutraEmpresaNaoGravaAnexo() throws Exception {
+        var empresa = empresa("00000000000001");
+        var autor = usuario("autor", PerfilUsuario.CLIENTE, empresa);
+        var externo = usuario("externo", PerfilUsuario.CLIENTE, empresa("00000000000002"));
+        var chamado = chamado(autor, empresa);
+        var arquivo = new MockMultipartFile("arquivo", "relato.txt", "text/plain", "texto".getBytes(StandardCharsets.UTF_8));
+        String rota = "/api/chamados/" + chamado.getIdPublico() + "/anexos";
+        long antes = anexos.count();
+        http.perform(multipart(rota).file(arquivo)).andExpect(status().isUnauthorized());
+        http.perform(multipart(rota).file(arquivo).header("Authorization", bearer(externo)))
+                .andExpect(status().isForbidden());
+        assertEquals(antes, anexos.count());
+    }
+
+    @Test
+    void quarentenaBloqueiaRecursosOperacionaisMasMantemPerfilEAprovacaoAtualizada() throws Exception {
+        var pendente = usuario("pendente", PerfilUsuario.CLIENTE, null);
+        String token = bearer(pendente);
+        http.perform(get("/api/usuarios/me").header("Authorization", token)).andExpect(status().isOk());
+        for (String rota : new String[] {"/api/chamados", "/api/notificacoes", "/api/push/config", "/api/usuarios/pendentes"}) {
+            http.perform(get(rota).header("Authorization", token)).andExpect(status().isForbidden());
+        }
+        pendente.setEmpresa(empresa("00000000000003"));
+        usuarios.saveAndFlush(pendente);
+        http.perform(get("/api/notificacoes").header("Authorization", token)).andExpect(status().isOk());
+        pendente.revogarSessoes();
+        usuarios.saveAndFlush(pendente);
+        http.perform(get("/api/usuarios/me").header("Authorization", token)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void uploadRecusaFormatosForaDaListaMesmoComMimePermitido() throws Exception {
+        var autor = usuario("autor", PerfilUsuario.CLIENTE, empresa("00000000000001"));
+        var chamado = chamado(autor, autor.getEmpresa());
+        for (String nome : new String[] {"relato.txt", "relato.doc", "relato.docx", "imagem.gif", "audio.wav", "pagina.svg"}) {
+            var arquivo = new MockMultipartFile("arquivo", nome, "image/png", "%PDF-1.7\nconteudo".getBytes(StandardCharsets.UTF_8));
+            http.perform(multipart("/api/chamados/" + chamado.getIdPublico() + "/anexos")
+                    .file(arquivo).header("Authorization", bearer(autor))).andExpect(status().isUnsupportedMediaType());
+        }
+    }
+
+    @Test
+    void notificacoesDaEmpresaAnteriorNaoPodemSerLidasOuMarcadas() throws Exception {
+        var empresaAntiga = empresa("00000000000001");
+        var autor = usuario("autor", PerfilUsuario.CLIENTE, empresaAntiga);
+        var chamadoAntigo = chamado(autor, empresaAntiga);
+        var antiga = notificacoes.saveAndFlush(com.cobyte.api.model.entity.Notificacao.builder()
+                .usuario(autor).chamado(chamadoAntigo).titulo("Antiga").mensagem("Privado").tipo("MENSAGEM").build());
+        autor.setEmpresa(empresa("00000000000002"));
+        usuarios.saveAndFlush(autor);
+        var atual = notificacoes.saveAndFlush(com.cobyte.api.model.entity.Notificacao.builder()
+                .usuario(autor).titulo("Atual").mensagem("Conta").tipo("APROVACAO_CADASTRO").build());
+        http.perform(get("/api/notificacoes").header("Authorization", bearer(autor)))
+                .andExpect(status().isOk()).andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Privado"))));
+        http.perform(put("/api/notificacoes/" + antiga.getId() + "/lida").header("Authorization", bearer(autor)))
+                .andExpect(status().isNotFound());
+        http.perform(put("/api/notificacoes/marcar-todas-lidas").header("Authorization", bearer(autor)))
+                .andExpect(status().isNoContent());
+        assertEquals(false, notificacoes.findById(antiga.getId()).orElseThrow().isLida());
+        // A atualização em lote não sincroniza instâncias já presentes no contexto JPA.
+        assertEquals(0, notificacoes.contarNaoLidasVisiveis(autor.getId(), true));
+        assertEquals(1, notificacoes.countByUsuarioIdAndLidaFalse(autor.getId()));
+    }
+
+    @Test
+    void transcricaoMantemAudioNoFluxoEspecificoSemLiberarUploadGenerico() throws Exception {
+        var autor = usuario("autor", PerfilUsuario.CLIENTE, empresa("00000000000001"));
+        var chamado = chamado(autor, autor.getEmpresa());
+        var audio = new MockMultipartFile("arquivo", "relato.wav", "audio/wav", new byte[] {82,73,70,70,0,0,0,0,87,65,86,69});
+        when(transcritor.transcreverAudio(org.mockito.ArgumentMatchers.any())).thenReturn(
+                new com.cobyte.api.dto.response.TranscricaoResponse("relato.wav", 1.0, "pt", 1.0, "Falha no sistema"));
+        http.perform(multipart("/api/chamados/" + chamado.getIdPublico() + "/transcrever-audio")
+                .file(audio).param("salvarAnexo", "true").param("salvarMensagem", "false")
+                .header("Authorization", bearer(autor))).andExpect(status().isOk());
+        assertEquals("audio/wav", anexos.findByChamadoIdOrderByEnviadoEmAscIdAsc(chamado.getId()).get(0).getTipoConteudo());
+    }
+
+    @Test
+    void binarioRenomeadoParaTxtEExecutavelNaoSaoArmazenados() throws Exception {
+        var autor = usuario("autor", PerfilUsuario.CLIENTE, empresa("00000000000001"));
+        var chamado = chamado(autor, autor.getEmpresa());
+        String rota = "/api/chamados/" + chamado.getIdPublico() + "/anexos";
+        long antes = anexos.count();
+        for (String nome : new String[] {"programa.txt", "foto.jpg.exe", "pagina.html", "script.svg", "script.docm"}) {
+            var arquivo = new MockMultipartFile("arquivo", nome, "image/png", new byte[] {77, 90, 0, 0});
+            http.perform(multipart(rota).file(arquivo).header("Authorization", bearer(autor)))
+                    .andExpect(status().isUnsupportedMediaType());
+        }
+        assertEquals(antes, anexos.count());
+    }
 
     @Test
     void aberturaGeraProtocolosAleatoriosDistintosEPreservaOLegado() throws Exception {
