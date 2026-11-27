@@ -1,6 +1,7 @@
 package com.cobyte.api.service;
 import com.cobyte.api.repository.*;
 import com.cobyte.api.model.entity.Usuario;
+import com.cobyte.api.model.entity.LeituraChamado;
 import com.cobyte.api.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ public class LeituraChamadoService {
     private final ChamadoRepository chamados;
     private final UsuarioRepository usuarios;
     private final AcessoChamadoService acesso;
+    private final LeituraChamadoRepository leituras;
     public boolean temNova(Long chamadoId,Usuario usuario) {
         return Boolean.TRUE.equals(jdbc.queryForObject("""
             SELECT EXISTS(
@@ -27,15 +29,23 @@ public class LeituraChamadoService {
             """,Boolean.class,chamadoId,usuario.getId(),acesso.ehSuporte(usuario),acesso.ehSuporte(usuario),chamadoId,usuario.getId()));
     }
     @Transactional
-    public void marcar(Long chamadoId,Long usuarioId) {
-        var c=chamados.findById(chamadoId).orElseThrow(()->new ResourceNotFoundException("Chamado não encontrado"));
+    public void marcar(Long chamadoId,Long usuarioId,long ultimaMensagemId) {
+        if (ultimaMensagemId < 0) throw new IllegalArgumentException("Marcador de leitura invalido");
+        // Serializa atualizacoes do marcador para impedir regressao em requisicoes concorrentes.
+        var c=chamados.findParaAvaliacao(chamadoId).orElseThrow(()->new ResourceNotFoundException("Chamado não encontrado"));
         var u=usuarios.findById(usuarioId).orElseThrow(()->new ResourceNotFoundException("Usuário não encontrado"));
         acesso.exigirLeitura(c,u);
-        jdbc.update("""
-            INSERT INTO leitura_chamado(usuario_id,chamado_id,ultima_mensagem_id)
-            SELECT ?,?,COALESCE(max(id),0) FROM mensagens WHERE chamado_id=? AND (? OR NOT visivel_apenas_suporte)
-            ON CONFLICT(usuario_id,chamado_id) DO UPDATE
-            SET ultima_mensagem_id=greatest(leitura_chamado.ultima_mensagem_id,excluded.ultima_mensagem_id)
-            """,usuarioId,chamadoId,chamadoId,acesso.ehSuporte(u));
+        Long ultimaVisivel = jdbc.queryForObject("""
+            SELECT COALESCE(max(id),0) FROM mensagens
+            WHERE chamado_id=? AND id<=? AND (? OR NOT visivel_apenas_suporte)
+            """,Long.class,chamadoId,ultimaMensagemId,acesso.ehSuporte(u));
+        var chave = new LeituraChamado.Id(usuarioId, chamadoId);
+        var leitura = leituras.findById(chave).orElseGet(() -> {
+            var nova = new LeituraChamado();
+            nova.setId(chave); nova.setUsuario(u); nova.setChamado(c);
+            return nova;
+        });
+        leitura.setUltimaMensagemId(Math.max(leitura.getUltimaMensagemId(), ultimaVisivel == null ? 0L : ultimaVisivel));
+        leituras.save(leitura);
     }
 }

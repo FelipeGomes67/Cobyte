@@ -21,6 +21,7 @@ import {
   obterChamadoPorId,
   baixarArquivoAnexo,
   enviarMensagem,
+  marcarMensagensLidas,
   reabrirChamado,
   alterarStatus,
   alterarPrioridade,
@@ -286,7 +287,36 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [erroEnvio, setErroEnvio] = useState('');
+  const [erroLeitura, setErroLeitura] = useState('');
+  const ultimaMensagemCarregada = Math.max(0, ...mensagens.map(m => Number(m.id)).filter(Number.isSafeInteger));
   const fimConversaRef = useRef(null);
+
+  useEffect(() => {
+    if (!chamado.id || !ultimaMensagemCarregada) return;
+    let ativo = true;
+    let emCurso = false;
+    let confirmada = false;
+    const controle = new AbortController();
+    async function confirmarLeitura() {
+      if (document.hidden || emCurso || confirmada || !ativo) return;
+      emCurso = true;
+      try {
+        await marcarMensagensLidas(chamado.id, ultimaMensagemCarregada, controle.signal);
+        if (ativo) { confirmada = true; setErroLeitura(''); }
+      } catch {
+        if (ativo) setErroLeitura('Não foi possível confirmar a leitura das mensagens. Tente novamente ao voltar para esta aba.');
+      } finally { emCurso = false; }
+    }
+    confirmarLeitura();
+    window.addEventListener('focus', confirmarLeitura);
+    document.addEventListener('visibilitychange', confirmarLeitura);
+    return () => {
+      ativo = false;
+      controle.abort();
+      window.removeEventListener('focus', confirmarLeitura);
+      document.removeEventListener('visibilitychange', confirmarLeitura);
+    };
+  }, [chamado.id, ultimaMensagemCarregada]);
 
   const chamadoEncerrado = chamado?.status === 'Resolvido' || chamado?.status === 'Fechado' || chamado?.status === 'Cancelado'
     || chamado?.statusRaw === 'RESOLVIDO' || chamado?.statusRaw === 'FECHADO' || chamado?.statusRaw === 'CANCELADO';
@@ -341,6 +371,7 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
 
   return (
     <div className="history-conversation">
+      {erroLeitura && <p role="status" className="mensagem-erro-conversa">{erroLeitura}</p>}
       <div className="history-conversation-header">
         <span className="conversation-pill">Conversa</span>
         <span className="conversation-date">{dataAbertura}</span>

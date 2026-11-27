@@ -6,7 +6,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.io.Serializable;
 
-/** Mapeia a tabela usada pelo JdbcTemplate para os marcadores de leitura individuais. */
+/** Marcador individual de leitura, consultado tambem pelo JdbcTemplate nos indicadores. */
 @Entity
 @Table(name = "leitura_chamado")
 @Getter @Setter @NoArgsConstructor

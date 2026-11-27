@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 
 import com.cobyte.api.config.UsuarioLogado;
 import com.cobyte.api.service.LeituraChamadoService;
+import com.cobyte.api.dto.request.MarcarLeituraRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -21,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class LeituraChamadoController {
     private final IdentificadorChamado identificador;
     private final LeituraChamadoService service;
-    @Operation(summary = "Marcar mensagens como lidas", description = "Solicitante CLIENTE ou SUPORTE/ADMIN. Avança o marcador individual até a última mensagem visível. Notas internas não entram no marcador do cliente.")
+    @Operation(summary = "Marcar mensagens como lidas", description = "Cliente da empresa ou SUPORTE/ADMIN. Recebe ultimaMensagemId carregada pelo navegador e avança o marcador individual apenas até esse limite. Notas internas não entram no marcador do cliente; mensagens posteriores permanecem não lidas.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Operação concluída sem corpo", content = @io.swagger.v3.oas.annotations.media.Content),
             @ApiResponse(responseCode = "401", ref = "#/components/responses/NaoAutenticado"),
@@ -31,5 +33,8 @@ public class LeituraChamadoController {
     })
     @PutMapping("/api/chamados/{id}/mensagens/marcar-lidas")
     @ResponseStatus(org.springframework.http.HttpStatus.NO_CONTENT)
-    public void marcar(@PathVariable UUID id,@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) { service.marcar(identificador.interno(id),UsuarioLogado.id(jwt)); }
+    public void marcar(@PathVariable UUID id, @Valid @RequestBody MarcarLeituraRequest request,
+                       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+        service.marcar(identificador.interno(id), UsuarioLogado.id(jwt), request.ultimaMensagemId());
+    }
 }

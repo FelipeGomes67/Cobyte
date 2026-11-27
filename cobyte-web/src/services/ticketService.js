@@ -349,6 +349,12 @@ export function mapearDetalheChamadoApi(c) {
   };
 }
 
+/** Confirma somente as mensagens que ja foram carregadas na conversa. */
+export async function marcarMensagensLidas(chamadoId, ultimaMensagemId, signal) {
+  await api.put(`/chamados/${encodeURIComponent(chamadoId)}/mensagens/marcar-lidas`,
+    { ultimaMensagemId }, { signal });
+}
+
 /** Envia uma mensagem para o chamado. */
 export async function enviarMensagem(chamadoId, texto) {
   if (!chamadoId) throw new Error('Identificador do chamado não fornecido.');
