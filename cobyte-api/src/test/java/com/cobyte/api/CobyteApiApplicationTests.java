@@ -47,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CobyteApiApplicationTests {
     @Autowired MockMvc http;
     @Autowired UsuarioRepository usuarios;
+    @Autowired jakarta.persistence.EntityManager entidades;
     @Autowired EmpresaRepository empresas;
     @Autowired ChamadoRepository chamados;
     @Autowired AnexoRepository anexos;
@@ -55,6 +56,35 @@ class CobyteApiApplicationTests {
     @Autowired TokenService tokens;
     @MockitoBean ClassificadorIaService classificador;
     @MockitoBean com.cobyte.api.service.TranscricaoService transcritor;
+
+    @Test
+    void fotoEnviadaPermaneceNoPerfilENoArmazenamentoAposRecarregar() throws Exception {
+        var autor = usuario("foto-persistida", PerfilUsuario.CLIENTE, empresa("00000000000098"));
+        String token = bearer(autor);
+        String ultimaUrl = null;
+        for (int cor : new int[] {0xff336699, 0xffcc5522}) {
+            var imagem = new java.awt.image.BufferedImage(2, 2, java.awt.image.BufferedImage.TYPE_INT_RGB);
+            imagem.setRGB(0, 0, cor);
+            var bytes = new java.io.ByteArrayOutputStream();
+            javax.imageio.ImageIO.write(imagem, "png", bytes);
+            var foto = new MockMultipartFile("foto", "perfil.png", "image/png", bytes.toByteArray());
+            http.perform(multipart("/api/usuarios/me/foto").file(foto).header("Authorization", token))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("fotoPerfil").isNotEmpty());
+            entidades.flush();
+            entidades.clear();
+            var persistido = usuarios.findById(autor.getId()).orElseThrow();
+            String url = persistido.getFotoPerfil();
+            assertNotEquals(ultimaUrl, url);
+            http.perform(get("/api/usuarios/me").header("Authorization", token))
+                    .andExpect(status().isOk()).andExpect(jsonPath("fotoPerfil").value(url));
+            var download = http.perform(get(url)).andExpect(status().isOk())
+                    .andExpect(content().contentType("image/png")).andReturn().getResponse().getContentAsByteArray();
+            var recarregada = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(download));
+            assertEquals(cor, recarregada.getRGB(0, 0));
+            ultimaUrl = url;
+        }
+    }
 
     @Test
     void pdfComSqlEScriptPermaneceDadoSemExecutarNoBanco() throws Exception {
