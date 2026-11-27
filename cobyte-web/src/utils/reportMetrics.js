@@ -1,6 +1,6 @@
 import { obterVisualChamado } from './chamadoVisual.js';
 export const REPORT_CATEGORIES = ['Indisponibilidade', 'Integração', 'Acesso', 'Dúvida', 'Segurança', 'Outros'];
-export const REPORT_PRIORITIES = ['Crítica', 'Alta', 'Média', 'Baixa', 'Melhoria', 'Não aplicável', 'Sem prioridade']
+export const REPORT_PRIORITIES = ['Crítica', 'Alta', 'Média', 'Baixa', 'Melhoria', 'Cancelado', 'Não aplicável', 'Sem prioridade']
   .map(name => ({ name, color: obterVisualChamado(name, 'prioridade').cor }));
 
 function normalize(value) {
@@ -22,6 +22,7 @@ function isImprovement(ticket) {
 }
 
 export function getPriorityGroup(ticket) {
+  if (normalize(ticket.statusRaw || ticket.status) === 'cancelado' || normalize(ticket.priority) === 'cancelado') return 'Cancelado';
   if (ticket.foraDoEscopo || normalize(ticket.priority) === 'nao aplicavel') return 'Não aplicável';
   if (isImprovement(ticket)) return 'Melhoria';
   const priority = normalize(ticket.priority);

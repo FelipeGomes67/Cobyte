@@ -148,9 +148,10 @@ export function mapearChamadoApi(c) {
   const tituloOriginal = primeiroTexto(c.titulo, c.title) || 'Chamado sem título';
   const tituloIa = primeiroTexto(c.tituloGeradoIa, c.classificacaoIa?.tituloGeradoIa);
   const statusFormatado = formatarNomeStatus(c.status);
+  const cancelado = statusFormatado === 'Cancelado';
   const foraDoEscopo = c.foraDoEscopo === true || (c.status === 'CANCELADO' && c.motivoCancelamento?.startsWith('Cancelado pela IA:'));
-  const prioridadeFormatada = foraDoEscopo ? 'Não aplicável' : formatarNomePrioridade(c.prioridade || c.priority);
-  const categoriaFormatada = foraDoEscopo ? 'Fora do escopo' : c.categoriaPersonalizada?.trim() || formatarNomeCategoria(c.categoria || c.category);
+  const prioridadeFormatada = cancelado ? 'Cancelado' : formatarNomePrioridade(c.prioridade || c.priority);
+  const categoriaFormatada = cancelado ? 'Cancelado' : c.categoriaPersonalizada?.trim() || formatarNomeCategoria(c.categoria || c.category);
   const dataCriacao = c.abertoEm || c.createdAt || new Date().toISOString();
 
   return {

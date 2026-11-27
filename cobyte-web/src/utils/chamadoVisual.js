@@ -10,6 +10,7 @@ export const STATUS_VISUAL = {
 };
 
 export const PRIORIDADE_VISUAL = {
+  CANCELADO: STATUS_VISUAL.CANCELADO,
   CRITICA: { nome: 'Crítica', cor: '#991b1b', fundo: '#fecaca' },
   ALTA: { nome: 'Alta', cor: '#9a3412', fundo: '#fed7aa' },
   MEDIA: { nome: 'Média', cor: '#713f12', fundo: '#fef08a' },
