@@ -47,6 +47,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CobyteApiApplicationTests {
     @Autowired MockMvc http;
     @Autowired UsuarioRepository usuarios;
+    @Autowired com.cobyte.api.repository.LeituraChamadoRepository leituras;
+    @Autowired com.cobyte.api.repository.PoliticaSlaRepository politicas;
+    @Autowired com.cobyte.api.config.InicializadorPoliticasSla inicializadorPoliticas;
+    @Autowired com.cobyte.api.service.LeituraChamadoService servicoLeituras;
     @Autowired jakarta.persistence.EntityManager entidades;
     @Autowired EmpresaRepository empresas;
     @Autowired ChamadoRepository chamados;
@@ -56,6 +60,107 @@ class CobyteApiApplicationTests {
     @Autowired TokenService tokens;
     @MockitoBean ClassificadorIaService classificador;
     @MockitoBean com.cobyte.api.service.TranscricaoService transcritor;
+
+    @Test
+    void notasInternasFicamRestritasAoSuporteENaoContamComoRespostaAoCliente() throws Exception {
+        var empresa = empresa("00000000000094");
+        var cliente = usuario("cliente-nota", PerfilUsuario.CLIENTE, empresa);
+        var colega = usuario("colega-nota", PerfilUsuario.CLIENTE, empresa);
+        var tecnico = usuario("tecnico-nota", PerfilUsuario.SUPORTE, null);
+        var naoParticipante = usuario("fora-equipe-nota", PerfilUsuario.SUPORTE, null);
+        var admin = usuario("admin-nota", PerfilUsuario.ADMIN, null);
+        var chamado = chamado(cliente, empresa);
+        chamado.adicionarTecnico(tecnico);
+        chamado.adicionarTecnico(admin);
+        chamados.saveAndFlush(chamado);
+        String rota = "/api/chamados/" + chamado.getIdPublico() + "/mensagens";
+        String nota = "{\"conteudo\":\"Informacao exclusiva da equipe\",\"visivelApenasSuporte\":true}";
+        http.perform(post(rota).header("Authorization", bearer(cliente)).contentType("application/json").content(nota)).andExpect(status().isForbidden());
+        http.perform(post(rota).header("Authorization", bearer(naoParticipante)).contentType("application/json").content(nota)).andExpect(status().isForbidden());
+        http.perform(post(rota).header("Authorization", bearer(tecnico)).contentType("application/json").content(nota))
+                .andExpect(status().isCreated()).andExpect(jsonPath("visivelApenasSuporte").value(true));
+        http.perform(post(rota).header("Authorization", bearer(admin)).contentType("application/json").content(nota))
+                .andExpect(status().isCreated()).andExpect(jsonPath("visivelApenasSuporte").value(true));
+        for (var leitor : new Usuario[] {cliente, colega}) {
+            http.perform(get(rota).header("Authorization", bearer(leitor)))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+            assertEquals(0, notificacoes.countByUsuarioIdAndLidaFalse(leitor.getId()));
+        }
+        http.perform(get(rota).header("Authorization", bearer(tecnico)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2));
+        org.junit.jupiter.api.Assertions.assertNull(chamados.findById(chamado.getId()).orElseThrow().getPrimeiraRespostaEm());
+        http.perform(post(rota).header("Authorization", bearer(tecnico)).contentType("application/json")
+                .content("{\"conteudo\":\"Resposta publica ao cliente\",\"visivelApenasSuporte\":false}"))
+                .andExpect(status().isCreated());
+        http.perform(get(rota).header("Authorization", bearer(cliente)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].visivelApenasSuporte").value(false));
+        org.junit.jupiter.api.Assertions.assertNotNull(chamados.findById(chamado.getId()).orElseThrow().getPrimeiraRespostaEm());
+    }
+
+    @Test
+    void politicasSlaSaoPreenchidasSemDuplicarOuSobrescreverConfiguracoes() {
+        politicas.deleteAll();
+        politicas.flush();
+        politicas.saveAndFlush(com.cobyte.api.model.entity.PoliticaSla.builder()
+                .prioridade(com.cobyte.api.model.enums.Prioridade.ALTA)
+                .minutosPrimeiraResposta(45).minutosResolucao(240).build());
+        inicializadorPoliticas.run(null);
+        inicializadorPoliticas.run(null);
+        assertEquals(4, politicas.count());
+        assertEquals(45, politicas.findByPrioridade(com.cobyte.api.model.enums.Prioridade.ALTA).orElseThrow().getMinutosPrimeiraResposta());
+        assertEquals(120, politicas.findByPrioridade(com.cobyte.api.model.enums.Prioridade.CRITICA).orElseThrow().getMinutosPrimeiraResposta());
+        assertEquals(2880, politicas.findByPrioridade(com.cobyte.api.model.enums.Prioridade.BAIXA).orElseThrow().getMinutosResolucao());
+        org.junit.jupiter.api.Assertions.assertTrue(politicas.findByPrioridade(com.cobyte.api.model.enums.Prioridade.MELHORIA).isEmpty());
+    }
+
+    @Test
+    void leituraEIndividualNaoRegrideENaoIncluiMensagensPosteriores() throws Exception {
+        var empresa = empresa("00000000000091");
+        var cliente = usuario("leitor", PerfilUsuario.CLIENTE, empresa);
+        var colega = usuario("outro-leitor", PerfilUsuario.CLIENTE, empresa);
+        var suporte = usuario("suporte-leitura", PerfilUsuario.SUPORTE, null);
+        var chamado = chamado(cliente, empresa);
+        var primeira = mensagens.saveAndFlush(Mensagem.builder().chamado(chamado).usuario(suporte).conteudo("Primeira").build());
+        var segunda = mensagens.saveAndFlush(Mensagem.builder().chamado(chamado).usuario(suporte).conteudo("Ainda nao carregada").build());
+        String rota = "/api/chamados/" + chamado.getIdPublico() + "/mensagens/marcar-lidas";
+        http.perform(put(rota).header("Authorization", bearer(cliente)).contentType("application/json")
+                .content("{\"ultimaMensagemId\":" + primeira.getId() + "}"))
+                .andExpect(status().isNoContent());
+        entidades.flush();
+        assertEquals(primeira.getId(), leituras.findById(new com.cobyte.api.model.entity.LeituraChamado.Id(cliente.getId(), chamado.getId())).orElseThrow().getUltimaMensagemId());
+        org.junit.jupiter.api.Assertions.assertTrue(servicoLeituras.temNova(chamado.getId(), cliente));
+        http.perform(put(rota).header("Authorization", bearer(cliente)).contentType("application/json")
+                .content("{\"ultimaMensagemId\":" + segunda.getId() + "}"))
+                .andExpect(status().isNoContent());
+        entidades.flush();
+        org.junit.jupiter.api.Assertions.assertFalse(servicoLeituras.temNova(chamado.getId(), cliente));
+        org.junit.jupiter.api.Assertions.assertTrue(servicoLeituras.temNova(chamado.getId(), colega));
+        http.perform(put(rota).header("Authorization", bearer(cliente)).contentType("application/json")
+                .content("{\"ultimaMensagemId\":" + primeira.getId() + "}"))
+                .andExpect(status().isNoContent());
+        assertEquals(segunda.getId(), leituras.findById(new com.cobyte.api.model.entity.LeituraChamado.Id(cliente.getId(), chamado.getId())).orElseThrow().getUltimaMensagemId());
+    }
+
+    @Test
+    void leituraBloqueiaOutraEmpresaEIgnoraNotasInternasParaClientes() throws Exception {
+        var empresa = empresa("00000000000092");
+        var cliente = usuario("leitor-interno", PerfilUsuario.CLIENTE, empresa);
+        var externo = usuario("leitor-externo", PerfilUsuario.CLIENTE, empresa("00000000000093"));
+        var suporte = usuario("autor-interno", PerfilUsuario.SUPORTE, null);
+        var chamado = chamado(cliente, empresa);
+        var publica = mensagens.saveAndFlush(Mensagem.builder().chamado(chamado).usuario(suporte).conteudo("Publica").build());
+        var interna = mensagens.saveAndFlush(Mensagem.builder().chamado(chamado).usuario(suporte).conteudo("Privada").visivelApenasSuporte(true).build());
+        String rota = "/api/chamados/" + chamado.getIdPublico() + "/mensagens/marcar-lidas";
+        String corpo = "{\"ultimaMensagemId\":" + interna.getId() + "}";
+        http.perform(put(rota).contentType("application/json").content(corpo)).andExpect(status().isUnauthorized());
+        http.perform(put(rota).header("Authorization", bearer(externo)).contentType("application/json").content(corpo)).andExpect(status().isForbidden());
+        http.perform(put(rota).header("Authorization", bearer(cliente)).contentType("application/json").content("{\"ultimaMensagemId\":-1}")).andExpect(status().isBadRequest());
+        http.perform(put(rota).header("Authorization", bearer(cliente)).contentType("application/json").content(corpo)).andExpect(status().isNoContent());
+        assertEquals(publica.getId(), leituras.findById(new com.cobyte.api.model.entity.LeituraChamado.Id(cliente.getId(), chamado.getId())).orElseThrow().getUltimaMensagemId());
+        http.perform(put(rota).header("Authorization", bearer(suporte)).contentType("application/json").content(corpo)).andExpect(status().isNoContent());
+        assertEquals(interna.getId(), leituras.findById(new com.cobyte.api.model.entity.LeituraChamado.Id(suporte.getId(), chamado.getId())).orElseThrow().getUltimaMensagemId());
+    }
 
     @Test
     void fotoEnviadaPermaneceNoPerfilENoArmazenamentoAposRecarregar() throws Exception {
