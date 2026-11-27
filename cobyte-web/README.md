@@ -44,6 +44,7 @@ npm test
 - Chamados por texto ou áudio, evidências, transcrição revisável e triagem por IA.
 - Na gravação ativa, o botão mostra pausa. Quando pausado, volta ao microfone para retomar.
 - Chat, anexos, imagens, reprodução de áudio e visualização dos formatos suportados.
+- Técnicos e administradores participantes podem ativar “Nota interna — somente suporte”. A mensagem fica identificada na conversa e oculta dos clientes. Após enviar, o formulário volta ao envio público.
 - Atendimento com vários técnicos, fluxo de status, SLA, cancelamento e avaliações.
 - Dashboard da empresa com os principais problemas em ordem decrescente de ocorrências e desempate alfabético.
 - Chamados cancelados exibem “Cancelado” na prioridade e na categoria, preservando a classificação original no banco.

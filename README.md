@@ -9,6 +9,7 @@ Sistema de gestão de chamados de suporte para ambientes de laboratório. Reúne
 - O botão de gravação mostra pausa enquanto captura áudio e volta ao microfone quando pausado, permitindo retomar a gravação.
 - Triagem com categoria, prioridade, título técnico sugerido, sintoma e impacto operacional. Dados insuficientes ficam sinalizados para revisão.
 - Chat com identificação do autor, foto, anexos e mensagens internas do suporte.
+- Técnicos e administradores participantes podem marcar “Nota interna — somente suporte” antes de enviar. Essas mensagens são destacadas na conversa, não aparecem para clientes e não contam como primeira resposta do SLA. Após enviar, o campo volta ao modo de mensagem pública.
 - Participação de mais de um técnico no atendimento.
 - Fluxo controlado de status, cancelamento com justificativa e avaliação de 1 a 5 estrelas pelo solicitante.
 - SLA pausado enquanto o chamado aguarda o solicitante. A resposta do cliente retoma o atendimento e a contagem do prazo.
@@ -251,10 +252,19 @@ O arquivo [bancoDeDados/cobyte.sql](bancoDeDados/cobyte.sql) documenta o banco e
 - Aguardando solicitante pausa o SLA; uma resposta do cliente retoma Em atendimento.
 - Resolvido pode ser fechado ou reaberto para atendimento. Fechado e Cancelado são estados finais.
 - O cancelamento exige justificativa.
+- A abertura da conversa confirma a leitura individual até a última mensagem carregada, quando a aba está visível. Mensagens posteriores e notas internas não visíveis ao cliente não entram nessa confirmação.
 - Chamados cancelados exibem “Cancelado” na prioridade e na categoria nas telas, filtros e agrupamentos do frontend. A classificação original permanece no banco.
 - A exclusão pelo ADMIN é definitiva no banco e remove os registros vinculados ao chamado. E-mails já entregues, cópias baixadas e backups não são recolhidos. A limpeza de arquivos locais ocorre no servidor e eventuais falhas são informadas.
 
 A API verifica as permissões; ocultar um botão no frontend não substitui a autorização do servidor.
+
+### Tabelas auxiliares
+
+- `politica_sla`: a API cria as prioridades ausentes ao iniciar, com primeira resposta de 120 minutos e resolução de referência de 120, 240, 720 e 2880 minutos para Crítica, Alta, Média e Baixa. Valores existentes são preservados. A resolução efetiva continua seguindo as regras de `Prioridade`; a tabela configura a primeira resposta. Melhoria não recebe SLA.
+- `pausa_sla`: registra os intervalos em que o atendimento aguarda o solicitante.
+- `leitura_chamado`: guarda a última mensagem lida por usuário e chamado; fica vazia enquanto nenhuma conversa com mensagens tiver sido confirmada.
+- `inscricao_push`: guarda os navegadores autorizados para Web Push; depende da configuração VAPID e da ativação no dispositivo.
+- A antiga fila `email_pendente` foi retirada do modelo e do SQL de referência. Os e-mails atuais são enviados depois do commit, sem fila persistente ou reenvio automático. Uma tabela antiga já existente no banco não é apagada automaticamente; nenhum script de remoção é executado pelo inicializador.
 
 ## Validação do código
 
@@ -275,7 +285,7 @@ Para executar as suítes de teste, separadamente:
 
 ```powershell
 # Dentro de cobyte-api
-.\mvnw.cmd test
+.\mvnw.cmd test "-Dtest=*Test,*Tests"
 
 # Dentro de cobyte-web
 npm test
