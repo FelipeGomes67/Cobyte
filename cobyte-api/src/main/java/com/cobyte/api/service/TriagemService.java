@@ -56,8 +56,9 @@ public class TriagemService {
                 c.setPrazoResolucao(r.prioridade() == null || r.prioridade().minutosResolucao() == null ? null : c.getAbertoEm().plusMinutes(r.prioridade().minutosResolucao()).plus(c.duracaoPausasEncerradas()));
                 c.setPrazoPrimeiraResposta(null);
                 if (r.prioridade() != null && r.prioridade().minutosResolucao() != null) {
-                    politicas.findByPrioridade(r.prioridade()).ifPresent(p ->
-                            c.setPrazoPrimeiraResposta(c.getAbertoEm().plusMinutes(p.getMinutosPrimeiraResposta())));
+                    int minutos = politicas.findByPrioridade(r.prioridade())
+                            .map(PoliticaSla::getMinutosPrimeiraResposta).orElse(120);
+                    c.setPrazoPrimeiraResposta(c.getAbertoEm().plusMinutes(minutos).plus(c.duracaoPausasEncerradas()));
                 }
             }
             ia.setTecnicoSugerido(null);
