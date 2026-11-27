@@ -36,9 +36,6 @@ public class ExclusaoChamadoService {
         }
         em.createQuery("delete from ArquivoCompartilhado a where a.chave like :prefixo")
                 .setParameter("prefixo", "anexos/" + id + "/%").executeUpdate();
-        // Compatibilidade com eventuais e-mails enfileirados por versões anteriores.
-        em.createQuery("delete from EmailPendente e where e.texto like :link")
-                .setParameter("link", "%/chamados/" + publico + "%").executeUpdate();
         // O cascade existente remove a avaliação; o ORM também remove chamado_tecnico.
         em.remove(chamado);
         em.flush();
