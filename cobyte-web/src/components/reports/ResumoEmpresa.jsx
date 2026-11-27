@@ -30,7 +30,7 @@ export default function ResumoEmpresa({ tickets, usuario }) {
     <div className="empresa-graficos">
       <BarrasResumo titulo="Situação dos chamados da empresa" itens={Object.values(STATUS_VISUAL).map(v=>({...v,quantidade:tickets.filter(t=>t.status===v.nome).length}))}/>
       <BarrasResumo titulo="Prioridades da empresa" itens={Object.values(PRIORIDADE_VISUAL).map(v=>({...v,quantidade:tickets.filter(t=>t.priority===v.nome).length}))}/>
-      <BarrasResumo titulo="Principais problemas da empresa" itens={grupos('category')}/>
+      <BarrasResumo titulo="Principais problemas da empresa" itens={grupos('category').sort((a, b) => b.quantidade - a.quantidade || a.nome.localeCompare(b.nome, 'pt-BR'))}/>
       <BarrasResumo titulo="Chamados abertos nos últimos 6 meses" itens={meses}/>
     </div>
     <section className="panel empresa-aguardando">
