@@ -16,6 +16,7 @@ import Notificacoes from './pages/Notificacoes';
 import DetalhesChamado from './pages/DetalhesChamado';
 import { useAutenticacao } from './hooks/useAuth';
 import { obterToken } from './services/api';
+import { rotaPermitidaAdmin } from './utils/rotasAdmin';
 
 export function ProtectedRoute() {
   const { usuario, inicializando } = useAutenticacao();
@@ -37,7 +38,7 @@ export function ProtectedRoute() {
     return <Navigate to="/login" replace state={{ from: localizacao.pathname }} />;
   }
 
-  if (usuario.perfil === 'ADMIN' && !['/admin/usuarios', '/admin/empresas', '/admin/chamados', '/usuarios-pendentes', '/perfil', '/configuracoes'].includes(localizacao.pathname)) {
+  if (usuario.perfil === 'ADMIN' && !rotaPermitidaAdmin(localizacao.pathname)) {
     return <Navigate to="/admin/usuarios" replace />;
   }
   return <AppLayout />;
