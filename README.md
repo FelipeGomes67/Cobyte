@@ -17,6 +17,7 @@ Sistema de gestão de chamados de suporte para ambientes de laboratório. Reúne
 - Alertas específicos para chamados críticos e para prazos de SLA com até uma hora restante.
 - Dashboard, histórico, filtros e relatórios. Os principais problemas da empresa aparecem em ordem decrescente de ocorrências, com desempate alfabético.
 - Perfil com edição de dados, foto com recorte e zoom, layout responsivo e alteração de senha. O salvamento da foto aguarda sua preparação e confirma o perfil e a leitura da imagem na API antes de mostrar sucesso.
+- Recuperação de senha por e-mail: “Esqueceu sua senha?” abre uma tela pública para solicitar um código de 6 dígitos. O código expira em 10 minutos, funciona uma única vez e fica bloqueado após 5 erros. A troca exige e-mail, código e nova senha e revoga as sessões anteriores.
 - Administração de usuários, perfis, vínculos de empresa e exclusão definitiva de chamados e registros associados.
 
 ### Perfis de acesso
@@ -234,6 +235,8 @@ O inicializador do STT procura o Mailpit nas pastas locais previstas e também a
 O Web Push é opcional. Preencha as três variáveis `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY` e `WEB_PUSH_SUBJECT` com um par VAPID e um assunto válido, como um contato `mailto:`. Cada navegador precisa autorizar e ativar as notificações do dispositivo. A autorização do navegador é separada das preferências de e-mail.
 
 Para links de notificações e e-mails em outro endereço, configure `FRONTEND_URL` na API. O frontend de produção precisa usar HTTPS.
+
+A recuperação usa o mesmo SMTP das notificações. Com Mailpit, o e-mail fica na caixa local de testes; para entrega em caixas externas, configure um servidor SMTP real. O usuário informa o código recebido em `/redefinir-senha`, junto com o e-mail e a nova senha. A tabela `recuperacao_senha` guarda somente a assinatura HMAC-SHA256 do código vinculada à conta, expiração e tentativas; o código não é armazenado em texto puro. A assinatura usa o segredo do backend; trocar `JWT_SECRET` invalida os códigos pendentes. Uma nova solicitação substitui o código anterior. Os endpoints públicos `/api/auth/esqueci-senha` e `/api/auth/redefinir-senha` possuem limite de tentativas. A confirmação da solicitação não informa se o e-mail existe.
 
 ### Arquivos e banco compartilhado
 
