@@ -330,6 +330,7 @@
 
 .detalhes-chamado-page .history-message-composer {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   gap: 10px;
   margin-top: 14px;
@@ -337,7 +338,7 @@
   border-top: 1px solid #e2e8f0;
 }
 
-.detalhes-chamado-page .history-message-composer input,
+.detalhes-chamado-page .history-message-composer input:not([type="checkbox"]),
 .detalhes-chamado-page .history-message-composer textarea {
   flex: 1;
   min-height: 42px;
@@ -357,6 +358,38 @@
 .detalhes-chamado-page .history-message-composer input::placeholder,
 .detalhes-chamado-page .history-message-composer textarea::placeholder {
   color: #94a3b8;
+}
+
+.detalhes-chamado-page .nota-interna-controle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-basis: 100%;
+  min-width: 0;
+  color: #526176;
+  font-size: 13px;
+  cursor: pointer;
+}
+.detalhes-chamado-page .nota-interna-controle input[type="checkbox"] {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  min-height: 16px;
+  padding: 0;
+  accent-color: #185df1;
+}
+.detalhes-chamado-page .history-message-row .history-message-card.mensagem-interna {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+.detalhes-chamado-page .nota-interna-identificacao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: #854d0e;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* 4. Blocos Secundários ("Atendimento" e "Evidências") */

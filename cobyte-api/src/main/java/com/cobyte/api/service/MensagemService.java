@@ -115,7 +115,7 @@ public class MensagemService {
                 notificacoes.emitirParaSuportes(usuarioId, chamado, "STATUS", "Status atualizado", alteracao, autor.getNome(), null);
         }
 
-        String tituloMsg = ehSuporte ? "Nova mensagem do suporte" : (visivel ? "Nova mensagem do cliente" : "Nova nota interna");
+        String tituloMsg = !visivel ? "Nova nota interna" : ehSuporte ? "Nova mensagem do suporte" : "Nova mensagem do cliente";
         String textoMsg = req.conteudo() != null && !req.conteudo().isBlank() ? req.conteudo().trim() : "(Anexo)";
 
         if (ehSuporte && visivel) {

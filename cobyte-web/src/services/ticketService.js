@@ -278,6 +278,7 @@ export function mapearMensagemApi(m, indice) {
     texto: m.texto || m.mensagem || m.conteudo || '',
     criadoEm: m.criadoEm || m.enviadoEm || m.createdAt || m.data || null,
     ehSuporte: m.ehSuporte ?? ['SUPORTE', 'ADMIN'].includes(perfil),
+    visivelApenasSuporte: m.visivelApenasSuporte === true,
   };
 }
 
@@ -356,7 +357,7 @@ export async function marcarMensagensLidas(chamadoId, ultimaMensagemId, signal) 
 }
 
 /** Envia uma mensagem para o chamado. */
-export async function enviarMensagem(chamadoId, texto) {
+export async function enviarMensagem(chamadoId, texto, { visivelApenasSuporte = false } = {}) {
   if (!chamadoId) throw new Error('Identificador do chamado não fornecido.');
   const textoLimpo = String(texto || '').trim();
   if (!textoLimpo) throw new Error('A mensagem não pode ser vazia.');
@@ -368,7 +369,7 @@ export async function enviarMensagem(chamadoId, texto) {
   try {
     const { data } = await api.post(
       `/chamados/${idLimpo}/mensagens`,
-      { texto: textoLimpo, conteudo: textoLimpo },
+      { texto: textoLimpo, conteudo: textoLimpo, visivelApenasSuporte },
       { headers }
     );
     return mapearMensagemApi(data);

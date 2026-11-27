@@ -15,6 +15,7 @@ import {
   File,
   RotateCcw,
   AlertTriangle,
+  LockKeyhole,
 } from 'lucide-react';
 import { useAutenticacao } from '../hooks/useAuth';
 import {
@@ -285,6 +286,8 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
     : [];
 
   const [texto, setTexto] = useState('');
+  const [notaInterna, setNotaInterna] = useState(false);
+  const podeEnviarNotaInterna = ['SUPORTE', 'ADMIN'].includes(usuario?.perfil);
   const [enviando, setEnviando] = useState(false);
   const [erroEnvio, setErroEnvio] = useState('');
   const [erroLeitura, setErroLeitura] = useState('');
@@ -349,8 +352,11 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
 
     const textoParaEnviar = texto.trim();
     try {
-      const novaMensagem = await enviarMensagem(chamado.id, textoParaEnviar);
+      const novaMensagem = await enviarMensagem(chamado.id, textoParaEnviar, {
+        visivelApenasSuporte: podeEnviarNotaInterna && notaInterna,
+      });
       setTexto('');
+      setNotaInterna(false);
       if (onNovaMensagem) {
         onNovaMensagem(novaMensagem);
       }
@@ -405,7 +411,8 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
               nome,
               fotoPerfil: autorId ? '/api/usuarios/' + autorId + '/foto' : null,
             }} />
-            <div className="history-message-card">
+            <div className={`history-message-card ${msg.visivelApenasSuporte ? 'mensagem-interna' : ''}`}>
+              {msg.visivelApenasSuporte && <span className="nota-interna-identificacao"><LockKeyhole size={13} aria-hidden="true" /> Nota interna · somente suporte</span>}
               <header className="message-header">
                 <strong>{propria ? 'Você' : nome} <span>· {perfil}</span></strong>
                 <time dateTime={data || undefined}>{formatarDataHoraMensagem(data)}</time>
@@ -426,9 +433,15 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
         </div>
       ) : !chamadoEncerrado ? (
         <form className="history-message-composer" onSubmit={handleEnviar}>
+          {podeEnviarNotaInterna && <label className="nota-interna-controle">
+            <input type="checkbox" checked={notaInterna} disabled={enviando}
+              onChange={evento => setNotaInterna(evento.target.checked)} />
+            <span>Nota interna — somente suporte</span>
+          </label>}
           <textarea
             rows={1}
-            aria-label="Mensagem para a conversa do chamado" placeholder="Digite uma mensagem... (Enter para enviar, Shift+Enter para quebrar linha)"
+            aria-label={podeEnviarNotaInterna && notaInterna ? 'Nota interna para o suporte' : 'Mensagem para a conversa do chamado'}
+            placeholder={podeEnviarNotaInterna && notaInterna ? 'Escreva uma nota interna. O cliente não verá esta mensagem.' : 'Digite uma mensagem... (Enter para enviar, Shift+Enter para quebrar linha)'}
             value={texto}
             onChange={e => {
               setTexto(e.target.value);
@@ -442,7 +455,7 @@ function SecaoConversa({ chamado, onNovaMensagem, onReabrir, reabrindo }) {
             className="primary-button"
             disabled={enviando || !texto.trim()}
           >
-            {enviando ? 'Enviando...' : 'Enviar mensagem'}
+            {enviando ? 'Enviando...' : podeEnviarNotaInterna && notaInterna ? 'Enviar nota interna' : 'Enviar mensagem'}
           </button>
         </form>
       ) : (
