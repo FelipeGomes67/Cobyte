@@ -6,6 +6,7 @@ Sistema de gestão de chamados de suporte para ambientes de laboratório. Reúne
 
 - Cadastro público com nome da empresa informado livremente. O suporte ou ADMIN vincula o cliente a uma empresa oficial antes de liberar os chamados.
 - Abertura de chamados com evidência obrigatória e opção de transcrever áudio. O relato transcrito pode ser revisado antes do envio.
+- O botão de gravação mostra pausa enquanto captura áudio e volta ao microfone quando pausado, permitindo retomar a gravação.
 - Triagem com categoria, prioridade, título técnico sugerido, sintoma e impacto operacional. Dados insuficientes ficam sinalizados para revisão.
 - Chat com identificação do autor, foto, anexos e mensagens internas do suporte.
 - Participação de mais de um técnico no atendimento.
@@ -13,8 +14,8 @@ Sistema de gestão de chamados de suporte para ambientes de laboratório. Reúne
 - SLA pausado enquanto o chamado aguarda o solicitante. A resposta do cliente retoma o atendimento e a contagem do prazo.
 - Notificações no sino e em uma página própria, preferências, e-mails com contexto e Web Push opcional por dispositivo.
 - Alertas específicos para chamados críticos e para prazos de SLA com até uma hora restante.
-- Dashboard, histórico, filtros e relatórios.
-- Perfil com edição de dados, foto com recorte e alteração de senha.
+- Dashboard, histórico, filtros e relatórios. Os principais problemas da empresa aparecem em ordem decrescente de ocorrências, com desempate alfabético.
+- Perfil com edição de dados, foto com recorte e zoom, layout responsivo e alteração de senha. O salvamento da foto aguarda sua preparação e confirma o perfil e a leitura da imagem na API antes de mostrar sucesso.
 - Administração de usuários, perfis, vínculos de empresa e exclusão definitiva de chamados e registros associados.
 
 ### Perfis de acesso
@@ -23,7 +24,7 @@ Sistema de gestão de chamados de suporte para ambientes de laboratório. Reúne
 | --- | --- |
 | CLIENTE | Abrir e acompanhar seus chamados, consultar chamados da empresa e interagir nos atendimentos permitidos. |
 | SUPORTE | Atender chamados, participar como técnico, confirmar classificação, acompanhar métricas e vincular clientes pendentes. |
-| ADMIN | Gerenciar usuários, perfis, empresas, clientes pendentes e exclusão de chamados. A interface administrativa tem navegação própria. |
+| ADMIN | Gerenciar usuários, perfis, empresas, clientes pendentes, abrir detalhes e excluir chamados. A interface administrativa tem navegação própria. |
 
 O cliente não altera a própria empresa no perfil. O cadastro público cria contas CLIENTE; contas internas devem ser provisionadas ou gerenciadas por um ADMIN autorizado. Não há credenciais padrão documentadas para acesso.
 
@@ -99,6 +100,8 @@ A triagem possui timeout e fallback por regras. Uma resposta preenchida pela IA 
 
 ### 2. Preparar e iniciar a transcrição
 
+Antes da primeira execução, prepare `cobyte-api/.env` conforme a etapa 3 e preencha `STT_INTERNAL_API_KEY` com uma chave aleatória de pelo menos 32 bytes. A API Java e o STT precisam usar o mesmo valor. O inicializador do STT lê essa chave automaticamente do `.env` da API; não é necessário gerá-la novamente a cada reinicialização do computador.
+
 ```powershell
 cd cobyte-api/stt-service
 .\iniciar.cmd
@@ -117,13 +120,13 @@ py -3.12 -m venv .venv
 
 Não copie a `.venv` de outra máquina: recrie-a após clonar o projeto. Se a pasta existente usar outra versão de Python, renomeie-a antes de preparar novamente.
 
-Confira o carregamento do modelo:
+Para validar a configuração sem iniciar o servidor nem exibir a chave:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8000/health
+.\.venv\Scripts\python.exe iniciar.py --validar
 ```
 
-O retorno deve indicar `model_loaded: true`. A documentação do serviço fica em [localhost:8000/docs](http://localhost:8000/docs).
+As rotas `/health`, `/docs` e `/transcrever` exigem o cabeçalho `X-Internal-Api-Key`. Uma consulta autenticada a `/health` deve indicar `model_loaded: true`. A API Java envia a chave nas chamadas ao STT; o navegador não precisa conhecê-la. Consulte também o [README do STT](cobyte-api/stt-service/README.md).
 
 A transcrição carrega o modelo localmente, sem baixá-lo durante as requisições. Para usar uma pasta já provisionada, configure `STT_MODEL_PATH` no ambiente do serviço Python; ela precisa conter `model.bin`, `config.json` e `tokenizer.json`.
 
@@ -147,6 +150,9 @@ JWT_SECRET: SUBSTITUA_POR_UMA_CHAVE_ALEATORIA_DE_NO_MINIMO_32_BYTES
 OLLAMA_BASE_URL: http://localhost:11434
 OLLAMA_MODEL: llama3.2
 STT_SERVICE_URL: http://localhost:8000
+STT_INTERNAL_API_KEY: SUBSTITUA_POR_UMA_CHAVE_ALEATORIA_DE_NO_MINIMO_32_BYTES
+CORS_ALLOWED_ORIGINS: http://localhost:5173
+FRONTEND_URL: http://localhost:5173
 UPLOADS_ARMAZENAMENTO: banco
 
 WEB_PUSH_PUBLIC_KEY:
@@ -194,11 +200,17 @@ O frontend usa `http://localhost:8080` como endereço padrão da API. Para outro
 VITE_API_URL=http://localhost:8080
 ```
 
-Para liberar outra origem do frontend, configure `CORS_ALLOWED_ORIGINS` na API com as URLs autorizadas separadas por vírgula.
+Configure `CORS_ALLOWED_ORIGINS` na API com as origens exatas autorizadas, separadas por vírgula, sem curingas, caminhos ou barra final. Para desenvolvimento, inclua `http://localhost:5173`; se acessar por `127.0.0.1`, inclua essa origem separadamente. Sem configuração, nenhuma origem adicional é liberada automaticamente.
 
 Se publicar na Vercel, use `cobyte-web` como **Root Directory**. Para exibir um link de contato, configure `VITE_EMAIL_SUPORTE` com o endereço público da equipe.
 
 Informe a URL base sem `/api`. Reinicie o Vite após alterar o arquivo. Variáveis `VITE_*` são públicas e incorporadas no build; nunca coloque senhas, segredo JWT ou chave privada de push nelas.
+
+### Frontend na Vercel e serviços locais
+
+Configure `VITE_API_URL` na Vercel com a URL HTTPS do túnel que encaminha para a API local na porta 8080. Inclua a origem exata do site em `CORS_ALLOWED_ORIGINS` e configure `FRONTEND_URL` com o endereço público do frontend. Reinicie a API ao alterar seu `.env` e faça um novo deploy do frontend ao alterar `VITE_API_URL` ou publicar mudanças no código.
+
+Com ngrok, o cliente Axios em `cobyte-web/src/services/api.js` envia o cabeçalho necessário para evitar a página intermediária do túnel. As fotos da API também são carregadas por esse cliente, como imagens binárias. API, túnel, Ollama e STT precisam continuar em execução no computador para disponibilizar suas funcionalidades.
 
 ## Endereços locais
 
@@ -239,6 +251,7 @@ O arquivo [bancoDeDados/cobyte.sql](bancoDeDados/cobyte.sql) documenta o banco e
 - Aguardando solicitante pausa o SLA; uma resposta do cliente retoma Em atendimento.
 - Resolvido pode ser fechado ou reaberto para atendimento. Fechado e Cancelado são estados finais.
 - O cancelamento exige justificativa.
+- Chamados cancelados exibem “Cancelado” na prioridade e na categoria nas telas, filtros e agrupamentos do frontend. A classificação original permanece no banco.
 - A exclusão pelo ADMIN é definitiva no banco e remove os registros vinculados ao chamado. E-mails já entregues, cópias baixadas e backups não são recolhidos. A limpeza de arquivos locais ocorre no servidor e eventuais falhas são informadas.
 
 A API verifica as permissões; ocultar um botão no frontend não substitui a autorização do servidor.
@@ -278,7 +291,7 @@ Os testes de integração Java configuram H2 em memória. Os testes locais não 
 
 | Sintoma | O que conferir |
 | --- | --- |
-| STT não inicia | Python 3.12, dependências da `.venv`, modelo `small` provisionado e porta 8000 livre. |
+| STT não inicia | Python 3.12, dependências da `.venv`, modelo `small`, porta 8000 livre e `STT_INTERNAL_API_KEY` no `.env` da API. |
 | Modelo Whisper não encontrado | Execute `preparar_modelo.py` com a Python da `.venv`, ou confira `STT_MODEL_PATH`. |
 | Triagem usa fallback | Confira `ollama list`, o serviço Ollama e se `OLLAMA_MODEL` corresponde ao modelo instalado. |
 | API não conecta ao banco | URL JDBC, usuário, senha, conectividade e SSL do banco hospedado. |
@@ -286,6 +299,7 @@ Os testes de integração Java configuram H2 em memória. Os testes locais não 
 | Arquivo existe em uma máquina, mas não em outra | Confira o modo de armazenamento; arquivos locais não são compartilhados apenas pelo banco. |
 | Aviso sobre Mailpit ausente | Configure `MAILPIT_PATH` ou inicie um SMTP separado, se quiser testar e-mails. |
 | Frontend não alcança a API | Confira `VITE_API_URL`, a porta da API e as origens CORS autorizadas. |
+| Foto de perfil não aparece após salvar | Confira se a versão atual do frontend foi publicada, se a API e o túnel estão ativos e se a imagem salva pode ser carregada. O sucesso depende da confirmação do perfil e da imagem pela API. |
 | Microfone não funciona pelo IP do celular | A gravação precisa de um contexto seguro. O HTTP local do computador e o acesso por IP no celular têm comportamentos diferentes; use HTTPS com certificado confiável para esse acesso. |
 
 Para testar somente no computador, utilize os endereços `localhost` acima. O comando `npm run dev:rede` expõe o frontend na rede, mas também exige que o celular consiga alcançar a API e que a origem esteja autorizada no CORS. O modo `npm run dev:https` depende dos certificados locais esperados em `cobyte-web/.certs/` e usa a porta 5174.
