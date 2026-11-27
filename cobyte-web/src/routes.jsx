@@ -4,6 +4,8 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import AppLayout from './components/layout/AppLayout';
 import UsuariosPendentes from './pages/UsuariosPendentes';
 import LoginPage from './pages/Login';
+import EsqueciSenha from './pages/EsqueciSenha';
+import RedefinirSenha from './pages/RedefinirSenha';
 import ProfilePage from './pages/Perfil';
 import ReportsPage from './pages/Relatorios';
 import SettingsPage from './pages/Configuracoes';
@@ -97,6 +99,8 @@ export default function RotasAplicacao() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<RotaRaiz />} />
+        <Route path="/esqueci-senha" element={<PublicRoute><EsqueciSenha /></PublicRoute>} />
+        <Route path="/redefinir-senha" element={<RedefinirSenha />} />
         <Route
           path="/login"
           element={
