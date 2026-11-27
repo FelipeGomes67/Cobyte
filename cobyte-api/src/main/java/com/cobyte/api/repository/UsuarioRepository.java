@@ -40,6 +40,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByEmail(String email);
     Optional<Usuario> findByEmailIgnoreCase(String email);
+    @org.springframework.data.jpa.repository.Query("select u.id from Usuario u where lower(u.email) = lower(:email)")
+    Optional<Long> buscarIdPorEmail(@org.springframework.data.repository.query.Param("email") String email);
     boolean existsByEmail(String email);
     java.util.List<Usuario> findByPerfil(com.cobyte.api.model.enums.PerfilUsuario perfil);
 }

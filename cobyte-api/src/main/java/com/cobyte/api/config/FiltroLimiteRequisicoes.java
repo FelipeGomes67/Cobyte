@@ -34,6 +34,8 @@ final class FiltroLimiteRequisicoes extends OncePerRequestFilter {
                 limites.consumir("login-ip:" + ipDireto(request), limites.loginIp);
             } else if ("POST".equals(metodo) && rota.equals("/api/auth/cadastrar")) {
                 limites.consumir("cadastro-ip:" + ipDireto(request), limites.cadastroIp);
+            } else if ("POST".equals(metodo) && (rota.equals("/api/auth/esqueci-senha") || rota.equals("/api/auth/redefinir-senha"))) {
+                limites.consumir("recuperacao-ip:" + ipDireto(request), limites.cadastroIp);
             } else if (inferencia && identidade instanceof JwtAuthenticationToken jwt) {
                 limites.consumir("ia:" + jwt.getName(), limites.iaUsuario);
                 limites.iniciarInferencia();

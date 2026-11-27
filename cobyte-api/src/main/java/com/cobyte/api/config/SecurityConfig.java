@@ -41,7 +41,8 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**",
                                 "/api-docs", "/api-docs.yaml", "/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/cadastrar").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/cadastrar",
+                                "/api/auth/esqueci-senha", "/api/auth/redefinir-senha").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/*/foto").permitAll()
                         // Quarentena permite somente consultar/editar a própria conta.
                         .requestMatchers("/api/auth/me", "/api/usuarios/me", "/api/usuarios/me/senha",

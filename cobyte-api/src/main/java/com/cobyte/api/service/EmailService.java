@@ -26,6 +26,25 @@ public class EmailService {
     @Value("${cobyte.email.frontend-url:http://localhost:5173}")
     private String frontendUrl;
 
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void enviarRecuperacao(RecuperacaoSenhaService.EmailRecuperacao evento) {
+        try {
+            var mensagem = new org.springframework.mail.SimpleMailMessage();
+            mensagem.setFrom(remetente);
+            mensagem.setTo(evento.destinatario());
+            mensagem.setSubject("Cobyte - Redefinir sua senha");
+            mensagem.setText("Recebemos uma solicitacao para redefinir sua senha.\n\n"
+                    + "Seu codigo de recuperacao e:\n\n"
+                    + evento.codigo() + "\n\nEle expira em 10 minutos e pode ser usado uma unica vez."
+                    + "\nDigite esse codigo na tela de recuperacao do Cobyte junto com sua nova senha."
+                    + "\n\nSe voce nao solicitou essa alteracao, ignore este e-mail.");
+            mailSender.send(mensagem);
+        } catch (Exception erro) {
+            log.error("Falha no envio de recuperacao de senha (tipo={})", erro.getClass().getSimpleName());
+        }
+    }
+
     public record EmailNotificacao(
             String destinatario,
             String nome,
