@@ -30,10 +30,10 @@ export default function Sidebar({ sidebarRef, mobile, inert, open, onNavigate, u
   // Itens dinâmicos de acordo com o perfil do usuário
   const navItems = user?.perfil === 'ADMIN'
     ? [
-        { label: 'Usuários pendentes', to: '/usuarios-pendentes', Icon: Users, active: currentPath === '/usuarios-pendentes' },
-        { label: 'Gerenciar usuários', to: '/admin/usuarios', Icon: Users, active: currentPath === '/admin/usuarios' },
-        { label: 'Gerenciar chamados', to: '/admin/chamados', Icon: Ticket, active: currentPath === '/admin/chamados' },
-        { label: 'Gerenciar empresas', to: '/admin/empresas', Icon: ClipboardCheck, active: currentPath === '/admin/empresas' },
+      { label: 'Gerenciar usuários', to: '/admin/usuarios', Icon: Users, active: currentPath === '/admin/usuarios' },
+      { label: 'Gerenciar chamados', to: '/admin/chamados', Icon: Ticket, active: currentPath === '/admin/chamados' },
+      { label: 'Gerenciar empresas', to: '/admin/empresas', Icon: ClipboardCheck, active: currentPath === '/admin/empresas' },
+      { label: 'Usuários pendentes', to: '/usuarios-pendentes', Icon: Users, active: currentPath === '/usuarios-pendentes' },
       ]
     : empresaPendente(user)
     ? [
