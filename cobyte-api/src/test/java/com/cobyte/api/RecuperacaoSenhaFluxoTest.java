@@ -60,14 +60,29 @@ class RecuperacaoSenhaFluxoTest {
         assertNotEquals(codigo, persistido.getHash());
         assertTrue(persistido.getExpiraEm().isAfter(Instant.now()));
         assertTrue(persistido.getExpiraEm().isBefore(Instant.now().plusSeconds(601)));
+        String resposta = http.perform(post("/api/auth/validar-codigo-recuperacao").contentType("application/json")
+                .content(codigo(usuario.getEmail(), codigo)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String autorizacao = tools.jackson.databind.json.JsonMapper.builder().build().readTree(resposta).path("autorizacao").asText();
+        assertTrue(autorizacao.matches("[A-Za-z0-9_-]{43}"));
+        persistido = recuperacoes.findById(hash(usuario.getId(), codigo)).orElseThrow();
+        assertEquals(hash(usuario.getId(), "autorizacao:" + autorizacao), persistido.getHashAutorizacao());
+        assertTrue(persistido.getAutorizacaoExpiraEm().isBefore(Instant.now().plusSeconds(301)));
+        assertTrue(senhas.matches("SenhaOriginal123", usuarios.findById(usuario.getId()).orElseThrow().getSenhaHash()));
+        http.perform(get("/api/usuarios/me").header("Authorization", jwt)).andExpect(status().isOk());
+        http.perform(post("/api/auth/validar-codigo-recuperacao").contentType("application/json")
+                .content(codigo(usuario.getEmail(), codigo))).andExpect(status().isBadRequest());
+        var outraConta = conta("outra-conta");
         http.perform(post("/api/auth/redefinir-senha").contentType("application/json")
-                .content(corpo(usuario.getEmail(), codigo, "NovaSenhaSegura123")))
+                .content(corpo(outraConta.getEmail(), autorizacao, "NaoPodeMudar123"))).andExpect(status().isBadRequest());
+        http.perform(post("/api/auth/redefinir-senha").contentType("application/json")
+                .content(corpo(usuario.getEmail(), autorizacao, "NovaSenhaSegura123")))
                 .andExpect(status().isNoContent());
         assertTrue(senhas.matches("NovaSenhaSegura123", usuarios.findById(usuario.getId()).orElseThrow().getSenhaHash()));
         assertTrue(recuperacoes.findById(hash(usuario.getId(), codigo)).isEmpty());
         http.perform(get("/api/usuarios/me").header("Authorization", jwt)).andExpect(status().isUnauthorized());
         http.perform(post("/api/auth/redefinir-senha").contentType("application/json")
-                .content(corpo(usuario.getEmail(), codigo, "OutraSenhaSegura123")))
+                .content(corpo(usuario.getEmail(), autorizacao, "OutraSenhaSegura123")))
                 .andExpect(status().isBadRequest());
     }
 
@@ -91,8 +106,8 @@ class RecuperacaoSenhaFluxoTest {
             recuperacao.setExpiraEm(Instant.now().plusSeconds(expirado ? -10 : 1800));
             recuperacoes.saveAndFlush(recuperacao);
             if (!expirado) { usuario.revogarSessoes(); usuarios.saveAndFlush(usuario); }
-            http.perform(post("/api/auth/redefinir-senha").contentType("application/json")
-                    .content(corpo(usuario.getEmail(), codigo, "NaoPodeMudar123")))
+            http.perform(post("/api/auth/validar-codigo-recuperacao").contentType("application/json")
+                    .content(codigo(usuario.getEmail(), codigo)))
                     .andExpect(status().isBadRequest());
             assertTrue(senhas.matches("SenhaOriginal123", usuarios.findById(usuario.getId()).orElseThrow().getSenhaHash()));
         }
@@ -100,6 +115,8 @@ class RecuperacaoSenhaFluxoTest {
 
     @Test
     void rejeitaSenhaCurtaCodigoInvalidoEExcessoDeSolicitacoes() throws Exception {
+        http.perform(post("/api/auth/validar-codigo-recuperacao").contentType("application/json")
+                .content(codigo("teste@exemplo.com", "invalido"))).andExpect(status().isBadRequest());
         http.perform(post("/api/auth/redefinir-senha").contentType("application/json")
                 .content(corpo("teste@exemplo.com", "invalido", "123")))
                 .andExpect(status().isBadRequest());
@@ -126,19 +143,45 @@ class RecuperacaoSenhaFluxoTest {
         recuperacao.setExpiraEm(Instant.now().plusSeconds(600));
         recuperacoes.saveAndFlush(recuperacao);
         for (int i = 0; i < 5; i++) {
-            http.perform(post("/api/auth/redefinir-senha").contentType("application/json")
-                    .content(corpo(usuario.getEmail(), "000008", "NaoPodeMudar123")))
+            http.perform(post("/api/auth/validar-codigo-recuperacao").contentType("application/json")
+                    .content(codigo(usuario.getEmail(), "000008")))
                     .andExpect(status().isBadRequest());
         }
         assertEquals(5, recuperacoes.findByUsuarioId(usuario.getId()).orElseThrow().getTentativas());
-        http.perform(post("/api/auth/redefinir-senha").contentType("application/json")
-                .content(corpo(usuario.getEmail(), codigo, "NaoPodeMudar123")))
+        http.perform(post("/api/auth/validar-codigo-recuperacao").contentType("application/json")
+                .content(codigo(usuario.getEmail(), codigo)))
                 .andExpect(status().isBadRequest());
         assertTrue(senhas.matches("SenhaOriginal123", usuarios.findById(usuario.getId()).orElseThrow().getSenhaHash()));
     }
 
-    private String corpo(String email, String codigo, String novaSenha) {
-        return "{\"email\":\"" + email + "\",\"codigo\":\"" + codigo + "\",\"novaSenha\":\"" + novaSenha + "\"}";
+    @Test
+    void bloqueiaTrocaSemValidacaoOuComAutorizacaoExpirada() throws Exception {
+        var usuario = conta("autorizacao-expirada");
+        String autorizacao = "a".repeat(43);
+        var recuperacao = new RecuperacaoSenha();
+        recuperacao.setHash(hash(usuario.getId(), "123456")); recuperacao.setUsuario(usuario);
+        recuperacao.setEmail(usuario.getEmail()); recuperacao.setVersaoSessao(usuario.versaoSessaoAtual());
+        recuperacao.setExpiraEm(Instant.now().plusSeconds(600));
+        recuperacoes.saveAndFlush(recuperacao);
+        http.perform(post("/api/auth/redefinir-senha").contentType("application/json")
+                .content(corpo(usuario.getEmail(), autorizacao, "NaoPodeMudar123"))).andExpect(status().isBadRequest());
+        http.perform(post("/api/auth/redefinir-senha").contentType("application/json")
+                .content("{\"email\":\"" + usuario.getEmail() + "\",\"codigo\":\"123456\",\"novaSenha\":\"NaoPodeMudar123\"}"))
+                .andExpect(status().isBadRequest());
+        recuperacao.setHashAutorizacao(hash(usuario.getId(), "autorizacao:" + autorizacao));
+        recuperacao.setAutorizacaoExpiraEm(Instant.now().minusSeconds(1));
+        recuperacoes.saveAndFlush(recuperacao);
+        http.perform(post("/api/auth/redefinir-senha").contentType("application/json")
+                .content(corpo(usuario.getEmail(), autorizacao, "NaoPodeMudar123"))).andExpect(status().isBadRequest());
+        assertTrue(senhas.matches("SenhaOriginal123", usuarios.findById(usuario.getId()).orElseThrow().getSenhaHash()));
+    }
+
+    private String codigo(String email, String codigo) {
+        return "{\"email\":\"" + email + "\",\"codigo\":\"" + codigo + "\"}";
+    }
+
+    private String corpo(String email, String autorizacao, String novaSenha) {
+        return "{\"email\":\"" + email + "\",\"autorizacao\":\"" + autorizacao + "\",\"novaSenha\":\"" + novaSenha + "\"}";
     }
 
     private String hash(Long id, String codigo) throws Exception {

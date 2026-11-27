@@ -31,7 +31,9 @@ CREATE TABLE recuperacao_senha (
     expira_em TIMESTAMP WITH TIME ZONE NOT NULL,
     versao_sessao VARCHAR(36) NOT NULL,
     email VARCHAR(255) NOT NULL,
-    tentativas INTEGER NOT NULL DEFAULT 0
+    tentativas INTEGER NOT NULL DEFAULT 0,
+    hash_autorizacao VARCHAR(64),
+    autorizacao_expira_em TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE politica_sla (

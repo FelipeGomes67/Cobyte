@@ -21,6 +21,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Locale;
+import java.util.Base64;
 
 @Service @RequiredArgsConstructor @Slf4j
 public class RecuperacaoSenhaService {
@@ -54,33 +55,62 @@ public class RecuperacaoSenhaService {
     }
 
     @Transactional
-    public boolean redefinir(String email, String codigo, String novaSenha) {
-        if (novaSenha.getBytes(StandardCharsets.UTF_8).length > 72) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A senha deve ter no maximo 72 bytes UTF-8.");
+    public String validarCodigo(String email, String codigo) {
+        var recuperacao = buscarValida(email);
+        if (recuperacao == null || recuperacao.getHashAutorizacao() != null) return null;
+        var usuario = recuperacao.getUsuario();
+        if (!iguais(hash(usuario.getId(), codigo), recuperacao.getHash())) {
+            recuperacao.setTentativas(recuperacao.getTentativas() + 1);
+            recuperacoes.saveAndFlush(recuperacao);
+            return null;
         }
+        byte[] bytes = new byte[32];
+        ALEATORIO.nextBytes(bytes);
+        String autorizacao = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        recuperacao.setHashAutorizacao(hash(usuario.getId(), "autorizacao:" + autorizacao));
+        Instant limite = Instant.now().plusSeconds(300);
+        recuperacao.setAutorizacaoExpiraEm(limite.isBefore(recuperacao.getExpiraEm()) ? limite : recuperacao.getExpiraEm());
+        recuperacoes.saveAndFlush(recuperacao);
+        return autorizacao;
+    }
+
+    // A verificacao invalida retorna normalmente para confirmar a contagem de erros no banco.
+    private RecuperacaoSenha buscarValida(String email) {
         var id = usuarios.buscarIdPorEmail(email.trim().toLowerCase(Locale.ROOT));
-        if (id.isEmpty()) return false;
+        if (id.isEmpty()) return null;
         // A emissao e o consumo bloqueiam primeiro o usuario, impedindo reutilizacao concorrente.
         var usuario = usuarios.buscarParaAprovacao(id.get()).orElseThrow();
         var registro = recuperacoes.findByUsuarioId(usuario.getId());
-        if (registro.isEmpty()) return false;
+        if (registro.isEmpty()) return null;
         var recuperacao = registro.get();
         if (!recuperacao.getExpiraEm().isAfter(Instant.now())
                 || !recuperacao.getVersaoSessao().equals(usuario.versaoSessaoAtual())
                 || !recuperacao.getEmail().equalsIgnoreCase(usuario.getEmail())
-                || recuperacao.getTentativas() >= 5) return false;
-        if (!MessageDigest.isEqual(hash(usuario.getId(), codigo).getBytes(StandardCharsets.US_ASCII),
-                recuperacao.getHash().getBytes(StandardCharsets.US_ASCII))) {
-            recuperacao.setTentativas(recuperacao.getTentativas() + 1);
-            recuperacoes.saveAndFlush(recuperacao);
-            // Retorna normalmente para confirmar a contagem; o controller produz o erro depois do commit.
-            return false;
+                || !usuario.getEmail().equalsIgnoreCase(email.trim())
+                || recuperacao.getTentativas() >= 5) return null;
+        return recuperacao;
+    }
+
+    @Transactional
+    public boolean redefinir(String email, String autorizacao, String novaSenha) {
+        if (novaSenha.getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A senha deve ter no maximo 72 bytes UTF-8.");
         }
+        var recuperacao = buscarValida(email);
+        if (recuperacao == null || recuperacao.getHashAutorizacao() == null
+                || recuperacao.getAutorizacaoExpiraEm() == null
+                || !recuperacao.getAutorizacaoExpiraEm().isAfter(Instant.now())) return false;
+        var usuario = recuperacao.getUsuario();
+        if (!iguais(hash(usuario.getId(), "autorizacao:" + autorizacao), recuperacao.getHashAutorizacao())) return false;
         usuario.setSenhaHash(senhas.encode(novaSenha));
         usuario.revogarSessoes();
         usuarios.saveAndFlush(usuario);
         recuperacoes.excluirPorUsuario(usuario.getId());
         return true;
+    }
+
+    private boolean iguais(String primeiro, String segundo) {
+        return MessageDigest.isEqual(primeiro.getBytes(StandardCharsets.US_ASCII), segundo.getBytes(StandardCharsets.US_ASCII));
     }
 
     private String hash(Long usuarioId, String codigo) {

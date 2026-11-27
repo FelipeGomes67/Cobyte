@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Mail, MailCheck, LoaderCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Mail, MailCheck, LoaderCircle, KeyRound } from 'lucide-react';
 import LayoutAutenticacao from '../components/layout/LayoutAutenticacao';
-import { solicitarRecuperacaoSenha } from '../services/recuperacaoSenhaService';
+import { solicitarRecuperacaoSenha, validarCodigoRecuperacao } from '../services/recuperacaoSenhaService';
 import '../css/RecuperacaoSenha.css';
 
 export default function EsqueciSenha() {
+  const navegar = useNavigate();
+  const [codigo, definirCodigo] = useState('');
   const [email, definirEmail] = useState('');
   const [enviando, definirEnviando] = useState(false);
   const [enviado, definirEnviado] = useState(false);
@@ -23,6 +25,17 @@ export default function EsqueciSenha() {
     } finally { definirEnviando(false); }
   }
 
+  async function confirmarCodigo(evento) {
+    evento.preventDefault();
+    if (enviando || !/^[0-9]{6}$/.test(codigo)) return;
+    definirEnviando(true); definirErro('');
+    try {
+      const autorizacao = await validarCodigoRecuperacao(email, codigo);
+      navegar('/redefinir-senha', { state: { email: email.trim(), autorizacao } });
+    } catch (falha) { definirErro(falha.message || 'Não foi possível validar o código.'); }
+    finally { definirEnviando(false); }
+  }
+
   return <LayoutAutenticacao>
     <section className="cartao-autenticacao cartao-recuperacao" aria-labelledby="titulo-recuperacao">
       <div className="icone-recuperacao" aria-hidden="true">{enviado ? <MailCheck size={28} /> : <Mail size={28} />}</div>
@@ -30,11 +43,28 @@ export default function EsqueciSenha() {
         <h2 id="titulo-recuperacao">{enviado ? 'Confira seu e-mail' : 'Esqueceu sua senha?'}</h2>
         <p>{enviado ? 'Se houver uma conta com esse e-mail, enviaremos um código para você criar uma nova senha.' : 'Informe o e-mail da sua conta para receber um código de recuperação de senha.'}</p>
       </div>
-      {enviado ? <div className="confirmacao-recuperacao" role="status">
+      {enviado ? <form className="confirmacao-recuperacao" onSubmit={confirmarCodigo}>
         <p>O código de 6 dígitos expira em 10 minutos. Confira também a pasta de spam ou lixo eletrônico.</p>
         <p>Não solicitou a alteração? Sua senha permanece a mesma.</p>
-        <Link className="botao-principal" to="/redefinir-senha" state={{ email }}>Informar código e nova senha <ArrowRight size={16} aria-hidden="true" /></Link>
-      </div> : <form onSubmit={solicitar}>
+        <div className="campo-autenticacao">
+          <label htmlFor="codigo-recuperacao">Código recebido por e-mail</label>
+          <div className="envoltorio-campo">
+            <KeyRound size={18} className="icone-campo" aria-hidden="true" />
+            <input id="codigo-recuperacao" type="text" inputMode="numeric" autoComplete="one-time-code"
+              required minLength={6} maxLength={6} pattern="[0-9]{6}" placeholder="000000" disabled={enviando}
+              value={codigo} aria-describedby={erro ? 'erro-codigo' : 'dica-codigo'}
+              onChange={evento => { definirCodigo(evento.target.value.replace(/\D/g, '').slice(0, 6)); definirErro(''); }} />
+          </div>
+          <span className="dica-senha" id="dica-codigo">Após 5 tentativas incorretas, solicite outro código.</span>
+        </div>
+        {erro && <p id="erro-codigo" className="mensagem-autenticacao mensagem-erro" role="alert">{erro}</p>}
+        <button type="submit" className="botao-principal" disabled={enviando}>
+          {enviando ? <><LoaderCircle size={18} className="carregando" aria-hidden="true" /> Validando...</>
+            : <>Validar código <ArrowRight size={16} aria-hidden="true" /></>}
+        </button>
+        <button type="button" className="voltar-login" disabled={enviando}
+          onClick={() => { definirEnviado(false); definirCodigo(''); definirErro(''); }}>Solicitar outro código</button>
+      </form> : <form onSubmit={solicitar}>
         <div className="campo-autenticacao">
           <label htmlFor="email-recuperacao">E-mail</label>
           <div className="envoltorio-campo">

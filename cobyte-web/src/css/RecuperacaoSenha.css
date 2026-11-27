@@ -20,6 +20,8 @@
   text-decoration: none;
 }
 .cartao-recuperacao .voltar-login:hover { text-decoration: underline; }
+.cartao-recuperacao button.voltar-login { border: 0; background: transparent; cursor: pointer; padding: 0; font-family: inherit; }
+.cartao-recuperacao button.voltar-login:disabled { opacity: .6; cursor: wait; }
 .cartao-recuperacao .confirmacao-recuperacao {
   display: grid;
   gap: 12px;

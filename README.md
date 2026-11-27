@@ -17,7 +17,7 @@ Sistema de gestão de chamados de suporte para ambientes de laboratório. Reúne
 - Alertas específicos para chamados críticos e para prazos de SLA com até uma hora restante.
 - Dashboard, histórico, filtros e relatórios. Os principais problemas da empresa aparecem em ordem decrescente de ocorrências, com desempate alfabético.
 - Perfil com edição de dados, foto com recorte e zoom, layout responsivo e alteração de senha. O salvamento da foto aguarda sua preparação e confirma o perfil e a leitura da imagem na API antes de mostrar sucesso.
-- Recuperação de senha por e-mail: “Esqueceu sua senha?” abre uma tela pública para solicitar um código de 6 dígitos. O código expira em 10 minutos, funciona uma única vez e fica bloqueado após 5 erros. A troca exige e-mail, código e nova senha e revoga as sessões anteriores.
+- Recuperação de senha por e-mail em três etapas: solicitar o código, validá-lo na tela “Confira seu e-mail” e cadastrar a nova senha na próxima tela. O código de 6 dígitos expira em 10 minutos e fica bloqueado após 5 erros. A validação gera uma autorização temporária de uso único; a troca da senha revoga as sessões anteriores.
 - Administração de usuários, perfis, vínculos de empresa e exclusão definitiva de chamados e registros associados.
 
 ### Perfis de acesso
@@ -236,7 +236,7 @@ O Web Push é opcional. Preencha as três variáveis `WEB_PUSH_PUBLIC_KEY`, `WEB
 
 Para links de notificações e e-mails em outro endereço, configure `FRONTEND_URL` na API. O frontend de produção precisa usar HTTPS.
 
-A recuperação usa o mesmo SMTP das notificações. Com Mailpit, o e-mail fica na caixa local de testes; para entrega em caixas externas, configure um servidor SMTP real. O usuário informa o código recebido em `/redefinir-senha`, junto com o e-mail e a nova senha. A tabela `recuperacao_senha` guarda somente a assinatura HMAC-SHA256 do código vinculada à conta, expiração e tentativas; o código não é armazenado em texto puro. A assinatura usa o segredo do backend; trocar `JWT_SECRET` invalida os códigos pendentes. Uma nova solicitação substitui o código anterior. Os endpoints públicos `/api/auth/esqueci-senha` e `/api/auth/redefinir-senha` possuem limite de tentativas. A confirmação da solicitação não informa se o e-mail existe.
+A recuperação usa o mesmo SMTP das notificações. Com Mailpit, o e-mail fica na caixa local de testes; para entrega em caixas externas, configure um servidor SMTP real. O usuário valida o código em `/esqueci-senha` antes de acessar `/redefinir-senha`, que contém somente os campos de nova senha e confirmação. A API emite uma autorização aleatória válida por até 5 minutos, limitada também à expiração original do código, para permitir essa troca. Código e autorização são de uso único e armazenados somente como assinaturas HMAC-SHA256 vinculadas à conta. A tabela `recuperacao_senha` registra também expirações e tentativas. A assinatura usa o segredo do backend; trocar `JWT_SECRET` invalida as recuperações pendentes. Uma nova solicitação substitui a anterior. Os endpoints públicos `/api/auth/esqueci-senha`, `/api/auth/validar-codigo-recuperacao` e `/api/auth/redefinir-senha` possuem limite de requisições. A confirmação da solicitação não informa se o e-mail existe.
 
 ### Arquivos e banco compartilhado
 

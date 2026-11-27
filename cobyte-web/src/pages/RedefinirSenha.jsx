@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCheck, Eye, EyeOff, Lock, LoaderCircle, Mail, KeyRound } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, CheckCheck, Eye, EyeOff, Lock, LoaderCircle } from 'lucide-react';
 import LayoutAutenticacao from '../components/layout/LayoutAutenticacao';
 import { redefinirSenha } from '../services/recuperacaoSenhaService';
 import '../css/RecuperacaoSenha.css';
 
 export default function RedefinirSenha() {
   const localizacao = useLocation();
-  const [email, definirEmail] = useState(localizacao.state?.email || '');
-  const [codigo, definirCodigo] = useState('');
+  const navegar = useNavigate();
+  const email = localizacao.state?.email || '';
+  const autorizacao = localizacao.state?.autorizacao || '';
+  const autorizado = Boolean(email) && /^[A-Za-z0-9_-]{43}$/.test(autorizacao);
   const [senha, definirSenha] = useState('');
   const [confirmacao, definirConfirmacao] = useState('');
   const [mostrar, definirMostrar] = useState(false);
@@ -18,13 +20,14 @@ export default function RedefinirSenha() {
 
   async function salvar(evento) {
     evento.preventDefault();
-    if (salvando || !/^[0-9]{6}$/.test(codigo)) return;
+    if (salvando || !autorizado) return;
     if (senha !== confirmacao) { definirErro('As senhas precisam ser iguais.'); return; }
     if (new TextEncoder().encode(senha).length > 72) { definirErro('A senha deve ter no máximo 72 bytes. Use uma senha menor.'); return; }
     definirSalvando(true); definirErro('');
     try {
-      await redefinirSenha(email, codigo, senha);
-      definirConcluido(true); definirSenha(''); definirConfirmacao(''); definirCodigo('');
+      await redefinirSenha(email, autorizacao, senha);
+      definirConcluido(true); definirSenha(''); definirConfirmacao('');
+      navegar('/redefinir-senha', { replace: true, state: null });
     } catch (falha) {
       definirErro(falha.message || 'Não foi possível redefinir sua senha. Solicite um novo código e tente novamente.');
     } finally { definirSalvando(false); }
@@ -35,31 +38,12 @@ export default function RedefinirSenha() {
       <div className="icone-recuperacao" aria-hidden="true">{concluido ? <CheckCheck size={28} /> : <Lock size={28} />}</div>
       <div className="cabecalho-autenticacao">
         <h2 id="titulo-nova-senha">{concluido ? 'Senha atualizada!' : 'Crie uma nova senha'}</h2>
-        <p>{concluido ? 'Sua senha foi alterada. Entre novamente para acessar a plataforma.' : 'Informe o código recebido por e-mail e escolha uma senha com pelo menos 8 caracteres.'}</p>
+        <p>{concluido ? 'Sua senha foi alterada. Entre novamente para acessar a plataforma.' : autorizado ? 'Código confirmado! Escolha uma senha com pelo menos 8 caracteres.' : 'Confirme o código enviado ao seu e-mail para criar uma nova senha.'}</p>
       </div>
       {concluido ? <p className="confirmacao-recuperacao" role="status">As sessões anteriores foram encerradas.</p>
+        : !autorizado ? <Link to="/esqueci-senha" className="voltar-login">Informar código de recuperação</Link>
         : <form onSubmit={salvar}>
           <div className="campos-autenticacao">
-            <div className="campo-autenticacao">
-              <label htmlFor="email-nova-senha">E-mail da conta</label>
-              <div className="envoltorio-campo">
-                <Mail size={18} className="icone-campo" aria-hidden="true" />
-                <input id="email-nova-senha" type="email" autoComplete="email" required maxLength={255}
-                  value={email} placeholder="Ex: joao@email.com" disabled={salvando}
-                  onChange={evento => { definirEmail(evento.target.value); definirErro(''); }} />
-              </div>
-            </div>
-            <div className="campo-autenticacao">
-              <label htmlFor="codigo-recuperacao">Código recebido por e-mail</label>
-              <div className="envoltorio-campo">
-                <KeyRound size={18} className="icone-campo" aria-hidden="true" />
-                <input id="codigo-recuperacao" type="text" inputMode="numeric" autoComplete="one-time-code"
-                  required minLength={6} maxLength={6} pattern="[0-9]{6}" placeholder="000000" disabled={salvando}
-                  value={codigo} aria-describedby="dica-codigo"
-                  onChange={evento => { definirCodigo(evento.target.value.replace(/\D/g, '').slice(0, 6)); definirErro(''); }} />
-              </div>
-              <span className="dica-senha" id="dica-codigo">Válido por 10 minutos. Após 5 tentativas incorretas, solicite outro código.</span>
-            </div>
             {[{ id: 'nova-senha', rotulo: 'Nova senha', valor: senha, definir: definirSenha },
               { id: 'confirmar-senha', rotulo: 'Confirmar nova senha', valor: confirmacao, definir: definirConfirmacao }].map(campo =>
               <div className="campo-autenticacao" key={campo.id}>

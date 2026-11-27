@@ -23,7 +23,8 @@ Na Vercel, selecione `cobyte-web` como **Root Directory** e configure a URL HTTP
 
 - Login: `POST /api/auth/login`, com `email` e `senha`.
 - Recuperação: `POST /api/auth/esqueci-senha`, com `email`; a confirmação não revela se a conta existe. Um código de 6 dígitos é enviado por e-mail e expira em 10 minutos.
-- Redefinição: `POST /api/auth/redefinir-senha`, com `email`, `codigo` e `novaSenha`. O código só funciona uma vez e fica bloqueado após 5 erros; a troca revoga as sessões anteriores.
+- Validação: `POST /api/auth/validar-codigo-recuperacao`, com `email` e `codigo`, na tela “Confira seu e-mail”. Retorna uma `autorizacao` temporária; o código só funciona uma vez e fica bloqueado após 5 erros.
+- Redefinição: a próxima tela contém apenas nova senha e confirmação. Envia `POST /api/auth/redefinir-senha`, com `email`, `autorizacao` e `novaSenha`. A autorização é de uso único e expira em até 5 minutos (sem ultrapassar a validade original do código). A troca revoga as sessões anteriores. A autorização fica no estado da navegação, sem ser incluída na URL ou no localStorage.
 - Cadastro: `POST /api/auth/cadastrar`, com `nome`, `email`, `senha` e `empresaInformada`; depois tenta fazer login automaticamente para obter o JWT.
 - O token é salvo no localStorage na chave `cobyte-token`. Senhas não são armazenadas no navegador.
 - Ao recarregar, `GET /api/usuarios/me` valida a sessão e recupera o usuário antes de liberar as rotas.

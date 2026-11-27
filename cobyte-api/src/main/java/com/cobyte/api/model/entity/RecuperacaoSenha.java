@@ -24,4 +24,7 @@ public class RecuperacaoSenha {
     @org.hibernate.annotations.ColumnDefault("0")
     @Column(nullable = false)
     private int tentativas;
+    @Column(length = 64)
+    private String hashAutorizacao;
+    private Instant autorizacaoExpiraEm;
 }
