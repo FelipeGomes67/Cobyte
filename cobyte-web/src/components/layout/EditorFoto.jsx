@@ -1,7 +1,7 @@
 import { Pencil } from 'lucide-react';
 import AvatarUsuario from './AvatarUsuario';
 import { useEffect, useRef, useState } from 'react';
-export default function EditorFoto({ onPreparar, user }) {
+export default function EditorFoto({ onPreparar, user, children }) {
   const canvas = useRef(null);
   const arraste = useRef(null);
   const arquivoInput = useRef(null);
@@ -67,10 +67,13 @@ export default function EditorFoto({ onPreparar, user }) {
   }
   return <div className="editor-foto">
     <input ref={arquivoInput} type="file" accept="image/jpeg,image/png,image/gif" onChange={escolher} hidden />
+    <div className="editor-foto-cabecalho">
     <button type="button" className="avatar-editar" aria-label="Alterar foto" title="Alterar foto" onClick={() => arquivoInput.current?.click()}>
       {previa ? <img src={previa} alt="" /> : <AvatarUsuario user={user} grande />}
       <span className="avatar-editar-icone"><Pencil size={15} aria-hidden="true" /></span>
     </button>
+    {children}
+    </div>
     {erro && <p role="alert">{erro}</p>}
     {imagem && <div className="editor-foto-ajustes">
       <canvas ref={canvas} width="256" height="256" className="foto-arrastavel" tabIndex={0}

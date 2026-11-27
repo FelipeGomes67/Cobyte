@@ -90,6 +90,9 @@
   width: 90%;
   padding: 45px;
   gap: 15px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .profile-top {
@@ -311,7 +314,8 @@
 }
 
 .profile-top .profile-header {
-  padding-top: 18px;
+  padding-top: 0;
+  overflow-wrap: anywhere;
 }
 
 .profile-top .editor-foto {
@@ -319,6 +323,20 @@
   padding: 0;
   border: 0;
   background: transparent;
+  width: 100%;
+  min-width: 0;
+}
+
+.editor-foto-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  min-width: 0;
+}
+
+.editor-foto-cabecalho .avatar-editar {
+  flex-shrink: 0;
 }
 
 .avatar-editar {
@@ -368,14 +386,28 @@
 }
 
 .profile-top .editor-foto-ajustes {
+  width: 100%;
   max-width: 550px;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 18px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   background: #f8fafc;
 }
 
+.profile-top .editor-foto-ajustes > div {
+  flex: 1 1 200px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .editor-foto canvas.foto-arrastavel {
+  flex: 0 1 180px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  box-sizing: border-box;
   touch-action: none;
   cursor: grab;
   user-select: none;

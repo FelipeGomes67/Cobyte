@@ -218,12 +218,13 @@ export default function ProfilePage() {
       <section className="panel profile-panel">
         {/* Cabeçalho do perfil */}
         <div className="profile-top">
-          <EditorFoto user={user} onPreparar={setFoto} />
+          <EditorFoto user={user} onPreparar={setFoto}>
 
           <div className="profile-header">
             <h2>{form.name || "Usuário"}</h2>
             <p>{form.email || "E-mail não informado"}</p>
           </div>
+          </EditorFoto>
         </div>
 
         {/* Informações abaixo do cabeçalho */}
