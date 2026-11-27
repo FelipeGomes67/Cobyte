@@ -13,6 +13,8 @@ import {
 export default function ProfilePage() {
   const { usuario: user, atualizarUsuario } = useAutenticacao();
   const [foto, setFoto] = useState(null);
+  const [preparandoFoto, setPreparandoFoto] = useState(false);
+  const [erroFoto, setErroFoto] = useState('');
   const suporte = user?.perfil === "SUPORTE" || user?.perfil === "ADMIN";
   const [avaliacoes, setAvaliacoes] = useState(null);
   const [erroAvaliacoes, setErroAvaliacoes] = useState("");
@@ -135,6 +137,7 @@ export default function ProfilePage() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (salvando || preparandoFoto || erroFoto) return;
     setFeedback({ tipo: "", mensagem: "" });
 
     if (!form.name.trim()) {
@@ -160,7 +163,6 @@ export default function ProfilePage() {
       };
 
       let perfilAtualizado = await atualizarPerfil(payload);
-      atualizarUsuario(perfilAtualizado);
       if (foto) {
         perfilAtualizado = await enviarFoto(foto);
         setFoto(null);
@@ -218,7 +220,8 @@ export default function ProfilePage() {
       <section className="panel profile-panel">
         {/* Cabeçalho do perfil */}
         <div className="profile-top">
-          <EditorFoto user={user} onPreparar={setFoto}>
+          <EditorFoto key={user?.fotoPerfil || 'sem-foto'} user={user} onPreparar={setFoto} onPreparando={setPreparandoFoto}
+            onErro={setErroFoto} desabilitado={salvando}>
 
           <div className="profile-header">
             <h2>{form.name || "Usuário"}</h2>
@@ -312,8 +315,8 @@ export default function ProfilePage() {
               </label>
 
               <div className="profile-actions">
-                <button type="submit" className="btn-save" disabled={salvando}>
-                  {salvando ? "Salvando..." : "Salvar"}
+                <button type="submit" className="btn-save" disabled={salvando || preparandoFoto || Boolean(erroFoto)}>
+                  {salvando ? "Salvando..." : preparandoFoto ? "Preparando foto..." : "Salvar"}
                 </button>
               </div>
             </div>

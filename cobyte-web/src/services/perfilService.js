@@ -1,4 +1,5 @@
 import api from './api.js';
+import { enviarEConfirmarFoto } from '../utils/fotoPerfil.js';
 
 /**
  * Busca a lista de empresas ativas cadastradas no sistema.
@@ -38,10 +39,7 @@ export async function alterarSenha(senhaAtual, novaSenha) {
   await api.post('/usuarios/alterar-senha', { senhaAtual, novaSenha });
 }
 export async function enviarFoto(foto) {
-  const dados = new FormData();
-  dados.append('foto', foto, 'perfil.png');
-  const { data } = await api.post('/usuarios/me/foto', dados, { headers: { 'Content-Type': 'multipart/form-data' } });
-  return data;
+  return enviarEConfirmarFoto(api, foto);
 }
 
 export async function obterResumoAvaliacoes() {

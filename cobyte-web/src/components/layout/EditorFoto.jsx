@@ -1,7 +1,7 @@
 import { Pencil } from 'lucide-react';
 import AvatarUsuario from './AvatarUsuario';
 import { useEffect, useRef, useState } from 'react';
-export default function EditorFoto({ onPreparar, user, children }) {
+export default function EditorFoto({ onPreparar, onPreparando, onErro, desabilitado = false, user, children }) {
   const canvas = useRef(null);
   const arraste = useRef(null);
   const arquivoInput = useRef(null);
@@ -14,6 +14,7 @@ export default function EditorFoto({ onPreparar, user, children }) {
   const sequencia = useRef(0);
   useEffect(() => {
     if (!imagem) return;
+    onPreparando?.(true);
     const escala = 256 / Math.min(imagem.width, imagem.height) * zoom;
     const contexto = canvas.current.getContext('2d');
     contexto.clearRect(0, 0, 256, 256);
@@ -22,9 +23,18 @@ export default function EditorFoto({ onPreparar, user, children }) {
     contexto.drawImage(imagem, (256 - imagem.width * escala) / 2 + x, (256 - imagem.height * escala) / 2 + y, imagem.width * escala, imagem.height * escala);
     setPrevia(canvas.current.toDataURL('image/png'));
     const atual = ++sequencia.current;
-    canvas.current.toBlob(blob => { if (atual === sequencia.current && blob) onPreparar(blob); }, 'image/png');
-  }, [imagem, zoom, x, y, onPreparar]);
+    canvas.current.toBlob(blob => {
+      if (atual !== sequencia.current) return;
+      if (blob) onPreparar(blob);
+      else {
+        const mensagem = 'Nao foi possivel preparar a foto. Escolha a imagem novamente.';
+        setErro(mensagem); onErro?.(mensagem); onPreparar(null);
+      }
+      onPreparando?.(false);
+    }, 'image/png');
+  }, [imagem, zoom, x, y, onPreparar, onPreparando, onErro]);
   function iniciarArraste(evento) {
+    if (desabilitado) return;
     if (evento.pointerType === 'mouse' && evento.button !== 0) return;
     evento.currentTarget.setPointerCapture(evento.pointerId);
     arraste.current = { id: evento.pointerId, px: evento.clientX, py: evento.clientY, x, y };
@@ -42,6 +52,7 @@ export default function EditorFoto({ onPreparar, user, children }) {
   }
   function redefinir() { setZoom(1); setX(0); setY(0); }
   function moverTeclado(evento) {
+    if (desabilitado) return;
     const passos = { ArrowLeft: [-5, 0], ArrowRight: [5, 0], ArrowUp: [0, -5], ArrowDown: [0, 5] };
     if (!passos[evento.key]) return;
     evento.preventDefault();
@@ -51,24 +62,31 @@ export default function EditorFoto({ onPreparar, user, children }) {
   }
   async function escolher(evento) {
     const arquivo = evento.target.files[0];
+    evento.target.value = '';
     if (!arquivo) return;
+    const escolha = ++sequencia.current;
+    setErro(''); onErro?.(''); onPreparar(null); onPreparando?.(true);
+    const falhar = mensagem => {
+      setErro(mensagem); onErro?.(mensagem); onPreparando?.(false);
+    };
     if (!['image/jpeg', 'image/png', 'image/gif'].includes(arquivo.type) || arquivo.size > 10 * 1024 * 1024) {
-      setErro('Escolha uma foto JPG, PNG ou GIF de até 10 MB.'); return;
+      falhar('Escolha uma foto JPG, PNG ou GIF de até 10 MB.'); return;
     }
     const url = URL.createObjectURL(arquivo);
     const img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(url);
-      if (img.width * img.height > 20000000) { setErro('A imagem deve ter até 20 megapixels.'); return; }
+      if (escolha !== sequencia.current) return;
+      if (img.width * img.height > 20000000) { falhar('A imagem deve ter até 20 megapixels.'); return; }
       setImagem(img); setZoom(1); setX(0); setY(0); setErro('');
     };
-    img.onerror = () => { URL.revokeObjectURL(url); setErro('Não foi possível abrir esta imagem.'); };
+    img.onerror = () => { URL.revokeObjectURL(url); if (escolha === sequencia.current) falhar('Não foi possível abrir esta imagem.'); };
     img.src = url;
   }
   return <div className="editor-foto">
-    <input ref={arquivoInput} type="file" accept="image/jpeg,image/png,image/gif" onChange={escolher} hidden />
+    <input ref={arquivoInput} type="file" accept="image/jpeg,image/png,image/gif" onChange={escolher} disabled={desabilitado} hidden />
     <div className="editor-foto-cabecalho">
-    <button type="button" className="avatar-editar" aria-label="Alterar foto" title="Alterar foto" onClick={() => arquivoInput.current?.click()}>
+    <button type="button" className="avatar-editar" aria-label="Alterar foto" title="Alterar foto" disabled={desabilitado} onClick={() => arquivoInput.current?.click()}>
       {previa ? <img src={previa} alt="" /> : <AvatarUsuario user={user} grande />}
       <span className="avatar-editar-icone"><Pencil size={15} aria-hidden="true" /></span>
     </button>
@@ -81,8 +99,8 @@ export default function EditorFoto({ onPreparar, user, children }) {
         onPointerDown={iniciarArraste} onPointerMove={moverFoto} onPointerUp={terminarArraste}
         onPointerCancel={terminarArraste} onLostPointerCapture={terminarArraste} onKeyDown={moverTeclado} />
       <div><p>Arraste a foto para ajustar e clique em Salvar no perfil.</p>
-        <label>Zoom<input type="range" min="1" max="3" step="0.01" aria-valuetext={Math.round(zoom * 100) + '%'} value={zoom} onChange={e => setZoom(Number(e.target.value))} /></label>
-        <button type="button" className="secondary-button" onClick={redefinir}>Redefinir</button>
+        <label>Zoom<input type="range" min="1" max="3" step="0.01" disabled={desabilitado} aria-valuetext={Math.round(zoom * 100) + '%'} value={zoom} onChange={e => setZoom(Number(e.target.value))} /></label>
+        <button type="button" className="secondary-button" disabled={desabilitado} onClick={redefinir}>Redefinir</button>
       </div>
     </div>}
   </div>;
