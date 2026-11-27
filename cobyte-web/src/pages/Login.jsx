@@ -10,6 +10,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useAutenticacao } from "../hooks/useAuth";
+import LayoutAutenticacao from "../components/layout/LayoutAutenticacao";
 
 export default function LoginPage({ modo = "login" }) {
   const navegar = useNavigate();
@@ -70,32 +71,7 @@ export default function LoginPage({ modo = "login" }) {
   }
 
   return (
-    <main className="tela-autenticacao">
-      <div className="conteudo-autenticacao">
-        <section className="identidade-marca">
-          <div className="logo-marca-conteudo">
-            <img
-              className="logo-marca"
-              src="/cobyte-logo-white.png"
-              alt="CoByte"
-            />
-          </div>
-
-          <div className="texto-apresentacao">
-            <h1>
-              Seu suporte,
-              <span className="destaque-claro">mais próximo.</span>
-              <span className="destaque-azul">Tudo conectado.</span>
-            </h1>
-
-            <p>
-              Acompanhe suas solicitações, converse com a equipe e fique por
-              dentro de cada atualização em um só lugar.
-            </p>
-          </div>
-        </section>
-
-        <section className="cartao-autenticacao-conteudo">
+    <LayoutAutenticacao>
           <form
             className="cartao-autenticacao"
             onSubmit={ehCadastro ? enviarCadastro : enviarLogin}
@@ -251,8 +227,6 @@ export default function LoginPage({ modo = "login" }) {
               </p>
             </div>
           </form>
-        </section>
-      </div>
-    </main>
+    </LayoutAutenticacao>
   );
 }
