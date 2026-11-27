@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Pause } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { transcreverAudio } from '../../services/sttService';
 import { criarChamadoApi } from '../../services/ticketService';
@@ -404,7 +405,9 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                 aria-label={!gravando ? 'Iniciar gravação' : pausado ? 'Retomar gravação' : 'Pausar gravação'}
                 title={!gravando ? 'Iniciar gravação' : pausado ? 'Retomar gravação' : 'Pausar gravação'}
               >
-                <img src="/icons/mic.svg" alt="Mic" />
+                {gravando && !pausado
+                  ? <Pause size={28} color="#fff" aria-hidden="true" />
+                  : <img src="/icons/mic.svg" alt="" />}
               </button>
 
               <p className="instrucao-audio">
