@@ -30,6 +30,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
   const audioPlayerRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const galeriaInputRef = useRef(null);
   const audioFileInputRef = useRef(null);
 
   useEffect(() => {
@@ -531,6 +532,15 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
           />
           <input
             type="file"
+            ref={galeriaInputRef}
+            accept="image/png,image/jpeg,image/webp"
+            multiple
+            onChange={handleFileSelect}
+            disabled={desabilitarGeral}
+            style={{ display: 'none' }}
+          />
+          <input
+            type="file"
             ref={fileInputRef}
             accept=".png,.jpg,.jpeg,.webp,.pdf"
             onChange={handleFileSelect}
@@ -562,6 +572,14 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
               <button
                 type="button"
                 className="btn-upload-opcao"
+                onClick={() => galeriaInputRef.current?.click()}
+                disabled={desabilitarGeral}
+              >
+                <img src="/icons/Galeria.svg" alt="" /> Galeria
+              </button>
+              <button
+                type="button"
+                className="btn-upload-opcao"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={desabilitarGeral}
               >
@@ -581,7 +599,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                     <img src="/icons/file.svg" alt="Arquivo" />
                   </div>
                   <div className="info-anexo">
-                    <strong>{f.name}</strong> <small>{formatFileSize(f.size)}</small>
+                    <strong title={f.name}>{f.name}</strong> <small>{formatFileSize(f.size)}</small>
                   </div>
                   <button
                     type="button"
@@ -589,6 +607,7 @@ export default function FormularioNovoChamado({ modoInicial = 'texto' }) {
                     onClick={() => setArquivos(arquivos.filter((_, idx) => idx !== i))}
                     disabled={desabilitarGeral}
                     title={`Remover ${f.name}`}
+                    aria-label={`Remover ${f.name}`}
                   >
                     ✕
                   </button>

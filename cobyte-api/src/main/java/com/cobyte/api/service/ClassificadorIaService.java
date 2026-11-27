@@ -31,6 +31,8 @@ public class ClassificadorIaService {
             ao suporte, inclusive falhas de infraestrutura. Só marque foraDoEscopo quando o assunto
             for claramente pessoal e alheio ao suporte; nunca por dúvida técnica ou falta de detalhes.
             Para fora do escopo, explique motivoCancelamento; caso contrário, use string vazia.
+            Relatos compostos apenas por números ou símbolos não descrevem uma solicitação de suporte.
+            Não confunda códigos de erro acompanhados de texto técnico com um relato inválido.
 
             Categoria identifica o sintoma:
             ERRO_FUNCIONAL: operação que falha, resultado incorreto, função ou botão necessário ausente.
@@ -106,6 +108,7 @@ public class ClassificadorIaService {
         long inicio = System.nanoTime();
         Future<ClassificacaoIaResultadoReponse> future = null;
         try {
+            if (semConteudoDescritivo(titulo, descricao)) return Optional.of(cancelamentoSemRelato());
             if (Thread.currentThread().isInterrupted()) {
                 return Optional.of(emergencia(titulo, descricao, "requisição interrompida"));
             }
@@ -289,6 +292,7 @@ public class ClassificadorIaService {
 
     public ClassificacaoIaResultadoReponse emergencia(String titulo, String descricao, String motivo) {
         try {
+            if (semConteudoDescritivo(titulo, descricao)) return cancelamentoSemRelato();
             var resultado = porRegras(titulo, descricao);
             log.warn("Triagem: emergência determinística ({}) -> {}/{}", motivo, resultado.categoria(), resultado.prioridade());
             return resultado;
@@ -297,6 +301,19 @@ public class ClassificadorIaService {
             return new ClassificacaoIaResultadoReponse(null, null,
                     "[Revisão necessária] Triagem indisponível. Categoria e prioridade aguardam análise do suporte.");
         }
+    }
+
+    private static boolean semConteudoDescritivo(String titulo, String descricao) {
+        String relato = limitar(titulo, 255) + " " + limitar(descricao, 12000);
+        return !relato.isBlank() && relato.codePoints().noneMatch(Character::isLetter);
+    }
+
+    private static ClassificacaoIaResultadoReponse cancelamentoSemRelato() {
+        String motivo = "O relato contém apenas números ou símbolos, sem descrever uma solicitação de suporte. "
+                + "Informe o problema ou a dúvida para abrir um novo chamado.";
+        log.info("Triagem: relato sem conteúdo descritivo; encaminhando para cancelamento automático");
+        return new ClassificacaoIaResultadoReponse(null, null,
+                "[Relato inválido] " + motivo, null, null, null, true, motivo);
     }
 
     private ClassificacaoIaResultadoReponse porRegras(String titulo, String descricao) {
